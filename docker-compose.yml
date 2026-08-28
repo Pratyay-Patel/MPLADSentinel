@@ -1,0 +1,33 @@
+# Local development dependencies for MPLADSentinel.
+# Provides a PostgreSQL instance for the Spring Boot backend during development.
+# Not a production deployment descriptor.
+#
+#   docker compose up -d      # start Postgres
+#   docker compose down       # stop
+#   docker compose down -v     # stop and delete the data volume
+#
+# Values are read from a local `.env` file (see .env.example).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mpladsentinel-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mpladsentinel}
+      POSTGRES_USER: ${POSTGRES_USER:-mpladsentinel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-locally}
+    ports:
+      # Host port 5544 (not the conventional 5432) to avoid clashing with a
+      # native PostgreSQL install that may already own 5432. Override with
+      # POSTGRES_PORT in a local .env if needed.
+      - "${POSTGRES_PORT:-5544}:5432"
+    volumes:
+      - mpladsentinel-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mpladsentinel} -d ${POSTGRES_DB:-mpladsentinel}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mpladsentinel-pgdata:

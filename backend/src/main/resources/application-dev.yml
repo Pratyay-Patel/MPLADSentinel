@@ -1,0 +1,6 @@
+# Development profile overrides. Active by default (SPRING_PROFILES_ACTIVE=dev).
+
+logging:
+  level:
+    com.mpladsentinel: DEBUG
+    org.springframework.web: INFO

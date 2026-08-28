@@ -234,3 +234,42 @@ If Claude identifies a reason to change an established architectural decision, i
 2. Explain the proposed alternative.
 3. Explain the impact.
 4. Wait for explicit approval before changing the architecture.
+
+
+## D21 — Repository Structure
+Decision: MPLADSentinel will use a monorepo containing frontend, backend,
+AI service, blockchain service, mobile application and shared documentation.
+
+## D22 — Round 1 Risk Engine
+Decision: The initial Round 1 rule/statistical risk engine will be implemented
+inside Spring Boot. The separate Python AI service will be introduced when
+advanced ML functionality is required.
+
+## D23 — Field Officer Role
+Decision: Field Officer is a backend RBAC role but does not have a dedicated
+web interface in Round 1. Field Officer functionality is primarily provided
+through the Flutter mobile application.
+
+## D24 — Project Foundation
+Decision: Project Foundation consists of repository structure, development
+tooling, frontend/backend scaffolding, configuration, database connectivity,
+migration framework, security foundation and build verification. It does not
+include business functionality or MPLADS integration.
+
+## D25 — Development Stack Versions
+
+**Decision:**
+
+The following versions/major versions are adopted for the initial MPLADSentinel implementation to prioritize stability and compatibility during development:
+
+- Java 21 LTS
+- Spring Boot 3.4.x
+- Maven
+- React 19.x
+- TypeScript 5.7.x
+- Vite 6.x
+- React Router 7.x
+- Node.js 22 LTS
+- npm
+- PostgreSQL 16.x
+- Flyway
