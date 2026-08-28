@@ -18,6 +18,14 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+  jpa:
+    # Flyway is the single source of truth for the schema. Hibernate never
+    # creates or alters tables.
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
 
 server:
   # Local dev default is 8081 (8080 is commonly taken by other local apps).

@@ -10,13 +10,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.mpladsentinel.platform.health.HealthController.HealthResponse;
+import com.mpladsentinel.support.AbstractPostgresIntegrationTest;
 
 /**
  * Verifies that {@code GET /api/health} is reachable through the full HTTP and
  * security filter chain and returns the expected payload.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class HealthControllerTest {
+class HealthControllerTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
