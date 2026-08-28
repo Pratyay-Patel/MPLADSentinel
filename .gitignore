@@ -1,0 +1,49 @@
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- IDE / Editors ---
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.sample
+*.swp
+*.swo
+
+# --- Environment / secrets ---
+.env
+.env.local
+.env.*.local
+*.local.properties
+
+# --- Java / Maven (backend) ---
+target/
+!.mvn/wrapper/maven-wrapper.jar
+build/
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+
+# --- Node / frontend ---
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Misc ---
+*.pid
+*.seed
+*.pid.lock
+.cache/
+tmp/

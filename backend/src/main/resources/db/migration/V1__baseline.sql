@@ -1,0 +1,7 @@
+-- V1 — MPLADSentinel schema baseline.
+--
+-- Intentionally empty. The Project Foundation phase wires up the Flyway
+-- migration pipeline but defines no application tables. The MPLADS data schema
+-- (projects / works, ingestion provenance, risk results, users & roles, audit
+-- events, evidence references, grievances) is introduced in the PostgreSQL Data
+-- Layer phase as subsequent versioned migrations (V2, V3, ...).
