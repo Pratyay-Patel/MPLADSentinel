@@ -7,6 +7,7 @@ import './styles/shell.css';
 import './ui/ui.css';
 import './pages/dashboard/dashboard.css';
 import './pages/project-detail/project-detail.css';
+import './pages/risk/risk.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

@@ -1,21 +1,28 @@
 import type { DataProvider } from '../DataProvider';
-import type { PaymentInstallment, Project } from '../types';
+import type { PaymentInstallment, Project, ProjectRisk } from '../types';
 
 /**
  * Feature-level service for the Project Details screen (`/projects/:id`).
  *
- * Composes `getProject` + `getProjectPayments` from the injected DataProvider.
- * The screen never touches a provider, the API client, or fixtures directly.
+ * Composes `getProject` + `getProjectPayments` + `getProjectRisk` from the
+ * injected DataProvider. The screen never touches a provider, the API client, or
+ * fixtures directly.
  */
 export interface ProjectDetailData {
   project: Project;
   /** Installment rows; empty unless `project.paymentDataState === 'FETCHED_PRESENT'`. */
   payments: PaymentInstallment[];
+  /** Risk view model; `UNKNOWN` when it cannot be assessed or the risk call fails. */
+  risk: ProjectRisk;
 }
 
 export interface ProjectDetailService {
   /** Resolves to `null` when no work has the given id (not an error). */
   load(sourceWorkId: number, signal?: AbortSignal): Promise<ProjectDetailData | null>;
+}
+
+function unknownRisk(sourceWorkId: number): ProjectRisk {
+  return { sourceWorkId, level: 'UNKNOWN', score: null, reasons: [], assessedAt: null };
 }
 
 export function createProjectDetailService(provider: DataProvider): ProjectDetailService {
@@ -25,11 +32,18 @@ export function createProjectDetailService(provider: DataProvider): ProjectDetai
       if (!project) {
         return null;
       }
-      const payments =
+
+      const [payments, risk] = await Promise.all([
         project.paymentDataState === 'FETCHED_PRESENT'
-          ? await provider.getProjectPayments(sourceWorkId, signal)
-          : [];
-      return { project, payments };
+          ? provider.getProjectPayments(sourceWorkId, signal)
+          : Promise.resolve<PaymentInstallment[]>([]),
+        provider
+          .getProjectRisk(sourceWorkId, signal)
+          .then((r) => r ?? unknownRisk(sourceWorkId))
+          .catch(() => unknownRisk(sourceWorkId)),
+      ]);
+
+      return { project, payments, risk };
     },
   };
 }

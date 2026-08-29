@@ -4,13 +4,7 @@ import { createDemoDataProvider } from '../demo/DemoDataProvider';
 import { demoProjects } from '../demo/fixtures';
 import type { DataProvider } from '../DataProvider';
 import { ProviderError } from '../errors';
-import type { ProjectRisk } from '../types';
-import {
-  buildFilterOptions,
-  createDashboardService,
-  riskHeadline,
-  topStatesByWorkCount,
-} from './dashboard';
+import { buildFilterOptions, createDashboardService, topStatesByWorkCount } from './dashboard';
 
 describe('createDashboardService (demo provider)', () => {
   const service = createDashboardService(createDemoDataProvider());
@@ -81,20 +75,5 @@ describe('dashboard pure helpers', () => {
     const options = buildFilterOptions([...demoProjects]);
     expect(options.states).toEqual([...options.states].sort((a, b) => a.localeCompare(b)));
     expect(new Set(options.districts).size).toBe(options.districts.length);
-  });
-
-  it('riskHeadline summarises reasons', () => {
-    const two: ProjectRisk = {
-      sourceWorkId: 1,
-      level: 'HIGH',
-      score: 70,
-      reasons: ['reason a', 'reason b'],
-      assessedAt: null,
-    };
-    const one: ProjectRisk = { ...two, reasons: ['cost anomaly detected'] };
-    const unknown: ProjectRisk = { ...two, level: 'UNKNOWN', reasons: [] };
-    expect(riskHeadline(two)).toBe('2 indicators detected');
-    expect(riskHeadline(one)).toBe('cost anomaly detected');
-    expect(riskHeadline(unknown)).toBe('Not yet assessed');
   });
 });

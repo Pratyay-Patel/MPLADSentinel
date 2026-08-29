@@ -11,6 +11,7 @@ import {
   KeyValueList,
   LoadingState,
   PageHeader,
+  RiskLevelBadge,
   SectionHeader,
   StatusBadge,
 } from '../../ui';
@@ -95,7 +96,7 @@ export function ProjectDetail() {
 }
 
 function ProjectDetailView({ data }: { data: ProjectDetailData }) {
-  const { project, payments } = data;
+  const { project, payments, risk } = data;
 
   return (
     <>
@@ -147,6 +148,32 @@ function ProjectDetailView({ data }: { data: ProjectDetailData }) {
             { label: 'Final cost (completed)', value: formatINRExact(project.finalCost) },
           ]}
         />
+      </Card>
+
+      <Card>
+        <SectionHeader
+          title="Risk assessment"
+          description="Rule-based indicators over the available fields — not an ML model. The Round-1 risk engine runs server-side."
+          actions={<RiskLevelBadge level={risk.level} />}
+        />
+        {risk.level === 'UNKNOWN' ? (
+          <p className="detail-note" style={{ marginTop: 0 }}>
+            Not enough data to assess this work.
+          </p>
+        ) : risk.reasons.length === 0 ? (
+          <p className="detail-note" style={{ marginTop: 0 }}>
+            No current indicators for this work.
+          </p>
+        ) : (
+          <>
+            <KeyValueList items={[{ label: 'Risk score', value: `${risk.score} / 100` }]} />
+            <ul className="risk-reasons" style={{ marginTop: 'var(--space-3)' }}>
+              {risk.reasons.map((reason) => (
+                <li key={reason}>{reason}</li>
+              ))}
+            </ul>
+          </>
+        )}
       </Card>
 
       <PaymentsSection project={project} payments={payments} />

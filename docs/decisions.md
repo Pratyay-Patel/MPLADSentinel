@@ -348,3 +348,36 @@ Frontend risk fields (`riskLevel`, `riskReasons`) remain a demo view model on
 dashboard is wired so the real risk API can supply them later without changing
 the presentation components. UI-implementation only — no change to
 `architecture.md`, `requirements.md` or `round1-scope.md`.
+## D29 — Frontend rule-based risk stand-in
+
+**Decision:**
+
+Until the Round-1 risk engine exists as a Spring Boot API (D22), risk indicators
+shown in the web portal are produced by a client-side rule layer,
+`frontend/src/data/risk/rules.ts` (`deriveRisk`).
+
+- It is **not** an ML model and **not** the production engine. It evaluates the
+  same *class* of rules the backend engine will, so the Risk & Alerts screen
+  (`/risk`), the dashboard's "Projects Requiring Attention" section and the
+  Project Details risk card can be built and demoed now.
+- Every rule uses only fields the verified source provides (financial figures,
+  installment count, payment-data state, recommended date, same-category cost
+  cohort). There is deliberately **no** physical-progress, geospatial,
+  duplicate-project or delay-prediction rule — the source has none of that
+  (`docs/data-source.md` §14).
+- Output is the existing `ProjectRisk` view model: `level`
+  (`HIGH` / `MEDIUM` / `LOW` / `UNKNOWN`), a 0–100 `score`, and human-readable
+  `reasons`. `UNKNOWN` means "not enough data to assess" and is never presented
+  as a clean result; scores are indicators requiring investigation, never proof
+  of misuse.
+- Age-based rules (e.g. "recommended long ago, no payments") are evaluated
+  against a fixed reference date (`RISK_REFERENCE_DATE` in the demo fixtures) so
+  demo output is deterministic.
+- The screens consume risk **only** through `DataProvider.getProjectRisk`. When
+  the backend risk API lands, `ApiDataProvider.getProjectRisk` returns its
+  response and this module is used only by `DemoDataProvider` (or removed) — no
+  presentation component changes.
+
+UI-implementation only — no change to `architecture.md`, `requirements.md` or
+`round1-scope.md`. The authoritative risk engine remains a backend concern
+(D22).

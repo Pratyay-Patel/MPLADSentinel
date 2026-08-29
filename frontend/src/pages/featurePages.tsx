@@ -17,16 +17,6 @@ export function ProjectsPage() {
   );
 }
 
-export function RiskPage() {
-  return (
-    <PlaceholderPage
-      title="Risk & Alerts"
-      description="Rule-based risk indicators and the reasons behind them."
-      note="Implemented in the Risk Detection phase."
-    />
-  );
-}
-
 export function AuditPage() {
   return (
     <PlaceholderPage

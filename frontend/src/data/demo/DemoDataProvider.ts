@@ -1,3 +1,4 @@
+import { deriveRisk } from '../risk/rules';
 import type { DataProvider } from '../DataProvider';
 import type {
   BackendHealth,
@@ -5,10 +6,9 @@ import type {
   Money,
   PaymentDataState,
   Project,
-  ProjectRisk,
   ProjectSummary,
 } from '../types';
-import { demoPaymentsByWorkId, demoProjects, demoRiskByWorkId } from './fixtures';
+import { demoPaymentsByWorkId, demoProjects, RISK_REFERENCE_DATE } from './fixtures';
 
 const LIFECYCLE_STATES: LifecycleState[] = [
   'RECOMMENDED',
@@ -91,19 +91,14 @@ export function createDemoDataProvider(): DataProvider {
 
     async getProjectRisk(sourceWorkId, signal) {
       ensureNotAborted(signal);
-      const projectExists = demoProjects.some((p) => p.sourceWorkId === sourceWorkId);
-      if (!projectExists) {
+      const project = demoProjects.find((p) => p.sourceWorkId === sourceWorkId);
+      if (!project) {
         return null;
       }
-      const risk = demoRiskByWorkId.get(sourceWorkId);
-      const fallback: ProjectRisk = {
-        sourceWorkId,
-        level: 'UNKNOWN',
-        score: null,
-        reasons: [],
-        assessedAt: null,
-      };
-      return risk ? { ...risk, reasons: [...risk.reasons] } : fallback;
+      return deriveRisk(project, {
+        allProjects: [...demoProjects],
+        asOf: RISK_REFERENCE_DATE,
+      });
     },
 
     async getProjectPayments(sourceWorkId, signal) {

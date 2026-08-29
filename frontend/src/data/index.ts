@@ -42,8 +42,6 @@ export {
   createDashboardService,
   buildFilterOptions,
   topStatesByWorkCount,
-  paymentRatio,
-  riskHeadline,
   type DashboardService,
   type DashboardData,
   type DashboardFilterOptions,
@@ -58,3 +56,13 @@ export {
   type ProjectDetailData,
 } from './features/projectDetail';
 export { useProjectDetailService } from './features/useProjectDetailService';
+
+export {
+  createRiskService,
+  type RiskService,
+  type RiskListData,
+  type RiskRow,
+} from './features/risk';
+export { useRiskService } from './features/useRiskService';
+
+export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';

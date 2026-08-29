@@ -1,8 +1,7 @@
 import type { AttentionItem } from '../../../data';
-import { DataTable, EmptyState, type Column } from '../../../ui';
+import { DataTable, EmptyState, ViewProjectLink, type Column } from '../../../ui';
 import { formatINRCompact } from '../../../format';
 import { RiskCell } from '../RiskCell';
-import { ViewProjectLink } from '../ViewProjectLink';
 
 const columns: Column<AttentionItem>[] = [
   {
@@ -53,7 +52,9 @@ const columns: Column<AttentionItem>[] = [
     key: 'action',
     header: 'Action',
     align: 'right',
-    render: ({ project }) => <ViewProjectLink project={project} />,
+    render: ({ project }) => (
+      <ViewProjectLink id={project.sourceWorkId} label={project.workDescription ?? undefined} />
+    ),
   },
 ];
 

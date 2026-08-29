@@ -1,5 +1,6 @@
 import type { DataProvider } from '../DataProvider';
 import type { DataSource, Money, Project, ProjectRisk, ProjectSummary, RiskLevel } from '../types';
+import { loadProjectsWithRisk } from './projectsWithRisk';
 
 /**
  * Feature-level service for the Government / MoSPI Intelligence Dashboard.
@@ -65,45 +66,13 @@ const ATTENTION_LEVELS: RiskLevel[] = ['HIGH', 'MEDIUM'];
 const ATTENTION_LIMIT = 6;
 const TOP_STATES_LIMIT = 6;
 
-function unknownRisk(sourceWorkId: number): ProjectRisk {
-  return { sourceWorkId, level: 'UNKNOWN', score: null, reasons: [], assessedAt: null };
-}
-
-/** Payment-to-estimate ratio when both are known and estimate > 0, else null. */
-export function paymentRatio(project: Project): number | null {
-  const est = project.estimatedCost?.amount ?? 0;
-  const paid = project.recordedPayments?.amount ?? null;
-  if (paid == null || est <= 0) return null;
-  return paid / est;
-}
-
-/** A concise headline for a risk badge, from the risk reasons. */
-export function riskHeadline(risk: ProjectRisk): string {
-  if (risk.level === 'UNKNOWN') return 'Not yet assessed';
-  if (risk.reasons.length === 0) return 'Flagged for review';
-  if (risk.reasons.length === 1) return risk.reasons[0];
-  return `${risk.reasons.length} indicators detected`;
-}
-
 export function createDashboardService(provider: DataProvider): DashboardService {
   return {
     async load(signal) {
-      const [projects, summary] = await Promise.all([
-        provider.listProjects(signal),
+      const [{ projects, risksByWorkId }, summary] = await Promise.all([
+        loadProjectsWithRisk(provider, signal),
         provider.getProjectSummary(signal),
       ]);
-
-      const riskResults = await Promise.allSettled(
-        projects.map((p) => provider.getProjectRisk(p.sourceWorkId, signal)),
-      );
-      const risksByWorkId: Record<number, ProjectRisk> = {};
-      projects.forEach((project, index) => {
-        const result = riskResults[index];
-        risksByWorkId[project.sourceWorkId] =
-          result.status === 'fulfilled' && result.value
-            ? result.value
-            : unknownRisk(project.sourceWorkId);
-      });
 
       const attention = projects
         .filter((p) => ATTENTION_LEVELS.includes(risksByWorkId[p.sourceWorkId].level))

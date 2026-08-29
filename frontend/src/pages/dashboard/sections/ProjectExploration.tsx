@@ -1,8 +1,14 @@
 import type { Project, ProjectRisk } from '../../../data';
-import { DataTable, EmptyState, StatusBadge, type Column, type StatusTone } from '../../../ui';
+import {
+  DataTable,
+  EmptyState,
+  StatusBadge,
+  ViewProjectLink,
+  type Column,
+  type StatusTone,
+} from '../../../ui';
 import { formatINRCompact } from '../../../format';
 import { RiskCell } from '../RiskCell';
-import { ViewProjectLink } from '../ViewProjectLink';
 
 const LIFECYCLE_TONE: Record<Project['lifecycleState'], StatusTone> = {
   RECOMMENDED: 'info',
@@ -67,7 +73,9 @@ export function ProjectExploration({ rows, risksByWorkId }: ProjectExplorationPr
       key: 'action',
       header: 'Action',
       align: 'right',
-      render: (project) => <ViewProjectLink project={project} />,
+      render: (project) => (
+        <ViewProjectLink id={project.sourceWorkId} label={project.workDescription ?? undefined} />
+      ),
     },
   ];
 

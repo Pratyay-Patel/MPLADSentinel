@@ -2,16 +2,11 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import { AppShell } from '../layout/AppShell';
 import { GovernmentDashboard } from '../pages/dashboard/GovernmentDashboard';
-import {
-  AuditPage,
-  CitizenPage,
-  GrievancesPage,
-  ProjectsPage,
-  RiskPage,
-} from '../pages/featurePages';
+import { AuditPage, CitizenPage, GrievancesPage, ProjectsPage } from '../pages/featurePages';
 import { HomePage } from '../pages/HomePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { ProjectDetail } from '../pages/project-detail/ProjectDetail';
+import { RiskAlerts } from '../pages/risk/RiskAlerts';
 
 /**
  * Application route table. The Overview route renders the Government Intelligence
@@ -27,7 +22,7 @@ export const appRouter = createBrowserRouter([
       { path: 'dashboard', element: <GovernmentDashboard /> },
       { path: 'projects', element: <ProjectsPage /> },
       { path: 'projects/:id', element: <ProjectDetail /> },
-      { path: 'risk', element: <RiskPage /> },
+      { path: 'risk', element: <RiskAlerts /> },
       { path: 'audit', element: <AuditPage /> },
       { path: 'citizen', element: <CitizenPage /> },
       { path: 'grievances', element: <GrievancesPage /> },

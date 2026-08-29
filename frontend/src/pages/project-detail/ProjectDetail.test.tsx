@@ -19,21 +19,25 @@ function renderAt(id: string, provider: DataProvider = createDemoDataProvider())
 }
 
 describe('ProjectDetail', () => {
-  it('renders a payments-present work: overview, distinct financials, installment rows', async () => {
-    renderAt('900000002');
+  it('renders a payments-present work: overview, distinct financials, installment rows, risk panel', async () => {
+    renderAt('900000006'); // Library and reading room — est 12L, final 11.4L, 2 installments
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Multipurpose community centre' }),
+      await screen.findByRole('heading', { level: 1, name: 'Library and reading room' }),
     ).toBeInTheDocument();
 
-    expect(screen.getByText('R. B. Patil')).toBeInTheDocument(); // MP
+    expect(screen.getByText('N. K. Singh')).toBeInTheDocument(); // MP
     // estimated and final cost are shown as separate figures (never merged)
-    expect(screen.getByText('₹18,20,000')).toBeInTheDocument(); // estimated (recommended)
-    expect(screen.getAllByText('₹16,90,000').length).toBeGreaterThan(0); // final cost
+    expect(screen.getByText('₹12,00,000')).toBeInTheDocument(); // estimated
+    expect(screen.getByText('₹11,40,000')).toBeInTheDocument(); // final (distinct from estimated)
 
     const table = screen.getByRole('table', { name: 'Payment installments' });
-    expect(within(table).getAllByRole('row')).toHaveLength(1 + 3); // header + 3 installments
-    expect(within(table).getAllByText('Payment Success')).toHaveLength(3);
+    expect(within(table).getAllByRole('row')).toHaveLength(1 + 2); // header + 2 installments
+    expect(within(table).getAllByText('Payment Success')).toHaveLength(2);
+
+    // risk panel is present (this work has no indicators)
+    expect(screen.getByRole('heading', { name: 'Risk assessment' })).toBeInTheDocument();
+    expect(screen.getByText(/no current indicators for this work/i)).toBeInTheDocument();
 
     expect(screen.getByText(/not an official MPLADS \/ e-SAKSHI id/i)).toBeInTheDocument();
   });
@@ -58,7 +62,7 @@ describe('ProjectDetail', () => {
       ...createDemoDataProvider(),
       getProject: vi.fn().mockRejectedValue(new ProviderError('unavailable', 'backend down')),
     };
-    renderAt('900000002', provider);
+    renderAt('900000006', provider);
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('backend down');

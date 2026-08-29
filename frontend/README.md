@@ -49,15 +49,22 @@ src/
   Requiring Attention (hero) → financial intelligence → work distribution →
   filters + project exploration → regional insight. Reads data only through
   `useDashboardService()` → `DataProvider` (seed fixtures until the backend APIs
-  exist). Risk level/reasons are a placeholder view model — there is no risk
-  engine yet.
+  exist). Risk level/reasons come from the client rule layer (see `/risk`) via
+  `getProjectRisk`.
 - **`/projects/:id`** — Project Details (`src/pages/project-detail/`). The full
   single-work record — overview, location, financials (estimated vs final cost,
-  kept distinct), payments (state + installment rows via `getProjectPayments`),
-  a source-date timeline, and provenance / data-quality flags. Built only from
-  fields the source provides (no sanctioned amount, progress %, geo, delay).
-  Reads via `useProjectDetailService()`; an unknown id shows a "work not found"
-  state. Risk is added with the Risk & Alerts feature.
+  kept distinct), a rule-based risk-assessment card, payments (state +
+  installment rows via `getProjectPayments`), a source-date timeline, and
+  provenance / data-quality flags. Built only from fields the source provides
+  (no sanctioned amount, progress %, geo, delay). Reads via
+  `useProjectDetailService()`; an unknown id shows a "work not found" state.
+- **`/risk`** — Risk & Alerts (`src/pages/risk/`). Every work with a risk level
+  (HIGH / MEDIUM / LOW / UNKNOWN), most severe first, with the actual rule-based
+  indicators for each and per-level count tiles; filters by level, state,
+  category and free text. Rules are computed client-side from financial and
+  data-quality signals over the available work fields (`src/data/risk/rules.ts`)
+  — not an ML model, and a stand-in for the Round-1 risk engine, which runs
+  server-side. Reads via `useRiskService()` → `getProjectRisk`.
 - Other feature routes render placeholders until their own phases.
 
 Rules:

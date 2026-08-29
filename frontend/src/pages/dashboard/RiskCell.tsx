@@ -1,12 +1,5 @@
-import { riskHeadline, type ProjectRisk, type RiskLevel } from '../../data';
-import { StatusBadge, type StatusTone } from '../../ui';
-
-const TONE: Record<RiskLevel, StatusTone> = {
-  HIGH: 'danger',
-  MEDIUM: 'warning',
-  LOW: 'success',
-  UNKNOWN: 'neutral',
-};
+import { riskHeadline, type ProjectRisk } from '../../data';
+import { RiskLevelBadge } from '../../ui';
 
 export interface RiskCellProps {
   risk: ProjectRisk;
@@ -22,9 +15,7 @@ export interface RiskCellProps {
 export function RiskCell({ risk, showHeadline = false }: RiskCellProps) {
   return (
     <span className="dash-risk">
-      <StatusBadge tone={TONE[risk.level]} srLabel="Risk level">
-        {risk.level} RISK
-      </StatusBadge>
+      <RiskLevelBadge level={risk.level} />
       {showHeadline ? <span className="dash-risk__headline">{riskHeadline(risk)}</span> : null}
     </span>
   );

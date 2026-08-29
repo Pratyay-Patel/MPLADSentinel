@@ -7,19 +7,17 @@
  * The record STRUCTURE mirrors the backend `Work` model exactly. State /
  * district / category values are drawn from the real domain value space
  * (docs/data-source.md §13); work descriptions and MP names are generic
- * placeholders.
- *
- * `demoRiskByWorkId` is a placeholder risk view model — there is no backend risk
- * engine yet (Round-1 P0.4 / requirements F3, F10). Its `reasons` use only
- * indicators the current data model can support (estimated-cost position,
- * payment-to-estimate ratio, dormant / no-payment signal, payment-pattern
- * signal).
+ * placeholders. Each record is shaped to exercise a distinct rule outcome in
+ * `src/data/risk/rules.ts` (relative to {@link RISK_REFERENCE_DATE}).
  */
 
-import type { Money, PaymentInstallment, Project, ProjectRisk } from '../types';
+import type { Money, PaymentInstallment, Project } from '../types';
 
-/** Obviously-synthetic id range so a demo record can never be mistaken for a real work. */
+/** Obviously-synthetic id range so a seed record can never be mistaken for a real work. */
 const DEMO_ID_BASE = 900_000_000;
+
+/** Fixed "now" for the demo so rule ages (dormant, etc.) are deterministic. */
+export const RISK_REFERENCE_DATE = new Date('2026-09-01T00:00:00.000Z');
 
 function inr(amount: number): Money {
   return { amount, currency: 'INR' };
@@ -38,18 +36,20 @@ interface DemoSpec {
   estimated: number | null;
   final: number | null;
   recommendedOn: string | null;
-  recommendedYear: number | null;
   completedOn: string | null;
-  completionYear: number | null;
   paymentDataState: Project['paymentDataState'];
   recorded: number | null;
   installments: number | null;
   flags?: string[];
 }
 
+function yearOf(iso: string | null): number | null {
+  return iso ? Number(iso.slice(0, 4)) : null;
+}
+
 function build(spec: DemoSpec): Project {
-  const seenInRecommended = spec.recommendedYear != null || spec.recommendedOn != null;
-  const seenInCompleted = spec.completionYear != null || spec.completedOn != null;
+  const seenInRecommended = spec.recommendedOn != null;
+  const seenInCompleted = spec.completedOn != null;
   const lifecycleState =
     seenInRecommended && seenInCompleted
       ? 'RECOMMENDED_AND_COMPLETED'
@@ -71,9 +71,9 @@ function build(spec: DemoSpec): Project {
     estimatedCost: spec.estimated == null ? null : inr(spec.estimated),
     finalCost: spec.final == null ? null : inr(spec.final),
     recommendedOn: spec.recommendedOn,
-    recommendedYear: spec.recommendedYear,
+    recommendedYear: yearOf(spec.recommendedOn),
     completedOn: spec.completedOn,
-    completionYear: spec.completionYear,
+    completionYear: yearOf(spec.completedOn),
     sourceStatusRaw: seenInRecommended ? 'Recommended' : null,
     expectedBeneficiaries: null,
     seenInRecommended,
@@ -97,12 +97,10 @@ export const demoProjects: readonly Project[] = [
     constituency: 'Jaipur Rural',
     state: 'Rajasthan',
     district: 'Jaipur',
-    estimated: 1_080_000,
+    estimated: 1_050_000,
     final: null,
-    recommendedOn: '2025-02-10',
-    recommendedYear: 2025,
+    recommendedOn: '2023-06-05',
     completedOn: null,
-    completionYear: null,
     paymentDataState: 'NOT_FETCHED',
     recorded: null,
     installments: null,
@@ -118,14 +116,12 @@ export const demoProjects: readonly Project[] = [
     constituency: 'Pune',
     state: 'Maharashtra',
     district: 'Pune',
-    estimated: 1_820_000,
-    final: 1_690_000,
+    estimated: 1_800_000,
+    final: null,
     recommendedOn: '2024-06-01',
-    recommendedYear: 2024,
-    completedOn: '2025-03-15',
-    completionYear: 2025,
+    completedOn: null,
     paymentDataState: 'FETCHED_PRESENT',
-    recorded: 1_690_000,
+    recorded: 1_960_000,
     installments: 3,
   }),
   build({
@@ -141,9 +137,7 @@ export const demoProjects: readonly Project[] = [
     estimated: 620_000,
     final: null,
     recommendedOn: '2024-11-05',
-    recommendedYear: 2024,
     completedOn: null,
-    completionYear: null,
     paymentDataState: 'FETCHED_ABSENT',
     recorded: null,
     installments: null,
@@ -159,14 +153,12 @@ export const demoProjects: readonly Project[] = [
     constituency: 'Chittoor',
     state: 'Andhra Pradesh',
     district: 'Chittoor',
-    estimated: 499_993,
-    final: 499_993,
+    estimated: 500_000,
+    final: 640_000,
     recommendedOn: null,
-    recommendedYear: null,
     completedOn: '2025-01-31',
-    completionYear: 2025,
     paymentDataState: 'FETCHED_PRESENT',
-    recorded: 499_993,
+    recorded: 640_000,
     installments: 1,
   }),
   build({
@@ -179,12 +171,10 @@ export const demoProjects: readonly Project[] = [
     constituency: 'Ernakulam',
     state: 'Kerala',
     district: 'Ernakulam',
-    estimated: 2_500_000,
+    estimated: 2_600_000,
     final: null,
-    recommendedOn: '2026-01-20',
-    recommendedYear: 2026,
+    recommendedOn: '2025-02-20',
     completedOn: null,
-    completionYear: null,
     paymentDataState: 'NOT_FETCHED',
     recorded: null,
     installments: null,
@@ -202,9 +192,7 @@ export const demoProjects: readonly Project[] = [
     estimated: 1_200_000,
     final: 1_140_000,
     recommendedOn: '2023-09-12',
-    recommendedYear: 2023,
     completedOn: '2024-08-20',
-    completionYear: 2024,
     paymentDataState: 'FETCHED_PRESENT',
     recorded: 980_000,
     installments: 2,
@@ -219,14 +207,12 @@ export const demoProjects: readonly Project[] = [
     constituency: 'Ernakulam',
     state: 'Kerala',
     district: 'Ernakulam',
-    estimated: 545_767,
-    final: 545_767,
+    estimated: 545_000,
+    final: 545_000,
     recommendedOn: null,
-    recommendedYear: null,
     completedOn: '2025-06-30',
-    completionYear: 2025,
     paymentDataState: 'FETCHED_PRESENT',
-    recorded: 545_767,
+    recorded: 545_000,
     installments: 2,
   }),
   build({
@@ -242,9 +228,7 @@ export const demoProjects: readonly Project[] = [
     estimated: 350_000,
     final: null,
     recommendedOn: '2025-04-18',
-    recommendedYear: 2025,
     completedOn: null,
-    completionYear: null,
     paymentDataState: 'NOT_FETCHED',
     recorded: null,
     installments: null,
@@ -262,9 +246,7 @@ export const demoProjects: readonly Project[] = [
     estimated: 875_000,
     final: null,
     recommendedOn: '2024-02-02',
-    recommendedYear: 2024,
     completedOn: null,
-    completionYear: null,
     paymentDataState: 'FETCH_ERROR',
     recorded: null,
     installments: null,
@@ -280,13 +262,11 @@ export const demoProjects: readonly Project[] = [
     state: 'Maharashtra',
     district: 'Nagpur',
     estimated: 1_500_000,
-    final: 1_420_000,
+    final: null,
     recommendedOn: '2024-07-10',
-    recommendedYear: 2024,
-    completedOn: '2025-05-05',
-    completionYear: 2025,
+    completedOn: null,
     paymentDataState: 'FETCHED_PRESENT',
-    recorded: 1_420_000,
+    recorded: 1_610_000,
     installments: 4,
   }),
   build({
@@ -299,12 +279,10 @@ export const demoProjects: readonly Project[] = [
     constituency: 'Varanasi',
     state: 'Uttar Pradesh',
     district: 'Varanasi',
-    estimated: 600_000,
+    estimated: null,
     final: null,
-    recommendedOn: '2026-03-01',
-    recommendedYear: 2026,
+    recommendedOn: '2026-06-01',
     completedOn: null,
-    completionYear: null,
     paymentDataState: 'NOT_FETCHED',
     recorded: null,
     installments: null,
@@ -320,13 +298,11 @@ export const demoProjects: readonly Project[] = [
     state: 'Andhra Pradesh',
     district: 'Guntur',
     estimated: 400_000,
-    final: 390_000,
+    final: 400_000,
     recommendedOn: null,
-    recommendedYear: null,
     completedOn: '2025-11-08',
-    completionYear: 2025,
     paymentDataState: 'FETCHED_PRESENT',
-    recorded: 390_000,
+    recorded: 400_000,
     installments: 1,
   }),
   build({
@@ -339,12 +315,10 @@ export const demoProjects: readonly Project[] = [
     constituency: 'Jaipur Rural',
     state: 'Rajasthan',
     district: 'Jaipur',
-    estimated: 920_000,
+    estimated: 900_000,
     final: null,
-    recommendedOn: '2023-05-14',
-    recommendedYear: 2023,
+    recommendedOn: '2026-05-14',
     completedOn: null,
-    completionYear: null,
     paymentDataState: 'NOT_FETCHED',
     recorded: null,
     installments: null,
@@ -360,67 +334,15 @@ export const demoProjects: readonly Project[] = [
     constituency: 'Howrah',
     state: 'West Bengal',
     district: 'Howrah',
-    estimated: 750_000,
+    estimated: null,
     final: null,
-    recommendedOn: '2025-08-01',
-    recommendedYear: 2025,
+    recommendedOn: '2026-07-01',
     completedOn: null,
-    completionYear: null,
     paymentDataState: 'NOT_FETCHED',
     recorded: null,
     installments: null,
   }),
 ];
-
-function risk(
-  n: number,
-  level: ProjectRisk['level'],
-  score: number | null,
-  reasons: string[],
-): [number, ProjectRisk] {
-  return [
-    DEMO_ID_BASE + n,
-    {
-      sourceWorkId: DEMO_ID_BASE + n,
-      level,
-      score,
-      reasons,
-      assessedAt: level === 'UNKNOWN' ? null : '2026-08-01T00:00:00Z',
-    },
-  ];
-}
-
-/** Placeholder risk view models keyed by `sourceWorkId` (no risk engine yet). */
-export const demoRiskByWorkId: ReadonlyMap<number, ProjectRisk> = new Map([
-  risk(1, 'HIGH', 78, [
-    'recommended over 12 months ago with no payment records',
-    'estimated cost in the upper range for its category cohort',
-  ]),
-  risk(2, 'HIGH', 71, [
-    'recorded payments are 93% of estimated cost',
-    'full sanctioned amount released across few installments',
-  ]),
-  risk(3, 'MEDIUM', 52, [
-    'payments endpoint reports no records for a work recommended 18+ months ago',
-  ]),
-  risk(4, 'HIGH', 69, [
-    'recorded payments equal estimated cost (100%)',
-    'full amount released in a single installment',
-  ]),
-  risk(5, 'MEDIUM', 48, ['estimated cost is the highest in the current dataset for its category']),
-  risk(6, 'LOW', 18, ['recorded payments below estimated cost with no other indicators']),
-  risk(7, 'LOW', 12, ['completed work with recorded payments consistent with final cost']),
-  risk(8, 'LOW', 22, ['recently recommended; no indicators yet']),
-  risk(9, 'MEDIUM', 44, ['payment data could not be retrieved (fetch error) for review']),
-  risk(10, 'HIGH', 66, [
-    'recorded payments are 95% of estimated cost',
-    'estimated cost in the upper range for its category cohort',
-  ]),
-  risk(11, 'UNKNOWN', null, []),
-  risk(12, 'MEDIUM', 41, ['full amount released in a single installment on completion']),
-  risk(13, 'HIGH', 74, ['recommended ~3 years ago with no payment records (dormant)']),
-  risk(14, 'LOW', 16, ['recently recommended; no indicators yet']),
-]);
 
 function installment(
   ordinal: number,
@@ -450,21 +372,21 @@ export const demoPaymentsByWorkId: ReadonlyMap<number, PaymentInstallment[]> = n
     [
       installment(
         0,
-        600_000,
+        700_000,
         '2024-08-15',
         'Shree Constructions',
         'PUNE (Implementing District Authority)',
       ),
       installment(
         1,
-        600_000,
+        700_000,
         '2024-12-10',
         'Shree Constructions',
         'PUNE (Implementing District Authority)',
       ),
       installment(
         2,
-        490_000,
+        560_000,
         '2025-02-20',
         'Shree Constructions',
         'PUNE (Implementing District Authority)',
@@ -473,7 +395,7 @@ export const demoPaymentsByWorkId: ReadonlyMap<number, PaymentInstallment[]> = n
   ],
   [
     DEMO_ID_BASE + 4,
-    [installment(0, 499_993, '2025-01-20', 'Balaji Infra Works', 'CHITTOOR (District Collector)')],
+    [installment(0, 640_000, '2025-01-20', 'Balaji Infra Works', 'CHITTOOR (District Collector)')],
   ],
   [
     DEMO_ID_BASE + 6,
@@ -506,7 +428,7 @@ export const demoPaymentsByWorkId: ReadonlyMap<number, PaymentInstallment[]> = n
       ),
       installment(
         1,
-        245_767,
+        245_000,
         '2025-06-22',
         'Coastal Electricals',
         'ERNAKULAM (District Collector)',
@@ -518,28 +440,28 @@ export const demoPaymentsByWorkId: ReadonlyMap<number, PaymentInstallment[]> = n
     [
       installment(
         0,
-        400_000,
+        450_000,
         '2024-10-01',
         'Vidarbha Works',
         'NAGPUR (Implementing District Authority)',
       ),
       installment(
         1,
-        400_000,
+        450_000,
         '2025-01-15',
         'Vidarbha Works',
         'NAGPUR (Implementing District Authority)',
       ),
       installment(
         2,
-        400_000,
+        450_000,
         '2025-03-20',
         'Vidarbha Works',
         'NAGPUR (Implementing District Authority)',
       ),
       installment(
         3,
-        220_000,
+        260_000,
         '2025-05-02',
         'Vidarbha Works',
         'NAGPUR (Implementing District Authority)',
@@ -548,6 +470,6 @@ export const demoPaymentsByWorkId: ReadonlyMap<number, PaymentInstallment[]> = n
   ],
   [
     DEMO_ID_BASE + 12,
-    [installment(0, 390_000, '2025-11-01', 'Sanitation Systems Co', 'GUNTUR (District Collector)')],
+    [installment(0, 400_000, '2025-11-01', 'Sanitation Systems Co', 'GUNTUR (District Collector)')],
   ],
 ]);
