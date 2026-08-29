@@ -67,30 +67,40 @@
   color: #dbe6ef;
 }
 
-.app-role-switcher {
+.app-user-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.app-user-menu__identity {
   display: flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-.app-role-switcher__label {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #a9c2d8;
+.app-user-menu__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: #eef4f9;
 }
 
-.app-role-switcher__select {
-  padding: var(--space-1) var(--space-2);
+.app-user-menu__signout {
+  padding: var(--space-1) var(--space-3);
   border: 1px solid var(--color-brand-700);
   border-radius: var(--radius-md);
   background: var(--color-brand-800);
   color: #eef4f9;
   font: inherit;
   font-size: var(--text-sm);
+  cursor: pointer;
 }
 
-.app-role-switcher__select:focus-visible {
+.app-user-menu__signout:hover {
+  background: var(--color-brand-700);
+}
+
+.app-user-menu__signout:focus-visible {
   outline: 2px solid var(--color-focus-ring, #7cb3e0);
   outline-offset: 1px;
 }
@@ -229,8 +239,7 @@
     display: none;
   }
 
-  .app-header__user .app-header__role,
-  .app-role-switcher__label {
+  .app-header__user .app-header__role {
     display: none;
   }
 }

@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 
-import { actionsGrievances, reviewsGrievances, useSession } from '../../auth';
+import { actionsGrievances, reviewsGrievances, useCurrentRole } from '../../auth';
 import {
   GRIEVANCE_CATEGORIES,
   GRIEVANCE_STATUS_LABEL,
@@ -114,7 +114,7 @@ function useWorkLabel(data: GrievancesData) {
  * `grievances` table / API exists.
  */
 export function Grievances() {
-  const { role } = useSession();
+  const role = useCurrentRole();
   const service = useGrievancesService();
   const [reloadKey, setReloadKey] = useState(0);
   const isReviewer = reviewsGrievances(role);

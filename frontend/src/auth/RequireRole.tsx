@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 
 import { Card, ForbiddenState } from '../ui';
 import { canAccess, type Area } from './access';
-import { useSession } from './context';
+import { useCurrentRole } from './context';
 
 interface RequireRoleProps {
   area: Area;
@@ -15,7 +15,7 @@ interface RequireRoleProps {
  * authorizes every API call (D5).
  */
 export function RequireRole({ area, children }: RequireRoleProps) {
-  const { role } = useSession();
+  const role = useCurrentRole();
   if (canAccess(role, area)) {
     return children;
   }

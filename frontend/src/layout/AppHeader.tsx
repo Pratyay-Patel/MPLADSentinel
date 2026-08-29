@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { CloseIcon, MenuIcon } from '../ui/icons';
-import { RoleSwitcher } from './RoleSwitcher';
+import { UserMenu } from './UserMenu';
 
 export interface AppHeaderProps {
   /** Whether the mobile nav drawer is open. */
@@ -32,9 +32,8 @@ export function AppHeader({ navOpen, onToggleNav, navId }: AppHeaderProps) {
 
       <div className="app-header__spacer" />
 
-      {/* Role selection stands in for backend sign-in (Spring Security, D5). */}
       <div className="app-header__user">
-        <RoleSwitcher />
+        <UserMenu />
       </div>
     </header>
   );

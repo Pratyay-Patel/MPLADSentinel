@@ -110,12 +110,12 @@ P0.6a — Client RBAC scaffold *(done)*
 
 Role context, role→area access map (`canAccess`), role-gated navigation, and the `RequireRole` route guard. Role chosen from a header selector, persisted to `localStorage`. This is UX only — see decision D30.
 
-P0.6b — Backend authentication + login *(backend-integration phase)*
+P0.6b — Backend authentication + login *(done — backend-integration step B1)*
 
-- Seeded demo users, one per web role; no self-registration (decision D31).
-- `POST /api/auth/login`, `GET /api/auth/me`, logout. Stateful session preferred over JWT.
-- `SecurityConfig`: `anyRequest().permitAll()` → `authenticated()`, with per-endpoint authority rules matching the client `canAccess` map. `/api/health` stays public.
-- A login page replaces the header role selector; `SessionProvider` reads `GET /api/auth/me`. `RequireRole` / `canAccess` are unchanged — they now read the authenticated role.
+- Seeded demo users, one per web role (`app_user` table, Flyway V5; `AuthUserSeeder`); no self-registration (decision D31).
+- `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`. Stateful `HttpSession`, BCrypt password hashing.
+- `SecurityConfig`: `anyRequest().permitAll()` → `authenticated()`; public = `POST /api/auth/login`, `GET /api/health`, actuator health/info. Unauthenticated calls get a JSON `ApiErrorResponse` 401. Per-endpoint authority rules land with each business API (B2 onward). CSRF stays disabled for Round 1 (documented limitation in `SecurityConfig`).
+- A `/login` page replaces the header role selector; `SessionProvider` resolves the session from `GET /api/auth/me`. The header shows the signed-in user + "Sign out". `RequireAuth` gates the shell; `RequireRole` / `canAccess` are unchanged — they now read the authenticated role.
 
 ## 3. P1 — Implement If P0 Is Stable
 
@@ -154,7 +154,7 @@ P1.5 — Grievances (citizen submission + authority review)
   form — a review queue. List all grievances, filter by status / work /
   category, open one, and move it through
   `SUBMITTED → UNDER_REVIEW → ACTIONED → CLOSED` with an action note.
-- **Persistence:** a `grievances` table (Flyway V5) with
+- **Persistence:** a `grievances` table (Flyway V6 — V5 is `app_user`) with
   `GET / POST / PATCH /api/grievances`.
 
 The frontend role-split (form vs. queue, status transitions) can land ahead of
@@ -188,7 +188,7 @@ Development follows this order. Steps 1–4 built the backend foundation and the
         ↓
 3. PostgreSQL Data Layer                      [done]
         ↓
-4. Spring Boot REST APIs                      [partial — deferred to step 12]
+4. Spring Boot REST APIs                      [auth done (B1); data APIs = B2, step 13]
         ↓
 --- frontend sprint (DataProvider seam) ---
 5. React Dashboard                            [done]
@@ -205,23 +205,27 @@ Development follows this order. Steps 1–4 built the backend foundation and the
         ↓
 11. Grievances (frontend, DataProvider seam)  [done]
         ↓
-11a. Grievances role-split (citizen form vs.  [current]
+11a. Grievances role-split (citizen form vs.  [done]
      authority review queue + status flow),
      still on the DataProvider seam
         ↓
      P0 FRONTEND COMPLETE — Round 1 demo surface ready
         ↓
 --- backend integration (flip VITE_DATA_SOURCE=api per capability) ---
-12. Backend auth + login page (seeded demo users, D31)
+12. B1 — Backend auth + login page             [done]
+    (seeded demo users, D31; app_user Flyway V5;
+     /api/auth/login|me|logout; stateful session;
+     SecurityConfig → authenticated(); /login page +
+     RequireAuth; header sign-out)
         ↓
-13. GET /api/works, /api/works/{id}, /api/works/summary,
+13. B2 — GET /api/works, /api/works/{id}, /api/works/summary,
     /api/works/{id}/payments  → flip listProjects / getProject /
     getProjectSummary / getProjectPayments
         ↓
-14. Risk engine: GET /api/works/{id}/risk (rule-based, server-side, D22)
+14. B3 — Risk engine: GET /api/works/{id}/risk (rule-based, server-side, D22)
     → flip getProjectRisk; retire the client deriveRisk stand-in
         ↓
-15. grievances table (Flyway V5) + GET/POST/PATCH /api/grievances
+15. B4 — grievances table (Flyway V6) + GET/POST/PATCH /api/grievances
     → flip listGrievances / submitGrievance / updateGrievanceStatus
         ↓
 16. IPFS evidence

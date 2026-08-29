@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 
-import { RequireRole } from '../auth';
+import { RequireAuth, RequireRole } from '../auth';
 import { AppShell } from '../layout/AppShell';
 import { GovernmentDashboard } from '../pages/dashboard/GovernmentDashboard';
 import { CitizenPortal } from '../pages/citizen/CitizenPortal';
@@ -8,6 +8,7 @@ import { CitizenProjectView } from '../pages/citizen/CitizenProjectView';
 import { AuditPage } from '../pages/featurePages';
 import { Grievances } from '../pages/grievances/Grievances';
 import { HomePage } from '../pages/HomePage';
+import { LoginPage } from '../pages/LoginPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { ProjectDetail } from '../pages/project-detail/ProjectDetail';
 import { ProjectRegister } from '../pages/projects/ProjectRegister';
@@ -18,14 +19,24 @@ import { RiskAlerts } from '../pages/risk/RiskAlerts';
  * Dashboard; the remaining feature routes render lightweight placeholders until
  * their own phases.
  *
- * Each area route is wrapped in {@link RequireRole} so a role without access
- * sees a "not available" state instead of the screen. This is UX only — the
- * backend authorizes every request (D5).
+ * The whole shell is wrapped in {@link RequireAuth}: an unauthenticated visitor
+ * is redirected to `/login`. Each area route is additionally wrapped in
+ * {@link RequireRole} so a signed-in role without access to that area sees a
+ * "not available" state. Both are UX only — the backend authorizes every
+ * request (D5 / D31).
  */
 export const appRouter = createBrowserRouter([
   {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
     path: '/',
-    element: <AppShell />,
+    element: (
+      <RequireAuth>
+        <AppShell />
+      </RequireAuth>
+    ),
     children: [
       { index: true, element: <HomePage /> },
       {

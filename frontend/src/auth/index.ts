@@ -1,12 +1,27 @@
 /**
- * Frontend RBAC scaffold — role context, role-to-area access map, and the
- * `RequireRole` route guard. Client-side only: it decides what the UI shows,
- * not what a user is allowed to do. Backend authorization (Spring Security, D5)
- * is the authoritative check.
+ * Frontend auth + RBAC surface — session context (resolved from the backend,
+ * decision D31), the role-to-area access map, and the route guards
+ * `RequireAuth` / `RequireRole`. The access map decides what the UI shows;
+ * backend authorization (Spring Security, D5) is the authoritative check.
  */
 
-export { ROLES, ROLE_LABELS, DEFAULT_ROLE, isRole, type Role } from './roles';
-export { AREA_ROLES, canAccess, reviewsGrievances, actionsGrievances, type Area } from './access';
-export { SessionContext, useSession, type Session } from './context';
+export { ROLES, ROLE_LABELS, isRole, type Role } from './roles';
+export {
+  AREA_ROLES,
+  canAccess,
+  reviewsGrievances,
+  actionsGrievances,
+  landingPathFor,
+  type Area,
+} from './access';
+export {
+  SessionContext,
+  useSession,
+  useCurrentRole,
+  type Session,
+  type SessionStatus,
+} from './context';
+export type { SessionUser } from '../api/auth';
 export { SessionProvider } from './SessionProvider';
 export { RequireRole } from './RequireRole';
+export { RequireAuth } from './RequireAuth';

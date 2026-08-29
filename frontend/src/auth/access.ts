@@ -42,3 +42,12 @@ export function reviewsGrievances(role: Role): boolean {
 export function actionsGrievances(role: Role): boolean {
   return GRIEVANCE_ADMINS.includes(role);
 }
+
+/**
+ * Where to send a user straight after sign-in when they had no specific
+ * destination in mind. A citizen has no access to the government dashboard, so
+ * they land on the citizen portal instead.
+ */
+export function landingPathFor(role: Role): string {
+  return role === 'CITIZEN' ? '/citizen' : '/dashboard';
+}

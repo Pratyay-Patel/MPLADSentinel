@@ -1,75 +1,129 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import * as authApi from '../api/auth';
 import { useSession } from './context';
 import { SessionProvider } from './SessionProvider';
 
-const STORAGE_KEY = 'mplads.portal.role';
+vi.mock('../api/auth');
+
+const mockedAuth = vi.mocked(authApi);
 
 function Probe() {
-  const { role, setRole } = useSession();
+  const { status, role, user, login, logout } = useSession();
   return (
     <div>
-      <span data-testid="role">{role}</span>
-      <button type="button" onClick={() => setRole('CITIZEN')}>
-        become citizen
+      <span data-testid="status">{status}</span>
+      <span data-testid="role">{role ?? 'none'}</span>
+      <span data-testid="name">{user?.username ?? 'none'}</span>
+      <button type="button" onClick={() => void login('mospi', 'pw')}>
+        sign in
+      </button>
+      <button type="button" onClick={() => void logout()}>
+        sign out
       </button>
     </div>
   );
 }
 
+afterEach(() => {
+  vi.resetAllMocks();
+});
+
 describe('SessionProvider', () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-  });
+  it('resolves to authenticated when /me returns a user', async () => {
+    mockedAuth.fetchCurrentUser.mockResolvedValue({
+      username: 'mospi',
+      role: 'MOSPI',
+      displayName: 'MoSPI (demo)',
+    });
 
-  it('defaults to MoSPI when nothing is stored', () => {
     render(
       <SessionProvider>
         <Probe />
       </SessionProvider>,
     );
+
+    expect(screen.getByTestId('status')).toHaveTextContent('loading');
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'));
     expect(screen.getByTestId('role')).toHaveTextContent('MOSPI');
+    expect(screen.getByTestId('name')).toHaveTextContent('mospi');
   });
 
-  it('honours an explicit initialRole', () => {
+  it('resolves to anonymous when /me returns null', async () => {
+    mockedAuth.fetchCurrentUser.mockResolvedValue(null);
+
     render(
-      <SessionProvider initialRole="AUDITOR">
+      <SessionProvider>
         <Probe />
       </SessionProvider>,
     );
+
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('anonymous'));
+    expect(screen.getByTestId('role')).toHaveTextContent('none');
+  });
+
+  it('resolves to anonymous when /me rejects', async () => {
+    mockedAuth.fetchCurrentUser.mockRejectedValue(new Error('network'));
+
+    render(
+      <SessionProvider>
+        <Probe />
+      </SessionProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('anonymous'));
+  });
+
+  it('login switches the session to authenticated', async () => {
+    mockedAuth.fetchCurrentUser.mockResolvedValue(null);
+    mockedAuth.login.mockResolvedValue({ username: 'auditor', role: 'AUDITOR', displayName: null });
+
+    render(
+      <SessionProvider>
+        <Probe />
+      </SessionProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('anonymous'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'sign in' }));
+
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'));
     expect(screen.getByTestId('role')).toHaveTextContent('AUDITOR');
+    expect(mockedAuth.login).toHaveBeenCalledWith('mospi', 'pw');
   });
 
-  it('reads a previously persisted role', () => {
-    window.localStorage.setItem(STORAGE_KEY, 'MP');
+  it('logout returns the session to anonymous', async () => {
+    mockedAuth.fetchCurrentUser.mockResolvedValue({
+      username: 'mp',
+      role: 'MP',
+      displayName: null,
+    });
+    mockedAuth.logout.mockResolvedValue(undefined);
+
     render(
       <SessionProvider>
         <Probe />
       </SessionProvider>,
     );
-    expect(screen.getByTestId('role')).toHaveTextContent('MP');
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'sign out' }));
+
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('anonymous'));
+    expect(mockedAuth.logout).toHaveBeenCalled();
   });
 
-  it('ignores an invalid stored value', () => {
-    window.localStorage.setItem(STORAGE_KEY, 'PRESIDENT');
+  it('initialRole shorthand starts authenticated and skips the /me probe', () => {
     render(
-      <SessionProvider>
+      <SessionProvider initialRole="STATE">
         <Probe />
       </SessionProvider>,
     );
-    expect(screen.getByTestId('role')).toHaveTextContent('MOSPI');
-  });
 
-  it('persists a role change to localStorage', () => {
-    render(
-      <SessionProvider>
-        <Probe />
-      </SessionProvider>,
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'become citizen' }));
-    expect(screen.getByTestId('role')).toHaveTextContent('CITIZEN');
-    expect(window.localStorage.getItem(STORAGE_KEY)).toBe('CITIZEN');
+    expect(screen.getByTestId('status')).toHaveTextContent('authenticated');
+    expect(screen.getByTestId('role')).toHaveTextContent('STATE');
+    expect(mockedAuth.fetchCurrentUser).not.toHaveBeenCalled();
   });
 
   it('throws if useSession is used outside a provider', () => {
