@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { getHealth } from '../api/health';
+import { Card, PageHeader, SectionHeader, StatusBadge } from '../ui';
 
 type BackendState =
   { kind: 'checking' } | { kind: 'ok'; service: string } | { kind: 'unreachable'; detail: string };
@@ -30,22 +31,34 @@ export function HomePage() {
   }, []);
 
   return (
-    <section>
-      <h1>MPLADSentinel</h1>
-      <p>
-        AI-powered MPLADS monitoring and analytics platform. This is the project foundation build —
-        feature modules are added in later phases.
-      </p>
+    <div className="ui-stack">
+      <PageHeader
+        title="MPLADSentinel"
+        description="AI-powered MPLADS monitoring and analytics platform. This is the foundation build — feature modules are added in later phases."
+      />
 
-      <h2>Backend connectivity</h2>
-      {backend.kind === 'checking' && <p>Checking backend…</p>}
-      {backend.kind === 'ok' && <p>Connected to backend service: {backend.service}</p>}
-      {backend.kind === 'unreachable' && (
-        <p>
-          Backend not reachable ({backend.detail}). Start the backend on its configured port and
-          reload.
-        </p>
-      )}
-    </section>
+      <Card>
+        <SectionHeader
+          title="Backend connectivity"
+          description="Single health check via the centralized API client."
+        />
+        {backend.kind === 'checking' && <p className="text-secondary">Checking backend…</p>}
+        {backend.kind === 'ok' && (
+          <p>
+            <StatusBadge tone="success">Connected</StatusBadge>{' '}
+            <span className="text-secondary">Connected to backend service: {backend.service}</span>
+          </p>
+        )}
+        {backend.kind === 'unreachable' && (
+          <p>
+            <StatusBadge tone="warning">Unreachable</StatusBadge>{' '}
+            <span className="text-secondary">
+              Backend not reachable ({backend.detail}). Start the backend on its configured port and
+              reload.
+            </span>
+          </p>
+        )}
+      </Card>
+    </div>
   );
 }

@@ -273,3 +273,174 @@ The following versions/major versions are adopted for the initial MPLADSentinel 
 - npm
 - PostgreSQL 16.x
 - Flyway
+
+## D26 — Frontend Data Provider Abstraction
+
+**Decision:**
+
+The Round-1 frontend is built broadly across the planned screens using a
+controlled demo data source first, and individual screens migrate to the real
+Spring Boot REST APIs as those APIs are implemented.
+
+To make that migration a configuration change rather than a UI rewrite, the
+frontend accesses data only through a `DataProvider` abstraction
+(`frontend/src/data/`):
+
+- React screens call a feature-level service (e.g. `useProjectsService`), which
+  depends on a `DataProvider`, not on `fetch`, the API client, or fixtures.
+- Two `DataProvider` implementations exist: `DemoDataProvider` (local,
+  clearly-marked demo fixtures) and `ApiDataProvider` (real data via the existing
+  centralized API client in `frontend/src/api/`). The browser still never calls
+  PostgreSQL, IPFS, Hyperledger Fabric or external MPLADS/Empowered Indian APIs
+  directly.
+- The active provider is selected from the `VITE_DATA_SOURCE` env var
+  (`demo` default, or `api`).
+- Frontend domain types mirror the backend `Work` model; no field is introduced
+  that the backend does not expose.
+- Demo fixtures will later be derived from real ingested MPLADS records; they
+  remain served through `DemoDataProvider` so no UI change is needed.
+
+No new state-management or data-fetching framework (Redux, Zustand, React
+Query, …) is introduced. A small `AsyncState` contract + `useAsyncData` hook
+covers loading / empty / success / error.
+
+This decision does not change the overall system architecture (D1–D3): the web
+portal still communicates with the backend only through REST APIs.
+
+## D27 — Frontend Visual Foundation
+
+**Decision:**
+
+The Round-1 web portal's visual layer is built with plain CSS plus a centralized
+CSS-custom-property design-token system (`frontend/src/styles/tokens.css`) and a
+small set of reusable presentation primitives (`frontend/src/ui/`). It uses a
+reusable application shell (`frontend/src/layout/AppShell`) — sticky header, left
+sidebar navigation collapsing to a drawer below 1024px, routed content area.
+
+No UI-component library, CSS framework or CSS-in-JS runtime (Tailwind, MUI,
+Chakra, styled-components, …) is introduced. The system font stack is used; no
+web-font dependency is added.
+
+Status is never communicated by colour alone (semantic glyph + text label
+alongside colour).
+
+Charting: no charting dependency is added in this phase. The Government Dashboard
+phase decides whether a single lightweight charting library is warranted.
+
+This is a UI-implementation decision; it does not alter `architecture.md`,
+`requirements.md` or `round1-scope.md`.
+
+## D28 — Dashboard charting: no library
+
+**Decision:**
+
+The Government Intelligence Dashboard's visualisations (estimated-cost vs
+recorded-payments comparison, recommended vs completed distribution, top states
+by work count) are single-series horizontal bar comparisons over a small
+dataset. They are implemented with a dependency-free `BarList` primitive
+(`frontend/src/ui/BarList.tsx`, plain CSS). No charting library
+(Recharts / Chart.js / D3 / …) is added — one would be disproportionate to the
+need and add significant bundle weight. This can be revisited if a later screen
+needs time-series or interactive charts.
+
+Frontend risk fields (`riskLevel`, `riskReasons`) remain a demo view model on
+`ProjectRisk`, kept separate from the source-of-truth `Project` fields; the
+dashboard is wired so the real risk API can supply them later without changing
+the presentation components. UI-implementation only — no change to
+`architecture.md`, `requirements.md` or `round1-scope.md`.
+## D29 — Frontend rule-based risk stand-in
+
+**Decision:**
+
+Until the Round-1 risk engine exists as a Spring Boot API (D22), risk indicators
+shown in the web portal are produced by a client-side rule layer,
+`frontend/src/data/risk/rules.ts` (`deriveRisk`).
+
+- It is **not** an ML model and **not** the production engine. It evaluates the
+  same *class* of rules the backend engine will, so the Risk & Alerts screen
+  (`/risk`), the dashboard's "Projects Requiring Attention" section and the
+  Project Details risk card can be built and demoed now.
+- Every rule uses only fields the verified source provides (financial figures,
+  installment count, payment-data state, recommended date, same-category cost
+  cohort). There is deliberately **no** physical-progress, geospatial,
+  duplicate-project or delay-prediction rule — the source has none of that
+  (`docs/data-source.md` §14).
+- Output is the existing `ProjectRisk` view model: `level`
+  (`HIGH` / `MEDIUM` / `LOW` / `UNKNOWN`), a 0–100 `score`, and human-readable
+  `reasons`. `UNKNOWN` means "not enough data to assess" and is never presented
+  as a clean result; scores are indicators requiring investigation, never proof
+  of misuse.
+- Age-based rules (e.g. "recommended long ago, no payments") are evaluated
+  against a fixed reference date (`RISK_REFERENCE_DATE` in the demo fixtures) so
+  demo output is deterministic.
+- The screens consume risk **only** through `DataProvider.getProjectRisk`. When
+  the backend risk API lands, `ApiDataProvider.getProjectRisk` returns its
+  response and this module is used only by `DemoDataProvider` (or removed) — no
+  presentation component changes.
+
+UI-implementation only — no change to `architecture.md`, `requirements.md` or
+`round1-scope.md`. The authoritative risk engine remains a backend concern
+(D22).
+
+## D30 — Frontend RBAC scaffold
+
+**Decision:**
+
+The Round-1 web portal carries a client-side RBAC scaffold (`frontend/src/auth/`)
+so role-aware navigation and screens can be built and demoed before backend
+sign-in exists.
+
+- **Roles** (`roles.ts`): MoSPI / Ministry, State Authority, District Authority,
+  Auditor, MP, Citizen. Field Officer is omitted — it has no web interface in
+  Round 1 (D23).
+- **Access map** (`access.ts`): each routed screen belongs to an `Area`;
+  `canAccess(role, area)` is the single role→visibility mapping. Round-1 rule:
+  authority roles see all monitoring areas (overview, projects, risk, audit);
+  Citizen sees Projects and the public areas (citizen portal, grievances) only.
+- **Session** (`SessionProvider` / `useSession`): the active role is chosen from
+  the header **Viewing as** selector and persisted to `localStorage`. This
+  stands in for authentication; it performs none.
+- **Enforcement points**: the sidebar hides items the role cannot access;
+  `RequireRole` wraps each route and renders a "not available for your role"
+  state instead of the screen.
+
+This is a UX convenience only. It is **not** a security boundary: per D5,
+Role-Based Access Control is enforced by Spring Security at the API layer, and
+frontend restrictions alone are never sufficient. When backend auth lands, the
+session is populated from the authenticated principal and the same `canAccess`
+map keeps driving navigation.
+
+UI-implementation only — no change to `architecture.md`, `requirements.md` or
+`round1-scope.md` (this is scope item P0.5, "Basic RBAC", frontend portion).
+
+## D31 — Round 1 authentication approach
+
+**Decision:**
+
+Backend authentication for Round 1 is deliberately minimal — enough to make the
+RBAC enforcement (D5) real for the demo, without building a full identity
+system.
+
+- **Seeded demo users only.** One account per web role (MoSPI / Ministry, State
+  Authority, District Authority, Auditor, MP, Citizen), created by a Flyway seed
+  / bootstrap. No self-registration, no email verification, no password reset,
+  no MFA.
+- **Simple credential login.** `POST /api/auth/login` (username + password),
+  `GET /api/auth/me`, logout. A stateful server session is preferred over JWT
+  for a single SPA against a modular monolith; JWT is an acceptable alternative
+  if it proves simpler in practice.
+- **SecurityConfig flips.** `anyRequest().permitAll()` becomes
+  `authenticated()`, with per-endpoint authority rules matching the frontend
+  `canAccess` map. `/api/health` stays public.
+- **Frontend.** A login page replaces the D30 "Viewing as" dropdown.
+  `SessionProvider` populates the session from `GET /api/auth/me` instead of
+  `localStorage`. `RequireRole` and the client `canAccess` map are unchanged —
+  they now read the authenticated role. Passwords/tokens are never stored in
+  source (D5 / project rules).
+
+This supersedes the "role dropdown" half of D30. The client `canAccess` map
+stays client-side as a navigation/UX convenience; the backend remains the
+authoritative check.
+
+Advanced identity work (real IdP / SSO, Field Officer mobile auth, granular
+approval permissions) is out of Round 1 scope.

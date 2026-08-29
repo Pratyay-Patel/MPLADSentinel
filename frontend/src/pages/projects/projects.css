@@ -1,0 +1,49 @@
+/**
+ * Project Register (`/projects`) — layout only. Reuses the Phase 3A-2 tokens and
+ * primitives (Select, SearchInput, DataTable, StatusBadge, RiskLevelBadge).
+ */
+
+.reg-filters {
+  background: var(--color-surface);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.reg-filters__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+
+.reg-filters__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.reg-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reg-cell__sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.reg-risk {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.reg-risk__score {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
