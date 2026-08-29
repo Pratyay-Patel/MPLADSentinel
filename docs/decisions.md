@@ -444,3 +444,35 @@ authoritative check.
 
 Advanced identity work (real IdP / SSO, Field Officer mobile auth, granular
 approval permissions) is out of Round 1 scope.
+
+## D32 — Citizen self-registration (post-B4)
+
+**Decision:**
+
+After the core backend integration (B1 auth, B2 works APIs, B3 risk engine,
+B4 grievances API) is built and stable, add **citizen-only self-registration**.
+This refines D31, which deliberately shipped B1 with seeded accounts and no
+signup.
+
+- **Scope: citizens only.** `POST /api/auth/register` is public and always
+  creates the account with role `CITIZEN`. The role is assigned by the server
+  and never taken from the request body. Government roles (MoSPI / Ministry,
+  State Authority, District Authority, Auditor, MP) stay
+  administrator-provisioned — there is no self-service path to a privileged
+  role.
+- **Data.** Registration collects display name, a unique email, and a password
+  (with confirmation). A Flyway migration (V7, after `app_user` V5 and
+  `grievances` V6) adds the columns needed — at minimum `email`, and an
+  `email_verified` flag if verification is implemented.
+- **Frontend.** A `/register` page, public and outside the application shell,
+  linked from `/login`. On success the user is signed in and lands on
+  `/citizen`.
+- **Sequencing.** This is backend-integration step **B4a**. It must not begin
+  before B1–B4 are stable, and it must not delay them.
+- **Deliberately minimal for Round 1** (documented limitations, revisit before
+  production): email verification, password reset, and abuse protection
+  (rate limiting / captcha) on the public endpoint are optional and added only
+  if time allows.
+
+Superseded part of D31: "no self-registration" applied to B1; from B4a a
+citizen may self-register. Everything else in D31 stands.

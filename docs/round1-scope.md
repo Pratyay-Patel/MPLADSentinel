@@ -161,6 +161,20 @@ The frontend role-split (form vs. queue, status transitions) can land ahead of
 persistence on the `DataProvider` seam; until the table exists the
 `DemoDataProvider` holds grievances for the browser session only.
 
+P1.6 — Citizen self-registration *(backend-integration step B4a — after B1–B4, decision D32)*
+
+- Public `POST /api/auth/register` creating an `app_user` with role **always
+  server-assigned `CITIZEN`** — the role is never read from the request body.
+- Fields: display name, email (unique), password + confirmation, with
+  server-side strength / format validation; duplicate email → 409.
+- Frontend `/register` page (public, outside the shell) linked from `/login`
+  ("Create a citizen account"). On success: sign in and land on `/citizen`.
+- Government roles (MoSPI / State / District / Auditor / MP) remain
+  administrator-provisioned — they cannot self-register.
+- Round-1 minimal: email verification, password reset and abuse throttling /
+  captcha on the public endpoint are noted as limitations to add before any
+  production use, not built for the demo unless time allows.
+
 ## 4. P2 — Deferred
 
 The following features are explicitly outside the Round 1 implementation scope:
@@ -227,6 +241,10 @@ Development follows this order. Steps 1–4 built the backend foundation and the
         ↓
 15. B4 — grievances table (Flyway V6) + GET/POST/PATCH /api/grievances
     → flip listGrievances / submitGrievance / updateGrievanceStatus
+        ↓
+15a. B4a — Citizen self-registration (D32): public POST /api/auth/register
+     (role always server-assigned CITIZEN), /register page linked from /login.
+     Government roles stay admin-provisioned. Only after B1–B4 are stable.
         ↓
 16. IPFS evidence
         ↓
