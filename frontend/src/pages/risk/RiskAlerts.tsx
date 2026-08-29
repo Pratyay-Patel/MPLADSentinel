@@ -279,6 +279,7 @@ function RiskBody({ data }: { data: RiskListData }) {
         caption="Risk and alerts"
         columns={columns}
         rows={filtered}
+        pageSize={25}
         getRowKey={({ project }) => project.sourceWorkId}
         emptyState={
           <EmptyState

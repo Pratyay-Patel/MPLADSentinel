@@ -53,10 +53,12 @@ describe('createCitizenService', () => {
     expect(await service.get(-1)).toBeNull();
   });
 
-  it('propagates a listProjects failure', async () => {
+  it('propagates a listPublicProjects failure', async () => {
     const provider: DataProvider = {
       ...createDemoDataProvider(),
-      listProjects: vi.fn().mockRejectedValue(new ProviderError('unavailable', 'backend down')),
+      listPublicProjects: vi
+        .fn()
+        .mockRejectedValue(new ProviderError('unavailable', 'backend down')),
     };
     await expect(createCitizenService(provider).list()).rejects.toThrow('backend down');
   });

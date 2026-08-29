@@ -67,6 +67,13 @@ mplads:
     payments-inter-request-delay: ${MPLADS_INGEST_PAYMENTS_DELAY:200ms}
     payments-recheck-absent-after: ${MPLADS_INGEST_PAYMENTS_RECHECK_ABSENT:7d}
     payments-recheck-present-after: ${MPLADS_INGEST_PAYMENTS_RECHECK_PRESENT:30d}
+    # Dev/demo only: ingestion steps to run once at startup (recommended, completed,
+    # payments, sample). Empty = do nothing. Populates the DB so the /api/works APIs
+    # return data. "sample" ingests a small, geographically diverse slice (see below).
+    run-on-startup: ${MPLADS_INGEST_RUN_ON_STARTUP:}
+    # "sample" step: first N pages of recommended + completed works per state.
+    sample-pages-per-state: ${MPLADS_INGEST_SAMPLE_PAGES_PER_STATE:1}
+    sample-states: ${MPLADS_INGEST_SAMPLE_STATES:Andhra Pradesh,Arunachal Pradesh,Assam,Bihar,Chhattisgarh,Goa,Gujarat,Haryana,Himachal Pradesh,Jharkhand,Karnataka,Kerala,Madhya Pradesh,Maharashtra,Manipur,Meghalaya,Mizoram,Nagaland,Odisha,Punjab,Rajasthan,Sikkim,Tamil Nadu,Telangana,Tripura,Uttar Pradesh,Uttarakhand,West Bengal,Delhi,Jammu And Kashmir,Ladakh,Puducherry,Chandigarh,Andaman And Nicobar Islands}
 
 management:
   endpoints:

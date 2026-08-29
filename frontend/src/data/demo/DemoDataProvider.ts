@@ -1,6 +1,7 @@
 import { deriveRisk } from '../risk/rules';
 import type { DataProvider } from '../DataProvider';
 import { ProviderError } from '../errors';
+import { toPublicProject } from '../publicProject';
 import type {
   BackendHealth,
   Grievance,
@@ -93,6 +94,17 @@ export function createDemoDataProvider(): DataProvider {
       ensureNotAborted(signal);
       const found = demoProjects.find((p) => p.sourceWorkId === sourceWorkId);
       return found ? { ...found, dataQualityFlags: [...found.dataQualityFlags] } : null;
+    },
+
+    async listPublicProjects(signal) {
+      ensureNotAborted(signal);
+      return demoProjects.map(toPublicProject);
+    },
+
+    async getPublicProject(reference, signal) {
+      ensureNotAborted(signal);
+      const found = demoProjects.find((p) => p.sourceWorkId === reference);
+      return found ? toPublicProject(found) : null;
     },
 
     async getProjectSummary(signal) {

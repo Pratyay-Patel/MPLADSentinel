@@ -60,6 +60,20 @@ class CompletedWorksClientTest extends AbstractEmpoweredIndianClientTest {
     }
 
     @Test
+    void addsTheStateFilterToTheQueryWhenSet() throws InterruptedException {
+        server.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(fixture("completed-page1.json")));
+
+        defaultClient().fetchCompletedWorks(ApiPageRequest.of(2, 100, "West Bengal"));
+
+        RecordedRequest request = server.takeRequest();
+        assertThat(request.getRequestUrl().queryParameter("state")).isEqualTo("West Bengal");
+        assertThat(request.getRequestUrl().queryParameter("page")).isEqualTo("2");
+    }
+
+    @Test
     void completedRecordsDoNotCarryRecommendedOnlyFields() {
         server.enqueue(new MockResponse()
                 .setResponseCode(200)

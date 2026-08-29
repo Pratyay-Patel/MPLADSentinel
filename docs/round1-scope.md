@@ -202,7 +202,7 @@ Development follows this order. Steps 1–4 built the backend foundation and the
         ↓
 3. PostgreSQL Data Layer                      [done]
         ↓
-4. Spring Boot REST APIs                      [auth done (B1); data APIs = B2, step 13]
+4. Spring Boot REST APIs                      [auth + works read APIs done (B1, B2); risk = B3, grievances = B4]
         ↓
 --- frontend sprint (DataProvider seam) ---
 5. React Dashboard                            [done]
@@ -232,9 +232,22 @@ Development follows this order. Steps 1–4 built the backend foundation and the
      SecurityConfig → authenticated(); /login page +
      RequireAuth; header sign-out)
         ↓
-13. B2 — GET /api/works, /api/works/{id}, /api/works/summary,
-    /api/works/{id}/payments  → flip listProjects / getProject /
-    getProjectSummary / getProjectPayments
+13. B2 — Works read APIs                        [done]
+    - GET /api/works, /api/works/{id}, /api/works/summary,
+      /api/works/{id}/payments — authority roles only (D33)
+    - GET /api/public/works, /api/public/works/{id} — limited public
+      projection for the Citizen Portal (D33)
+    - flip listProjects / getProject / getProjectSummary /
+      getProjectPayments + listPublicProjects / getPublicProject
+    - IngestionStartupRunner (mplads.ingestion.run-on-startup) populates
+      the dev/demo DB; ingestion stays HTTP-free otherwise. The `sample`
+      step ingests the first N pages of recommended+completed works per
+      state (verified `state` filter) for a geographically diverse slice,
+      instead of state-alphabetical sequential paging
+    - interim frontend perf: the list screens render all works at once, so
+      DataTable got client-side pagination (pageSize=25) and the risk fan-out
+      was cut (one probe, not one rejected call per work, pre-B3). Proper
+      server-side paging is B4b.
         ↓
 14. B3 — Risk engine: GET /api/works/{id}/risk (rule-based, server-side, D22)
     → flip getProjectRisk; retire the client deriveRisk stand-in
@@ -245,6 +258,16 @@ Development follows this order. Steps 1–4 built the backend foundation and the
 15a. B4a — Citizen self-registration (D32): public POST /api/auth/register
      (role always server-assigned CITIZEN), /register page linked from /login.
      Government roles stay admin-provisioned. Only after B1–B4 are stable.
+        ↓
+15b. B4b — Works pagination + filtering API (updates D33): GET /api/works and
+     GET /api/public/works take page/size + server-side filters (state,
+     district, category, lifecycle, risk, search) and return a paged envelope
+     {content, page, size, totalElements}. DataProvider gains a
+     paged+filtered list method; Project Register / dashboard exploration /
+     Risk & Alerts / Citizen Portal adopt it and drop the "fetch everything,
+     filter + paginate client-side" approach. Needed because the real dataset
+     is ~83k works; deferred to here so it lands once risk (B3) is a real
+     filterable field.
         ↓
 16. IPFS evidence
         ↓

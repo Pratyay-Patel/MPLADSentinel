@@ -43,6 +43,20 @@ describe('DemoDataProvider', () => {
     expect(await provider.getProject(-1)).toBeNull();
   });
 
+  it('serves a publicly-releasable projection with no internal fields', async () => {
+    const [full] = await provider.listProjects();
+    const publicRows = await provider.listPublicProjects();
+    const one = await provider.getPublicProject(full.sourceWorkId);
+
+    expect(publicRows).toHaveLength((await provider.listProjects()).length);
+    for (const key of ['sourceName', 'dataQualityFlags', 'paymentDataState', 'recordedPayments']) {
+      expect(key in publicRows[0]).toBe(false);
+    }
+    expect(one?.reference).toBe(full.sourceWorkId);
+    expect(one?.memberOfParliament).toBe(full.mpName);
+    expect(await provider.getPublicProject(-1)).toBeNull();
+  });
+
   it('summary is a faithful roll-up of the project set', async () => {
     const [projects, summary] = await Promise.all([
       provider.listProjects(),

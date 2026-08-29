@@ -476,3 +476,46 @@ signup.
 
 Superseded part of D31: "no self-registration" applied to B1; from B4a a
 citizen may self-register. Everything else in D31 stands.
+
+## D33 — Works read APIs: authority-facing vs. public split
+
+**Decision:**
+
+The B2 works read APIs are split into two endpoint families rather than one
+shared endpoint with client-side field stripping:
+
+- **`GET /api/works`, `/api/works/{id}`, `/api/works/summary`,
+  `/api/works/{id}/payments`** — the full internal view (`WorkResponse`:
+  data-quality flags, payment state, lifecycle, etc.). Restricted in
+  `SecurityConfig` to the government roles (`MOSPI`, `STATE`, `DISTRICT`,
+  `AUDITOR`, `MP`); a citizen session gets `403`.
+- **`GET /api/public/works`, `/api/public/works/{id}`** — a server-narrowed
+  projection (`PublicWorkResponse` / frontend `PublicProject`): only publicly
+  releasable fields, no risk data, no data-quality flags, no payment internals,
+  no provenance. Any authenticated session may read it; this is what the Citizen
+  Portal calls.
+
+**Why:** CLAUDE.md §5 / §14 — "only publicly releasable information should be
+exposed to citizens." Narrowing on the server means a citizen's browser never
+receives the internal fields at all, rather than relying on the frontend to
+omit them from the view. It keeps the pre-backend behaviour (the demo
+`toPublicProject` projection) but now enforced at the data boundary.
+
+**Frontend:** the `DataProvider` gains `listPublicProjects` / `getPublicProject`;
+`DemoDataProvider` derives them via `toPublicProject`, `ApiDataProvider` calls
+the public endpoints. The Citizen Portal service (`citizen.ts`) uses only these
+two; it can no longer reach `listProjects` / `getProject`.
+
+**Not done in B2** (revisit at B4b — round1-scope §5): pagination and filtering
+are client-side over the full list for both families. B4b makes `GET /api/works`
+and `GET /api/public/works` take `page`/`size` + server-side filters and return a
+paged envelope; the frontend adopts a paged list method and drops the
+fetch-everything approach. Deferred to B4b so it lands once risk (B3) is a real
+filterable field. A dedicated public *summary* endpoint is also not built (the
+portal derives filter options from the list) — folded into B4b.
+
+**Interim (B2, perf):** with ~6k demo works the list screens rendered 130k+ DOM
+nodes and took 9–12 s. `DataTable` gained client-side pagination (`pageSize=25`)
+and `loadProjectsWithRisk` now probes the risk endpoint once instead of firing
+one rejected call per work while it is unimplemented (pre-B3). Stopgap; B4b is
+the real fix.

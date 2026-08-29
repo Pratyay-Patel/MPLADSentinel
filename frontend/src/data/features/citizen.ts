@@ -1,66 +1,19 @@
 import type { DataProvider } from '../DataProvider';
-import type { LifecycleState, Money, Project, ProjectHouse } from '../types';
+import type { PublicProject } from '../publicProject';
 
 /**
  * Feature service for the Citizen Portal (`/citizen`) — a read-only, public view
  * of MPLADS works.
  *
- * The portal must only ever show **publicly releasable** information. Rather than
- * trusting each component to omit the right fields, the service maps every
- * `Project` through {@link toPublicProject} into a narrowed {@link PublicProject}
- * that simply does not carry risk scores, data-quality flags, payment-retrieval
- * internals or source-provenance framing. A component cannot leak what it never
- * receives.
- *
- * Data still flows Project → DataProvider; swapping demo ↔ api changes nothing
- * here.
+ * The portal must only ever show **publicly releasable** information. That is
+ * enforced at the data boundary, not in components: the provider returns
+ * {@link PublicProject} values (server-narrowed via `GET /api/public/works` in
+ * `api` mode, {@link toPublicProject}-narrowed in `demo` mode) that simply do
+ * not carry risk scores, data-quality flags, payment internals or provenance.
+ * This service only sorts and derives filter options.
  */
-export interface PublicProject {
-  /** Source work id — used only to address the public detail route. Never shown as an official id. */
-  reference: number;
-  workDescription: string | null;
-  category: string | null;
-  state: string | null;
-  district: string | null;
-  location: string | null;
-  house: ProjectHouse | null;
-  lsTerm: number | null;
-  memberOfParliament: string | null;
-  constituency: string | null;
-  estimatedCost: Money | null;
-  finalCost: Money | null;
-  status: LifecycleState;
-  sourceStatus: string | null;
-  expectedBeneficiaries: number | null;
-  recommendedOn: string | null;
-  recommendedYear: number | null;
-  completedOn: string | null;
-  completionYear: number | null;
-}
-
-export function toPublicProject(project: Project): PublicProject {
-  return {
-    reference: project.sourceWorkId,
-    workDescription: project.workDescription,
-    category: project.category,
-    state: project.state,
-    district: project.district,
-    location: project.locationRaw,
-    house: project.house,
-    lsTerm: project.lsTerm,
-    memberOfParliament: project.mpName,
-    constituency: project.constituency,
-    estimatedCost: project.estimatedCost,
-    finalCost: project.finalCost,
-    status: project.lifecycleState,
-    sourceStatus: project.sourceStatusRaw,
-    expectedBeneficiaries: project.expectedBeneficiaries,
-    recommendedOn: project.recommendedOn,
-    recommendedYear: project.recommendedYear,
-    completedOn: project.completedOn,
-    completionYear: project.completionYear,
-  };
-}
+export type { PublicProject } from '../publicProject';
+export { toPublicProject } from '../publicProject';
 
 export interface CitizenListData {
   projects: PublicProject[];
@@ -79,13 +32,11 @@ function uniqSorted(values: (string | null | undefined)[]): string[] {
 export function createCitizenService(provider: DataProvider): CitizenService {
   return {
     async list(signal) {
-      const projects = (await provider.listProjects(signal))
-        .map(toPublicProject)
-        .sort(
-          (a, b) =>
-            (a.workDescription ?? '').localeCompare(b.workDescription ?? '') ||
-            a.reference - b.reference,
-        );
+      const projects = (await provider.listPublicProjects(signal)).sort(
+        (a, b) =>
+          (a.workDescription ?? '').localeCompare(b.workDescription ?? '') ||
+          a.reference - b.reference,
+      );
       return {
         projects,
         filterOptions: {
@@ -94,9 +45,8 @@ export function createCitizenService(provider: DataProvider): CitizenService {
         },
       };
     },
-    async get(reference, signal) {
-      const project = await provider.getProject(reference, signal);
-      return project ? toPublicProject(project) : null;
+    get(reference, signal) {
+      return provider.getPublicProject(reference, signal);
     },
   };
 }

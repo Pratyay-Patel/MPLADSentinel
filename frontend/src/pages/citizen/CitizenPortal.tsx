@@ -249,6 +249,7 @@ function PortalBody({ data }: { data: CitizenListData }) {
         caption="Public list of MPLADS works"
         columns={columns}
         rows={filtered}
+        pageSize={25}
         getRowKey={(project) => project.reference}
         emptyState={
           <EmptyState

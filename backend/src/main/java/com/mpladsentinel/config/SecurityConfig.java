@@ -1,10 +1,14 @@
 package com.mpladsentinel.config;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mpladsentinel.common.web.ApiErrorResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +25,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -36,8 +41,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  *       ({@code AppUserDetailsService}) with BCrypt hashing;</li>
  *   <li>every endpoint requires authentication except {@code POST /api/auth/login},
  *       {@code GET /api/health} and the actuator health/info probes;</li>
- *   <li>unauthenticated calls get a JSON {@link ApiErrorResponse} 401, not a
- *       redirect or an HTML error page;</li>
+ *   <li>{@code GET /api/works/**} additionally requires a government role
+ *       (MoSPI / State / District / Auditor / MP); the Citizen Portal reads the
+ *       limited {@code /api/public/works} instead;</li>
+ *   <li>unauthenticated calls get a JSON {@link ApiErrorResponse} 401 and
+ *       forbidden calls a JSON 403 — never a redirect or HTML error page;</li>
  *   <li>configurable CORS with credentials for the SPA dev origin.</li>
  * </ul>
  *
@@ -47,8 +55,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * allow-listed dev origin; session-fixation rotation on login is not performed.
  * Both are revisited before any production deployment.
  *
- * <p>Per-endpoint authority rules (matching the frontend {@code canAccess} map)
- * are added alongside each business API as it is built (works, grievances, …).
+ * <p>Further per-endpoint authority rules (matching the frontend {@code canAccess}
+ * map) are added alongside each business API as it is built (grievances, …).
  */
 @Configuration
 @EnableWebSecurity
@@ -63,7 +71,8 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                            AuthenticationEntryPoint restAuthenticationEntryPoint)
+                                            AuthenticationEntryPoint restAuthenticationEntryPoint,
+                                            AccessDeniedHandler restAccessDeniedHandler)
             throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -75,14 +84,20 @@ public class SecurityConfig {
                 .logout(logout -> logout.disable())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(restAuthenticationEntryPoint)
+                        .accessDeniedHandler(restAccessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         // Public: login + operational probes.
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
-                        // Everything else requires a signed-in session. Per-role
-                        // authority rules are added with each business API.
+                        // Authority-facing work APIs: government roles only. The
+                        // Citizen Portal uses /api/public/works, which just
+                        // needs a signed-in session (matched by anyRequest).
+                        .requestMatchers(HttpMethod.GET, "/api/works", "/api/works/**")
+                        .hasAnyRole("MOSPI", "STATE", "DISTRICT", "AUDITOR", "MP")
+                        // Everything else requires a signed-in session.
                         .anyRequest().authenticated());
 
         return http.build();
@@ -102,17 +117,29 @@ public class SecurityConfig {
     /** Returns the standard {@link ApiErrorResponse} body with a 401 for unauthenticated calls. */
     @Bean
     AuthenticationEntryPoint restAuthenticationEntryPoint(ObjectMapper objectMapper) {
-        return (request, response, authException) -> {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            ApiErrorResponse body = new ApiErrorResponse(
-                    Instant.now(),
-                    HttpStatus.UNAUTHORIZED.value(),
-                    HttpStatus.UNAUTHORIZED.getReasonPhrase(),
-                    "Authentication required.",
-                    request.getRequestURI());
-            objectMapper.writeValue(response.getWriter(), body);
-        };
+        return (request, response, authException) ->
+                writeError(objectMapper, request, response, HttpStatus.UNAUTHORIZED,
+                        "Authentication required.");
+    }
+
+    /** Returns the standard {@link ApiErrorResponse} body with a 403 when the role is not permitted. */
+    @Bean
+    AccessDeniedHandler restAccessDeniedHandler(ObjectMapper objectMapper) {
+        return (request, response, accessDeniedException) ->
+                writeError(objectMapper, request, response, HttpStatus.FORBIDDEN,
+                        "You do not have access to this resource.");
+    }
+
+    private static void writeError(ObjectMapper objectMapper,
+                                   HttpServletRequest request,
+                                   HttpServletResponse response,
+                                   HttpStatus status,
+                                   String message) throws IOException {
+        response.setStatus(status.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        objectMapper.writeValue(response.getWriter(), new ApiErrorResponse(
+                Instant.now(), status.value(), status.getReasonPhrase(), message,
+                request.getRequestURI()));
     }
 
     private CorsConfigurationSource corsConfigurationSource() {

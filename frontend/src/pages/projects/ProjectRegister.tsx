@@ -316,6 +316,7 @@ function RegisterBody({ data }: { data: ProjectRegisterData }) {
         caption="Project register"
         columns={columns}
         rows={filtered}
+        pageSize={25}
         getRowKey={({ project }) => project.sourceWorkId}
         emptyState={
           <EmptyState

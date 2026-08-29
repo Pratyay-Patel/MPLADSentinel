@@ -84,6 +84,7 @@ export function ProjectExploration({ rows, risksByWorkId }: ProjectExplorationPr
       caption="Project exploration"
       columns={columns}
       rows={rows}
+      pageSize={25}
       getRowKey={(project) => project.sourceWorkId}
       emptyState={
         <EmptyState

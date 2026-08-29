@@ -1,3 +1,4 @@
+import type { PublicProject } from './publicProject';
 import type {
   BackendHealth,
   DataSource,
@@ -38,6 +39,16 @@ export interface DataProvider {
 
   /** One project by its Empowered Indian source work id, or `null` if unknown. */
   getProject(sourceWorkId: number, signal?: AbortSignal): Promise<Project | null>;
+
+  /**
+   * Publicly releasable view of every work — the only project data a citizen
+   * receives. In `api` mode this is a distinct, server-narrowed endpoint
+   * (`GET /api/public/works`); citizens cannot reach {@link listProjects}.
+   */
+  listPublicProjects(signal?: AbortSignal): Promise<PublicProject[]>;
+
+  /** One publicly releasable work view by source work id, or `null` if unknown. */
+  getPublicProject(reference: number, signal?: AbortSignal): Promise<PublicProject | null>;
 
   /** Aggregate counts / sums over the project set. */
   getProjectSummary(signal?: AbortSignal): Promise<ProjectSummary>;
