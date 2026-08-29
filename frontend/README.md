@@ -71,7 +71,14 @@ src/
   data-quality signals over the available work fields (`src/data/risk/rules.ts`)
   — not an ML model, and a stand-in for the Round-1 risk engine, which runs
   server-side. Reads via `useRiskService()` → `getProjectRisk`.
-- Other feature routes render placeholders until their own phases.
+- **`/citizen`** & **`/citizen/:id`** — Citizen Portal (`src/pages/citizen/`).
+  Read-only public browse of works + a public work view. Every work is served as
+  a `PublicProject` (`data/features/citizen.ts` `toPublicProject`) that carries
+  only publicly releasable fields — no risk score, no data-quality flags, no
+  payment-retrieval internals or provenance framing. Reads via
+  `useCitizenService()` → `DataProvider`.
+- Other feature routes (`/audit`, `/grievances`) render placeholders until their
+  own phases.
 
 Rules:
 

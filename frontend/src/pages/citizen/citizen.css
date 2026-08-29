@@ -1,0 +1,37 @@
+/**
+ * Citizen Portal (`/citizen`, `/citizen/:id`) — layout only. Reuses the
+ * Phase 3A-2 tokens and primitives (Select, SearchInput, DataTable, Card,
+ * KeyValueList, StatusBadge).
+ */
+
+.cit-filters {
+  background: var(--color-surface);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.cit-filters__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.cit-filters__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.cit-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cit-cell__sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}

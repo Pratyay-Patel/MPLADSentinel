@@ -3,7 +3,9 @@ import { createBrowserRouter } from 'react-router-dom';
 import { RequireRole } from '../auth';
 import { AppShell } from '../layout/AppShell';
 import { GovernmentDashboard } from '../pages/dashboard/GovernmentDashboard';
-import { AuditPage, CitizenPage, GrievancesPage } from '../pages/featurePages';
+import { CitizenPortal } from '../pages/citizen/CitizenPortal';
+import { CitizenProjectView } from '../pages/citizen/CitizenProjectView';
+import { AuditPage, GrievancesPage } from '../pages/featurePages';
 import { HomePage } from '../pages/HomePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { ProjectDetail } from '../pages/project-detail/ProjectDetail';
@@ -69,7 +71,15 @@ export const appRouter = createBrowserRouter([
         path: 'citizen',
         element: (
           <RequireRole area="citizen">
-            <CitizenPage />
+            <CitizenPortal />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'citizen/:id',
+        element: (
+          <RequireRole area="citizen">
+            <CitizenProjectView />
           </RequireRole>
         ),
       },

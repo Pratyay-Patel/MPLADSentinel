@@ -9,6 +9,7 @@ import './pages/dashboard/dashboard.css';
 import './pages/projects/projects.css';
 import './pages/project-detail/project-detail.css';
 import './pages/risk/risk.css';
+import './pages/citizen/citizen.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

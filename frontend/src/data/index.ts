@@ -74,4 +74,13 @@ export {
 } from './features/projectRegister';
 export { useProjectRegisterService } from './features/useProjectRegisterService';
 
+export {
+  createCitizenService,
+  toPublicProject,
+  type CitizenService,
+  type CitizenListData,
+  type PublicProject,
+} from './features/citizen';
+export { useCitizenService } from './features/useCitizenService';
+
 export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';
