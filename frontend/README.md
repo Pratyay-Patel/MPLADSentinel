@@ -69,6 +69,13 @@ src/
 
 Rules:
 
+- Screens are role-gated (`src/auth/`). The header **Viewing as** selector sets
+  the active role (persisted to `localStorage`); the sidebar hides sections the
+  role cannot enter and `RequireRole` shows a "not available" state on a blocked
+  route. Roles: MoSPI/Ministry, State/District Authority, Auditor, MP (all
+  monitoring sections) and Citizen (Projects + public sections only). This is UX
+  only — backend authorization (Spring Security, D5) is the real check.
+
 - All backend calls go through `src/api/`. Components must not call `fetch`
   directly.
 - The frontend never calls external MPLADS / third-party APIs — those are

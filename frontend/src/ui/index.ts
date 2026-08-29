@@ -17,6 +17,7 @@ export { SearchInput, type SearchInputProps } from './SearchInput';
 export { Skeleton, LoadingState, type SkeletonProps, type LoadingStateProps } from './Skeleton';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { ErrorState, type ErrorStateProps } from './ErrorState';
+export { ForbiddenState, type ForbiddenStateProps } from './ForbiddenState';
 export { DataTable, type DataTableProps, type Column } from './DataTable';
 export { BarList, type BarListProps, type BarListItem } from './BarList';
 export { KeyValueList, type KeyValueListProps, type KeyValueItem } from './KeyValueList';

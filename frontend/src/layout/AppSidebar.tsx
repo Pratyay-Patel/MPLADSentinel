@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 
+import { canAccess, useSession } from '../auth';
 import { NAV_GROUPS } from './navItems';
 
 export interface AppSidebarProps {
@@ -12,9 +13,16 @@ export interface AppSidebarProps {
 }
 
 export function AppSidebar({ open, onNavigate, id }: AppSidebarProps) {
+  const { role } = useSession();
+
+  const groups = NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => canAccess(role, item.area)),
+  })).filter((group) => group.items.length > 0);
+
   return (
     <aside id={id} className="app-sidebar" data-open={open} aria-label="Section navigation">
-      {NAV_GROUPS.map((group) => (
+      {groups.map((group) => (
         <nav
           key={group.caption ?? 'main'}
           className="app-nav"

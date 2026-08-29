@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 
+import { RequireRole } from '../auth';
 import { AppShell } from '../layout/AppShell';
 import { GovernmentDashboard } from '../pages/dashboard/GovernmentDashboard';
 import { AuditPage, CitizenPage, GrievancesPage, ProjectsPage } from '../pages/featurePages';
@@ -12,6 +13,10 @@ import { RiskAlerts } from '../pages/risk/RiskAlerts';
  * Application route table. The Overview route renders the Government Intelligence
  * Dashboard; the remaining feature routes render lightweight placeholders until
  * their own phases.
+ *
+ * Each area route is wrapped in {@link RequireRole} so a role without access
+ * sees a "not available" state instead of the screen. This is UX only — the
+ * backend authorizes every request (D5).
  */
 export const appRouter = createBrowserRouter([
   {
@@ -19,13 +24,62 @@ export const appRouter = createBrowserRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: 'dashboard', element: <GovernmentDashboard /> },
-      { path: 'projects', element: <ProjectsPage /> },
-      { path: 'projects/:id', element: <ProjectDetail /> },
-      { path: 'risk', element: <RiskAlerts /> },
-      { path: 'audit', element: <AuditPage /> },
-      { path: 'citizen', element: <CitizenPage /> },
-      { path: 'grievances', element: <GrievancesPage /> },
+      {
+        path: 'dashboard',
+        element: (
+          <RequireRole area="overview">
+            <GovernmentDashboard />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'projects',
+        element: (
+          <RequireRole area="projects">
+            <ProjectsPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'projects/:id',
+        element: (
+          <RequireRole area="projects">
+            <ProjectDetail />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'risk',
+        element: (
+          <RequireRole area="risk">
+            <RiskAlerts />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'audit',
+        element: (
+          <RequireRole area="audit">
+            <AuditPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'citizen',
+        element: (
+          <RequireRole area="citizen">
+            <CitizenPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'grievances',
+        element: (
+          <RequireRole area="grievances">
+            <GrievancesPage />
+          </RequireRole>
+        ),
+      },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

@@ -2,9 +2,11 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
+import { SessionProvider } from '../auth';
+import type { Role } from '../auth';
 import { AppShell } from './AppShell';
 
-function renderAt(path: string) {
+function renderAt(path: string, role: Role = 'MOSPI') {
   const router = createMemoryRouter(
     [
       {
@@ -19,7 +21,11 @@ function renderAt(path: string) {
     ],
     { initialEntries: [path] },
   );
-  return render(<RouterProvider router={router} />);
+  return render(
+    <SessionProvider initialRole={role}>
+      <RouterProvider router={router} />
+    </SessionProvider>,
+  );
 }
 
 const NAV_LABELS = [
@@ -41,11 +47,21 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: /skip to main content/i })).toBeInTheDocument();
   });
 
-  it('renders every primary navigation item', () => {
+  it('renders every primary navigation item for an authority role', () => {
     renderAt('/');
     for (const label of NAV_LABELS) {
       expect(screen.getByRole('link', { name: label })).toBeInTheDocument();
     }
+  });
+
+  it('hides authority-only nav items for the Citizen role', () => {
+    renderAt('/', 'CITIZEN');
+    expect(screen.getByRole('link', { name: 'Projects' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Citizen Portal' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Grievances' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Overview' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Risk & Alerts' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Audit' })).not.toBeInTheDocument();
   });
 
   it('marks the current route in the navigation', () => {
@@ -65,5 +81,11 @@ describe('AppShell', () => {
     const close = screen.getByRole('button', { name: /close navigation/i });
     expect(close).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByLabelText('Section navigation')).toHaveAttribute('data-open', 'true');
+  });
+
+  it('offers the role switcher in the header', () => {
+    renderAt('/');
+    const select = screen.getByLabelText('Viewing as');
+    expect(select).toHaveValue('MOSPI');
   });
 });

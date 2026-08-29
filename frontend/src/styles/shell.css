@@ -67,6 +67,34 @@
   color: #dbe6ef;
 }
 
+.app-role-switcher {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.app-role-switcher__label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #a9c2d8;
+}
+
+.app-role-switcher__select {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-brand-700);
+  border-radius: var(--radius-md);
+  background: var(--color-brand-800);
+  color: #eef4f9;
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.app-role-switcher__select:focus-visible {
+  outline: 2px solid var(--color-focus-ring, #7cb3e0);
+  outline-offset: 1px;
+}
+
 .app-menu-toggle {
   display: none;
   align-items: center;
@@ -201,7 +229,8 @@
     display: none;
   }
 
-  .app-header__user .app-header__role {
+  .app-header__user .app-header__role,
+  .app-role-switcher__label {
     display: none;
   }
 }

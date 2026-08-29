@@ -381,3 +381,34 @@ shown in the web portal are produced by a client-side rule layer,
 UI-implementation only — no change to `architecture.md`, `requirements.md` or
 `round1-scope.md`. The authoritative risk engine remains a backend concern
 (D22).
+
+## D30 — Frontend RBAC scaffold
+
+**Decision:**
+
+The Round-1 web portal carries a client-side RBAC scaffold (`frontend/src/auth/`)
+so role-aware navigation and screens can be built and demoed before backend
+sign-in exists.
+
+- **Roles** (`roles.ts`): MoSPI / Ministry, State Authority, District Authority,
+  Auditor, MP, Citizen. Field Officer is omitted — it has no web interface in
+  Round 1 (D23).
+- **Access map** (`access.ts`): each routed screen belongs to an `Area`;
+  `canAccess(role, area)` is the single role→visibility mapping. Round-1 rule:
+  authority roles see all monitoring areas (overview, projects, risk, audit);
+  Citizen sees Projects and the public areas (citizen portal, grievances) only.
+- **Session** (`SessionProvider` / `useSession`): the active role is chosen from
+  the header **Viewing as** selector and persisted to `localStorage`. This
+  stands in for authentication; it performs none.
+- **Enforcement points**: the sidebar hides items the role cannot access;
+  `RequireRole` wraps each route and renders a "not available for your role"
+  state instead of the screen.
+
+This is a UX convenience only. It is **not** a security boundary: per D5,
+Role-Based Access Control is enforced by Spring Security at the API layer, and
+frontend restrictions alone are never sufficient. When backend auth lands, the
+session is populated from the authenticated principal and the same `canAccess`
+map keeps driving navigation.
+
+UI-implementation only — no change to `architecture.md`, `requirements.md` or
+`round1-scope.md` (this is scope item P0.5, "Basic RBAC", frontend portion).
