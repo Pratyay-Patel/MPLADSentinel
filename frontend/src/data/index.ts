@@ -37,4 +37,16 @@ export { resolveDataSource, selectDataProvider } from './selectDataProvider';
 export { createProjectsService, type ProjectsService } from './features/projects';
 export { useProjectsService } from './features/useProjectsService';
 
-export { DEMO_DISCLAIMER } from './demo/fixtures';
+export {
+  createDashboardService,
+  buildFilterOptions,
+  topStatesByWorkCount,
+  paymentRatio,
+  riskHeadline,
+  type DashboardService,
+  type DashboardData,
+  type DashboardFilterOptions,
+  type AttentionItem,
+  type StateWorkCount,
+} from './features/dashboard';
+export { useDashboardService } from './features/useDashboardService';

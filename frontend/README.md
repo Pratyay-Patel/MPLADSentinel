@@ -36,10 +36,22 @@ src/
 - **Primitives** — import from `src/ui`: `Button`, `Card`, `Badge`,
   `StatusBadge`, `MetricCard`, `SectionHeader`, `PageHeader`, `Input`, `Select`,
   `SearchInput`, `Skeleton` / `LoadingState`, `EmptyState`, `ErrorState`,
-  `DataTable`. Presentation only — no data access, no business logic.
+  `DataTable`, `BarList`. Presentation only — no data access, no business logic.
 - **Status** is never colour-only: `StatusBadge` also carries a shape glyph and a
   screen-reader label.
-- **Charts** — no charting dependency yet; the dashboard phase decides.
+- **Charts** — no charting dependency. `BarList` (dependency-free horizontal
+  bars) covers the dashboard's comparisons.
+
+## Screens
+
+- **`/dashboard`** — Government / MoSPI Intelligence Dashboard
+  (`src/pages/dashboard/`). Intelligence-first: national metrics → Projects
+  Requiring Attention (hero) → financial intelligence → work distribution →
+  filters + project exploration → regional insight. Reads data only through
+  `useDashboardService()` → `DataProvider` (seed fixtures until the backend APIs
+  exist). Risk level/reasons are a placeholder view model — there is no risk
+  engine yet.
+- Other feature routes render placeholders until their own phases.
 
 Rules:
 

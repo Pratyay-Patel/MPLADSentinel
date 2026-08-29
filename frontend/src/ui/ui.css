@@ -462,3 +462,73 @@
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--space-4);
 }
+
+/* ---- BarList (dependency-free bar comparison) ------------------- */
+
+.ui-barlist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ui-barlist__row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 12rem) 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.ui-barlist__label {
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-barlist__track {
+  display: block;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  overflow: hidden;
+}
+
+.ui-barlist__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  min-width: 2px;
+}
+
+.ui-barlist__fill[data-tone='brand'] {
+  background: var(--color-brand-600);
+}
+.ui-barlist__fill[data-tone='success'] {
+  background: var(--color-success-fg);
+}
+.ui-barlist__fill[data-tone='warning'] {
+  background: var(--color-warning-fg);
+}
+.ui-barlist__fill[data-tone='danger'] {
+  background: var(--color-danger-fg);
+}
+.ui-barlist__fill[data-tone='neutral'] {
+  background: var(--color-border-strong);
+}
+
+.ui-barlist__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+@media (max-width: 560px) {
+  .ui-barlist__row {
+    grid-template-columns: 1fr auto;
+  }
+  .ui-barlist__track {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}

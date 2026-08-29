@@ -3,20 +3,10 @@ import { useParams } from 'react-router-dom';
 import { PlaceholderPage } from './PlaceholderPage';
 
 /**
- * Routed placeholders for the Round-1 feature screens. Each renders only a
- * heading + a "later phase" notice. The real implementations land in their own
- * phases (Government Dashboard, Project Intelligence, …).
+ * Routed placeholders for the Round-1 feature screens not yet implemented. Each
+ * renders only a heading + a "later phase" notice. (The Overview / Government
+ * Intelligence Dashboard is implemented — see `pages/dashboard/`.)
  */
-
-export function DashboardPage() {
-  return (
-    <PlaceholderPage
-      title="Overview"
-      description="Programme-wide MPLADS monitoring summary."
-      note="Implemented in the Government Dashboard phase."
-    />
-  );
-}
 
 export function ProjectsPage() {
   return (

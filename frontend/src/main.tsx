@@ -5,6 +5,7 @@ import { App } from './App';
 import './styles/global.css';
 import './styles/shell.css';
 import './ui/ui.css';
+import './pages/dashboard/dashboard.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

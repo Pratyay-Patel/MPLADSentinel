@@ -1,0 +1,131 @@
+/**
+ * Government Intelligence Dashboard — layout only. Reuses the Phase 3A-2 design
+ * tokens and primitives; adds section rhythm and the "Projects Requiring
+ * Attention" emphasis treatment.
+ */
+
+.dash-section-title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--space-3);
+}
+
+/* ---- Projects Requiring Attention: the hero section ------------- */
+
+.dash-attention {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--color-brand-700);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-5);
+}
+
+.dash-attention__head {
+  margin-bottom: var(--space-4);
+}
+
+.dash-attention__title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text);
+}
+
+.dash-attention__lede {
+  margin-top: var(--space-2);
+  max-width: 72ch;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ---- table cell helpers -------------------------------------- */
+
+.dash-cell-primary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-cell-primary__title {
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+
+.dash-cell-primary__sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.dash-cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-risk {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.dash-risk__headline {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* ---- two-up analytical row --------------------------------- */
+
+.dash-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+/* ---- filters --------------------------------------------- */
+
+.dash-filters {
+  background: var(--color-surface);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.dash-filters__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-3);
+}
+
+.dash-filters__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+/* ---- notes / disclaimer -------------------------------- */
+
+.dash-note {
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  max-width: 72ch;
+}
+
+/* ---- responsive -------------------------------------- */
+
+@media (max-width: 900px) {
+  .dash-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .dash-attention {
+    padding: var(--space-4);
+  }
+}

@@ -329,3 +329,22 @@ phase decides whether a single lightweight charting library is warranted.
 
 This is a UI-implementation decision; it does not alter `architecture.md`,
 `requirements.md` or `round1-scope.md`.
+
+## D28 — Dashboard charting: no library
+
+**Decision:**
+
+The Government Intelligence Dashboard's visualisations (estimated-cost vs
+recorded-payments comparison, recommended vs completed distribution, top states
+by work count) are single-series horizontal bar comparisons over a small
+dataset. They are implemented with a dependency-free `BarList` primitive
+(`frontend/src/ui/BarList.tsx`, plain CSS). No charting library
+(Recharts / Chart.js / D3 / …) is added — one would be disproportionate to the
+need and add significant bundle weight. This can be revisited if a later screen
+needs time-series or interactive charts.
+
+Frontend risk fields (`riskLevel`, `riskReasons`) remain a demo view model on
+`ProjectRisk`, kept separate from the source-of-truth `Project` fields; the
+dashboard is wired so the real risk API can supply them later without changing
+the presentation components. UI-implementation only — no change to
+`architecture.md`, `requirements.md` or `round1-scope.md`.
