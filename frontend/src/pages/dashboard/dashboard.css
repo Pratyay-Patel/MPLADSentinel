@@ -11,6 +11,18 @@
   margin-bottom: var(--space-3);
 }
 
+.dash-explore-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.dash-explore-head .dash-section-title {
+  margin-bottom: 0;
+}
+
 /* ---- Projects Requiring Attention: the hero section ------------- */
 
 .dash-attention {

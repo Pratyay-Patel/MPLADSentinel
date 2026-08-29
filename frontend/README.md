@@ -51,6 +51,12 @@ src/
   `useDashboardService()` → `DataProvider` (seed fixtures until the backend APIs
   exist). Risk level/reasons come from the client rule layer (see `/risk`) via
   `getProjectRisk`.
+- **`/projects`** — Project Register (`src/pages/projects/`). The full
+  searchable/filterable list of every work — filters for state, district,
+  house, category, status and risk level, plus free-text search. Distinct from
+  the dashboard's compact exploration table (every work, more columns, its own
+  route); the dashboard links here. Reads via `useProjectRegisterService()` →
+  `DataProvider`; filtering is client-side.
 - **`/projects/:id`** — Project Details (`src/pages/project-detail/`). The full
   single-work record — overview, location, financials (estimated vs final cost,
   kept distinct), a rule-based risk-assessment card, payments (state +

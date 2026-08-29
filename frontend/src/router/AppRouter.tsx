@@ -3,10 +3,11 @@ import { createBrowserRouter } from 'react-router-dom';
 import { RequireRole } from '../auth';
 import { AppShell } from '../layout/AppShell';
 import { GovernmentDashboard } from '../pages/dashboard/GovernmentDashboard';
-import { AuditPage, CitizenPage, GrievancesPage, ProjectsPage } from '../pages/featurePages';
+import { AuditPage, CitizenPage, GrievancesPage } from '../pages/featurePages';
 import { HomePage } from '../pages/HomePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { ProjectDetail } from '../pages/project-detail/ProjectDetail';
+import { ProjectRegister } from '../pages/projects/ProjectRegister';
 import { RiskAlerts } from '../pages/risk/RiskAlerts';
 
 /**
@@ -36,7 +37,7 @@ export const appRouter = createBrowserRouter([
         path: 'projects',
         element: (
           <RequireRole area="projects">
-            <ProjectsPage />
+            <ProjectRegister />
           </RequireRole>
         ),
       },

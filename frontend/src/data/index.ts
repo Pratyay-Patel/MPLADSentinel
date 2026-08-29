@@ -65,4 +65,13 @@ export {
 } from './features/risk';
 export { useRiskService } from './features/useRiskService';
 
+export {
+  createProjectRegisterService,
+  type ProjectRegisterService,
+  type ProjectRegisterData,
+  type RegisterRow,
+  type RegisterFilterOptions,
+} from './features/projectRegister';
+export { useProjectRegisterService } from './features/useProjectRegisterService';
+
 export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';

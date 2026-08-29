@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { useAsyncData, useDashboardService, type DashboardData } from '../../data';
 import { Card, EmptyState, ErrorState, LoadingState, PageHeader } from '../../ui';
@@ -85,9 +86,14 @@ function DashboardBody({ data }: { data: DashboardData }) {
       </div>
 
       <section className="ui-stack" aria-labelledby="dash-explore-heading">
-        <h2 id="dash-explore-heading" className="dash-section-title">
-          Project exploration
-        </h2>
+        <div className="dash-explore-head">
+          <h2 id="dash-explore-heading" className="dash-section-title">
+            Project exploration
+          </h2>
+          <Link className="ui-btn ui-btn--ghost ui-btn--sm" to="/projects">
+            Open full register <span aria-hidden>→</span>
+          </Link>
+        </div>
         <DashboardFilters
           filters={filters}
           options={data.filterOptions}
