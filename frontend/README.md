@@ -51,6 +51,13 @@ src/
   `useDashboardService()` → `DataProvider` (seed fixtures until the backend APIs
   exist). Risk level/reasons are a placeholder view model — there is no risk
   engine yet.
+- **`/projects/:id`** — Project Details (`src/pages/project-detail/`). The full
+  single-work record — overview, location, financials (estimated vs final cost,
+  kept distinct), payments (state + installment rows via `getProjectPayments`),
+  a source-date timeline, and provenance / data-quality flags. Built only from
+  fields the source provides (no sanctioned amount, progress %, geo, delay).
+  Reads via `useProjectDetailService()`; an unknown id shows a "work not found"
+  state. Risk is added with the Risk & Alerts feature.
 - Other feature routes render placeholders until their own phases.
 
 Rules:

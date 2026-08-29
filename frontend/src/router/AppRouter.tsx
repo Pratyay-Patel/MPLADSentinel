@@ -6,12 +6,12 @@ import {
   AuditPage,
   CitizenPage,
   GrievancesPage,
-  ProjectDetailPage,
   ProjectsPage,
   RiskPage,
 } from '../pages/featurePages';
 import { HomePage } from '../pages/HomePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
+import { ProjectDetail } from '../pages/project-detail/ProjectDetail';
 
 /**
  * Application route table. The Overview route renders the Government Intelligence
@@ -26,7 +26,7 @@ export const appRouter = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'dashboard', element: <GovernmentDashboard /> },
       { path: 'projects', element: <ProjectsPage /> },
-      { path: 'projects/:id', element: <ProjectDetailPage /> },
+      { path: 'projects/:id', element: <ProjectDetail /> },
       { path: 'risk', element: <RiskPage /> },
       { path: 'audit', element: <AuditPage /> },
       { path: 'citizen', element: <CitizenPage /> },

@@ -532,3 +532,41 @@
     order: 3;
   }
 }
+
+/* ---- KeyValueList (record detail) --------------------------- */
+
+.ui-kv {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ui-kv__row {
+  display: grid;
+  grid-template-columns: minmax(11rem, 16rem) 1fr;
+  gap: var(--space-2) var(--space-5);
+  padding: var(--space-3) 0;
+}
+
+.ui-kv__row + .ui-kv__row {
+  border-top: var(--border);
+}
+
+.ui-kv__key {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.ui-kv__val {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .ui-kv__row {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+}

@@ -1,6 +1,6 @@
 import type { DashboardData } from '../../../data';
 import { BarList, Card, SectionHeader } from '../../../ui';
-import { formatCount } from '../format';
+import { formatCount } from '../../../format';
 
 /**
  * Section 4 — Work Distribution. How many records appear in the recommended vs

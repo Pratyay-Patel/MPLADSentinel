@@ -1,11 +1,10 @@
-import { useParams } from 'react-router-dom';
-
 import { PlaceholderPage } from './PlaceholderPage';
 
 /**
  * Routed placeholders for the Round-1 feature screens not yet implemented. Each
- * renders only a heading + a "later phase" notice. (The Overview / Government
- * Intelligence Dashboard is implemented — see `pages/dashboard/`.)
+ * renders only a heading + a "later phase" notice. (The Overview dashboard and
+ * Project Details are implemented — see `pages/dashboard/` and
+ * `pages/project-detail/`.)
  */
 
 export function ProjectsPage() {
@@ -14,18 +13,6 @@ export function ProjectsPage() {
       title="Projects"
       description="Searchable register of MPLADS works with status and financial indicators."
       note="Implemented in the Project Intelligence phase."
-    />
-  );
-}
-
-export function ProjectDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  return (
-    <PlaceholderPage
-      title="Project details"
-      description="Full record for a single MPLADS work."
-      breadcrumbs={[{ label: 'Projects', to: '/projects' }, { label: `Work ${id ?? ''}`.trim() }]}
-      note="Implemented in the Project Details phase."
     />
   );
 }

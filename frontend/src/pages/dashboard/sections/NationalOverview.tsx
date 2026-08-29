@@ -1,6 +1,6 @@
 import type { DashboardData } from '../../../data';
 import { MetricCard } from '../../../ui';
-import { formatCount, formatINRCompact } from '../format';
+import { formatCount, formatINRCompact } from '../../../format';
 
 /**
  * Section 1 — national monitoring metrics. Definitions are deliberately literal

@@ -16,7 +16,7 @@
  * signal).
  */
 
-import type { Money, Project, ProjectRisk } from '../types';
+import type { Money, PaymentInstallment, Project, ProjectRisk } from '../types';
 
 /** Obviously-synthetic id range so a demo record can never be mistaken for a real work. */
 const DEMO_ID_BASE = 900_000_000;
@@ -420,4 +420,134 @@ export const demoRiskByWorkId: ReadonlyMap<number, ProjectRisk> = new Map([
   risk(12, 'MEDIUM', 41, ['full amount released in a single installment on completion']),
   risk(13, 'HIGH', 74, ['recommended ~3 years ago with no payment records (dormant)']),
   risk(14, 'LOW', 16, ['recently recommended; no indicators yet']),
+]);
+
+function installment(
+  ordinal: number,
+  amount: number,
+  paidOn: string,
+  vendorName: string,
+  implementingAuthorityText: string,
+): PaymentInstallment {
+  return {
+    ordinal,
+    amount: inr(amount),
+    paidOn,
+    vendorName,
+    statusRaw: 'Payment Success',
+    implementingAuthorityText,
+  };
+}
+
+/**
+ * Installment rows for works whose `paymentDataState === 'FETCHED_PRESENT'`.
+ * Sums and counts match the corresponding project's `recordedPayments` /
+ * `paymentInstallments`.
+ */
+export const demoPaymentsByWorkId: ReadonlyMap<number, PaymentInstallment[]> = new Map([
+  [
+    DEMO_ID_BASE + 2,
+    [
+      installment(
+        0,
+        600_000,
+        '2024-08-15',
+        'Shree Constructions',
+        'PUNE (Implementing District Authority)',
+      ),
+      installment(
+        1,
+        600_000,
+        '2024-12-10',
+        'Shree Constructions',
+        'PUNE (Implementing District Authority)',
+      ),
+      installment(
+        2,
+        490_000,
+        '2025-02-20',
+        'Shree Constructions',
+        'PUNE (Implementing District Authority)',
+      ),
+    ],
+  ],
+  [
+    DEMO_ID_BASE + 4,
+    [installment(0, 499_993, '2025-01-20', 'Balaji Infra Works', 'CHITTOOR (District Collector)')],
+  ],
+  [
+    DEMO_ID_BASE + 6,
+    [
+      installment(
+        0,
+        500_000,
+        '2024-01-12',
+        'Ganga Suppliers',
+        'LUCKNOW (Implementing District Authority)',
+      ),
+      installment(
+        1,
+        480_000,
+        '2024-07-05',
+        'Ganga Suppliers',
+        'LUCKNOW (Implementing District Authority)',
+      ),
+    ],
+  ],
+  [
+    DEMO_ID_BASE + 7,
+    [
+      installment(
+        0,
+        300_000,
+        '2025-04-10',
+        'Coastal Electricals',
+        'ERNAKULAM (District Collector)',
+      ),
+      installment(
+        1,
+        245_767,
+        '2025-06-22',
+        'Coastal Electricals',
+        'ERNAKULAM (District Collector)',
+      ),
+    ],
+  ],
+  [
+    DEMO_ID_BASE + 10,
+    [
+      installment(
+        0,
+        400_000,
+        '2024-10-01',
+        'Vidarbha Works',
+        'NAGPUR (Implementing District Authority)',
+      ),
+      installment(
+        1,
+        400_000,
+        '2025-01-15',
+        'Vidarbha Works',
+        'NAGPUR (Implementing District Authority)',
+      ),
+      installment(
+        2,
+        400_000,
+        '2025-03-20',
+        'Vidarbha Works',
+        'NAGPUR (Implementing District Authority)',
+      ),
+      installment(
+        3,
+        220_000,
+        '2025-05-02',
+        'Vidarbha Works',
+        'NAGPUR (Implementing District Authority)',
+      ),
+    ],
+  ],
+  [
+    DEMO_ID_BASE + 12,
+    [installment(0, 390_000, '2025-11-01', 'Sanitation Systems Co', 'GUNTUR (District Collector)')],
+  ],
 ]);

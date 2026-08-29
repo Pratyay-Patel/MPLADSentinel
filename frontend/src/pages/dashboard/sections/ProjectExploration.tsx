@@ -1,6 +1,6 @@
 import type { Project, ProjectRisk } from '../../../data';
 import { DataTable, EmptyState, StatusBadge, type Column, type StatusTone } from '../../../ui';
-import { formatINRCompact } from '../format';
+import { formatINRCompact } from '../../../format';
 import { RiskCell } from '../RiskCell';
 import { ViewProjectLink } from '../ViewProjectLink';
 

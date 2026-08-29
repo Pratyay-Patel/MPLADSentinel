@@ -34,6 +34,7 @@ describe('ProjectsService', () => {
       getProject: vi.fn().mockResolvedValue(null),
       getProjectSummary: vi.fn(),
       getProjectRisk: vi.fn().mockResolvedValue(null),
+      getProjectPayments: vi.fn().mockResolvedValue([]),
     };
     const service = createProjectsService(stub);
 

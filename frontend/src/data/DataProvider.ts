@@ -1,4 +1,11 @@
-import type { BackendHealth, DataSource, Project, ProjectRisk, ProjectSummary } from './types';
+import type {
+  BackendHealth,
+  DataSource,
+  PaymentInstallment,
+  Project,
+  ProjectRisk,
+  ProjectSummary,
+} from './types';
 
 /**
  * The swappable data boundary for the whole frontend.
@@ -34,4 +41,10 @@ export interface DataProvider {
 
   /** Risk information for one project, or `null` if the project is unknown. */
   getProjectRisk(sourceWorkId: number, signal?: AbortSignal): Promise<ProjectRisk | null>;
+
+  /**
+   * Payment installments for one work. Empty unless the work's
+   * `paymentDataState === 'FETCHED_PRESENT'`.
+   */
+  getProjectPayments(sourceWorkId: number, signal?: AbortSignal): Promise<PaymentInstallment[]>;
 }

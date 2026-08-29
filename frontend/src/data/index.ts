@@ -18,6 +18,7 @@ export type {
   LifecycleState,
   Money,
   PaymentDataState,
+  PaymentInstallment,
   Project,
   ProjectHouse,
   ProjectRisk,
@@ -50,3 +51,10 @@ export {
   type StateWorkCount,
 } from './features/dashboard';
 export { useDashboardService } from './features/useDashboardService';
+
+export {
+  createProjectDetailService,
+  type ProjectDetailService,
+  type ProjectDetailData,
+} from './features/projectDetail';
+export { useProjectDetailService } from './features/useProjectDetailService';

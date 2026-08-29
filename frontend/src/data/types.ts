@@ -82,6 +82,24 @@ export interface Project {
 }
 
 /**
+ * One payment installment for a work, from the work-level payments endpoint
+ * (backend `WorkPayment`). Only meaningful when the owning project's
+ * `paymentDataState === 'FETCHED_PRESENT'`.
+ */
+export interface PaymentInstallment {
+  /** Position within the source's payment list (0-based). */
+  ordinal: number;
+  amount: Money;
+  /** ISO date (day precision), or null. */
+  paidOn: string | null;
+  vendorName: string | null;
+  /** Raw source status string (only `"Payment Success"` has been observed). */
+  statusRaw: string | null;
+  /** Implementing authority free text (`ida`); the source has no structured field. */
+  implementingAuthorityText: string | null;
+}
+
+/**
  * Aggregate counts / sums over the project set. Every field is a straightforward
  * roll-up of the `Project` fields above — nothing here needs a backend field that
  * does not exist.

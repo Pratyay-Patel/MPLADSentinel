@@ -1,0 +1,196 @@
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+
+import { useAsyncData, useProjectDetailService, type ProjectDetailData } from '../../data';
+import { formatINRExact } from '../../format';
+import {
+  Badge,
+  Card,
+  EmptyState,
+  ErrorState,
+  KeyValueList,
+  LoadingState,
+  PageHeader,
+  SectionHeader,
+  StatusBadge,
+} from '../../ui';
+import { DetailTimeline } from './DetailTimeline';
+import { flagLabel, houseLabel, LIFECYCLE_LABEL, LIFECYCLE_TONE } from './labels';
+import { PaymentsSection } from './PaymentsSection';
+
+/**
+ * Project Details (`/projects/:id`) — the full record for a single MPLADS work,
+ * built entirely from fields the verified source provides. No sanctioned amount,
+ * physical-progress %, geo coordinates or delay prediction (they do not exist in
+ * the source). Risk indicators are added with the Risk & Alerts feature.
+ *
+ * Data comes through {@link useProjectDetailService} → DataProvider; a missing id
+ * resolves to the "work not found" state (not an error).
+ */
+export function ProjectDetail() {
+  const params = useParams<{ id: string }>();
+  const workId = Number(params.id);
+  const validId = Number.isFinite(workId) && workId > 0;
+
+  const service = useProjectDetailService();
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const state = useAsyncData<ProjectDetailData | null>(
+    (signal) => (validId ? service.load(workId, signal) : Promise.resolve(null)),
+    [service, workId, validId, reloadKey],
+    { isEmpty: (data) => data === null },
+  );
+
+  const project = state.status === 'success' ? state.data?.project : undefined;
+  const title = project?.workDescription ?? (validId ? `Work #${workId}` : 'Project details');
+  const subtitle = project
+    ? [project.category, project.state].filter(Boolean).join(' · ')
+    : undefined;
+
+  return (
+    <div className="ui-stack detail">
+      <PageHeader
+        breadcrumbs={[{ label: 'Projects', to: '/projects' }, { label: title }]}
+        title={title}
+        description={subtitle || undefined}
+      />
+
+      {state.status === 'loading' && (
+        <Card>
+          <LoadingState label="Loading work" />
+        </Card>
+      )}
+
+      {state.status === 'empty' && (
+        <Card>
+          <EmptyState
+            title="Work not found"
+            description={
+              validId
+                ? `No MPLADS work with id ${workId} is available.`
+                : 'That project id is not valid.'
+            }
+            action={
+              <Link className="ui-btn ui-btn--secondary ui-btn--sm" to="/dashboard">
+                Back to dashboard
+              </Link>
+            }
+          />
+        </Card>
+      )}
+
+      {state.status === 'error' && (
+        <Card>
+          <ErrorState
+            title="Could not load this work"
+            description={state.error.message}
+            onRetry={() => setReloadKey((key) => key + 1)}
+          />
+        </Card>
+      )}
+
+      {state.status === 'success' && state.data && <ProjectDetailView data={state.data} />}
+    </div>
+  );
+}
+
+function ProjectDetailView({ data }: { data: ProjectDetailData }) {
+  const { project, payments } = data;
+
+  return (
+    <>
+      <Card>
+        <SectionHeader title="Overview" />
+        <KeyValueList
+          items={[
+            { label: 'Work description', value: project.workDescription ?? '—' },
+            { label: 'Category', value: project.category ?? '—' },
+            {
+              label: 'Lifecycle',
+              value: (
+                <StatusBadge tone={LIFECYCLE_TONE[project.lifecycleState]} srLabel="Lifecycle">
+                  {LIFECYCLE_LABEL[project.lifecycleState]}
+                </StatusBadge>
+              ),
+            },
+            { label: 'Source status', value: project.sourceStatusRaw ?? '—' },
+            { label: 'House', value: houseLabel(project.house) },
+            { label: 'Lok Sabha term', value: project.lsTerm ?? '—' },
+            { label: 'Member of Parliament', value: project.mpName ?? '—' },
+            { label: 'Constituency', value: project.constituency ?? '—' },
+          ]}
+        />
+      </Card>
+
+      <Card>
+        <SectionHeader title="Location" />
+        <KeyValueList
+          items={[
+            { label: 'State', value: project.state ?? '—' },
+            { label: 'District', value: project.district ?? '—' },
+            { label: 'Location (as recorded)', value: project.locationRaw ?? '—' },
+          ]}
+        />
+        <p className="detail-note">
+          Location is free text from the source. No map coordinates are available for MPLADS works.
+        </p>
+      </Card>
+
+      <Card>
+        <SectionHeader
+          title="Financials"
+          description="The recommended estimate and the final cost are separate figures; they are never merged."
+        />
+        <KeyValueList
+          items={[
+            { label: 'Estimated cost (recommended)', value: formatINRExact(project.estimatedCost) },
+            { label: 'Final cost (completed)', value: formatINRExact(project.finalCost) },
+          ]}
+        />
+      </Card>
+
+      <PaymentsSection project={project} payments={payments} />
+
+      <Card>
+        <SectionHeader
+          title="Timeline"
+          description="Source-reported dates only — not a verified project lifecycle."
+        />
+        <DetailTimeline project={project} payments={payments} />
+      </Card>
+
+      <Card>
+        <SectionHeader title="Provenance & data quality" />
+        <KeyValueList
+          items={[
+            { label: 'Data source', value: 'Empowered Indian (secondary data-access source)' },
+            {
+              label: 'Source work id',
+              value: (
+                <>
+                  {project.sourceWorkId}{' '}
+                  <span className="detail-note">
+                    — source identifier, not an official MPLADS / e-SAKSHI id
+                  </span>
+                </>
+              ),
+            },
+          ]}
+        />
+        <div className="detail-flags">
+          {project.dataQualityFlags.length === 0 ? (
+            <p className="detail-note" style={{ marginTop: 0 }}>
+              No data-quality flags on this record.
+            </p>
+          ) : (
+            project.dataQualityFlags.map((flag) => <Badge key={flag}>{flagLabel(flag)}</Badge>)
+          )}
+        </div>
+        <p className="detail-note">
+          Data-quality flags are descriptive observations about the source record — not fraud
+          findings.
+        </p>
+      </Card>
+    </>
+  );
+}

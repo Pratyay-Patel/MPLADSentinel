@@ -1,6 +1,6 @@
 import type { StateWorkCount } from '../../../data';
 import { BarList, Card, SectionHeader } from '../../../ui';
-import { formatCount } from '../format';
+import { formatCount } from '../../../format';
 
 /**
  * Section 6 — one lightweight, defensible aggregate: number of works per state.

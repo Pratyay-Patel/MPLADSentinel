@@ -70,4 +70,18 @@ describe('DemoDataProvider', () => {
     expect(risk!.score === null || typeof risk!.score === 'number').toBe(true);
     expect(await provider.getProjectRisk(-1)).toBeNull();
   });
+
+  it('returns installment rows for a payments-present work and none otherwise', async () => {
+    const projects = await provider.listProjects();
+    const present = projects.find((p) => p.paymentDataState === 'FETCHED_PRESENT')!;
+    const notFetched = projects.find((p) => p.paymentDataState === 'NOT_FETCHED')!;
+
+    const rows = await provider.getProjectPayments(present.sourceWorkId);
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows[0].statusRaw).toBe('Payment Success');
+    expect(typeof rows[0].amount.amount).toBe('number');
+
+    expect(await provider.getProjectPayments(notFetched.sourceWorkId)).toEqual([]);
+    expect(await provider.getProjectPayments(-1)).toEqual([]);
+  });
 });

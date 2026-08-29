@@ -8,7 +8,7 @@ import type {
   ProjectRisk,
   ProjectSummary,
 } from '../types';
-import { demoProjects, demoRiskByWorkId } from './fixtures';
+import { demoPaymentsByWorkId, demoProjects, demoRiskByWorkId } from './fixtures';
 
 const LIFECYCLE_STATES: LifecycleState[] = [
   'RECOMMENDED',
@@ -104,6 +104,12 @@ export function createDemoDataProvider(): DataProvider {
         assessedAt: null,
       };
       return risk ? { ...risk, reasons: [...risk.reasons] } : fallback;
+    },
+
+    async getProjectPayments(sourceWorkId, signal) {
+      ensureNotAborted(signal);
+      const rows = demoPaymentsByWorkId.get(sourceWorkId) ?? [];
+      return rows.map((row) => ({ ...row }));
     },
   };
 }

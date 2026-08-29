@@ -1,6 +1,6 @@
 import type { DashboardData } from '../../../data';
 import { BarList, Card, SectionHeader } from '../../../ui';
-import { formatINRCompact, formatPercent } from '../format';
+import { formatINRCompact, formatPercent } from '../../../format';
 
 /**
  * Section 3 — Financial Intelligence. Communicates the estimated-cost vs
