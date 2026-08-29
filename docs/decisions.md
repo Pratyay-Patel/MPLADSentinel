@@ -412,3 +412,35 @@ map keeps driving navigation.
 
 UI-implementation only — no change to `architecture.md`, `requirements.md` or
 `round1-scope.md` (this is scope item P0.5, "Basic RBAC", frontend portion).
+
+## D31 — Round 1 authentication approach
+
+**Decision:**
+
+Backend authentication for Round 1 is deliberately minimal — enough to make the
+RBAC enforcement (D5) real for the demo, without building a full identity
+system.
+
+- **Seeded demo users only.** One account per web role (MoSPI / Ministry, State
+  Authority, District Authority, Auditor, MP, Citizen), created by a Flyway seed
+  / bootstrap. No self-registration, no email verification, no password reset,
+  no MFA.
+- **Simple credential login.** `POST /api/auth/login` (username + password),
+  `GET /api/auth/me`, logout. A stateful server session is preferred over JWT
+  for a single SPA against a modular monolith; JWT is an acceptable alternative
+  if it proves simpler in practice.
+- **SecurityConfig flips.** `anyRequest().permitAll()` becomes
+  `authenticated()`, with per-endpoint authority rules matching the frontend
+  `canAccess` map. `/api/health` stays public.
+- **Frontend.** A login page replaces the D30 "Viewing as" dropdown.
+  `SessionProvider` populates the session from `GET /api/auth/me` instead of
+  `localStorage`. `RequireRole` and the client `canAccess` map are unchanged —
+  they now read the authenticated role. Passwords/tokens are never stored in
+  source (D5 / project rules).
+
+This supersedes the "role dropdown" half of D30. The client `canAccess` map
+stays client-side as a navigation/UX convenience; the backend remains the
+authoritative check.
+
+Advanced identity work (real IdP / SSO, Field Officer mobile auth, granular
+approval permissions) is out of Round 1 scope.

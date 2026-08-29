@@ -37,6 +37,8 @@ Consequences for the scope below:
 - IPFS evidence (P1.1), the blockchain audit event (P1.2) and the Audit Timeline (P1.3) depend on backend and verification/ledger events. They are **deferred to the backend-integration phase** and are not built as frontend-only screens now.
 - Seed data must never be labelled "demo" in the UI (it will be replaced by real data with no UI change); it is only distinguishable in code (the `900_000_000+` id range and `DemoDataProvider`).
 
+The backend-integration phase begins with **authentication + a login page** (D31), then the **`/api/works` family** of read endpoints, then the **server-side risk engine** (D22), then the **grievances table + API**, and finally the optional IPFS / blockchain / Audit Timeline work. `VITE_DATA_SOURCE=api` is flipped **per capability** as each endpoint lands — not big-bang — and no screen UI is rewritten.
+
 ## 2. P0 — Must Have
 
 These features form the minimum acceptable Round 1 implementation. Per §1.1, "delivered" here means complete on the frontend `DataProvider` seam; the backend API behind each is a follow-on step.
@@ -104,6 +106,17 @@ Citizen
 
 Backend authorization must enforce permissions; frontend restrictions alone are insufficient.
 
+P0.6a — Client RBAC scaffold *(done)*
+
+Role context, role→area access map (`canAccess`), role-gated navigation, and the `RequireRole` route guard. Role chosen from a header selector, persisted to `localStorage`. This is UX only — see decision D30.
+
+P0.6b — Backend authentication + login *(backend-integration phase)*
+
+- Seeded demo users, one per web role; no self-registration (decision D31).
+- `POST /api/auth/login`, `GET /api/auth/me`, logout. Stateful session preferred over JWT.
+- `SecurityConfig`: `anyRequest().permitAll()` → `authenticated()`, with per-endpoint authority rules matching the client `canAccess` map. `/api/health` stays public.
+- A login page replaces the header role selector; `SessionProvider` reads `GET /api/auth/me`. `RequireRole` / `canAccess` are unchanged — they now read the authenticated role.
+
 ## 3. P1 — Implement If P0 Is Stable
 
 These features are valuable for the demonstration but must not delay completion of P0.
@@ -133,9 +146,20 @@ Viewing blockchain-backed audit/integrity information through Spring Boot APIs
 
 Citizens must not directly access the Hyperledger Fabric network.
 
-P1.5 — Citizen Grievance Form
+P1.5 — Grievances (citizen submission + authority review)
 
-Provide a basic form through which citizens can submit project-related grievances.
+- **Citizen:** a submission form (category, subject, description, optional
+  related work / contact) plus a read-only list of grievances they have raised.
+- **Authorities (MoSPI / State / District; Auditor read-only):** no submission
+  form — a review queue. List all grievances, filter by status / work /
+  category, open one, and move it through
+  `SUBMITTED → UNDER_REVIEW → ACTIONED → CLOSED` with an action note.
+- **Persistence:** a `grievances` table (Flyway V5) with
+  `GET / POST / PATCH /api/grievances`.
+
+The frontend role-split (form vs. queue, status transitions) can land ahead of
+persistence on the `DataProvider` seam; until the table exists the
+`DemoDataProvider` holds grievances for the browser session only.
 
 ## 4. P2 — Deferred
 
@@ -175,23 +199,36 @@ Development follows this order. Steps 1–4 built the backend foundation and the
         ↓
 8. RBAC scaffold (client)                     [done]
         ↓
-9. Project Register                           [current]
+9. Project Register                           [done]
         ↓
-10. Citizen Portal
+10. Citizen Portal                            [done]
         ↓
-11. Grievances
+11. Grievances (frontend, DataProvider seam)  [done]
+        ↓
+11a. Grievances role-split (citizen form vs.  [current]
+     authority review queue + status flow),
+     still on the DataProvider seam
         ↓
      P0 FRONTEND COMPLETE — Round 1 demo surface ready
         ↓
---- backend integration ---
-12. Spring Boot REST APIs per screen; switch each screen
-    DemoDataProvider → ApiDataProvider
+--- backend integration (flip VITE_DATA_SOURCE=api per capability) ---
+12. Backend auth + login page (seeded demo users, D31)
         ↓
-13. IPFS evidence
+13. GET /api/works, /api/works/{id}, /api/works/summary,
+    /api/works/{id}/payments  → flip listProjects / getProject /
+    getProjectSummary / getProjectPayments
         ↓
-14. Blockchain audit event
+14. Risk engine: GET /api/works/{id}/risk (rule-based, server-side, D22)
+    → flip getProjectRisk; retire the client deriveRisk stand-in
         ↓
-15. Audit Timeline
+15. grievances table (Flyway V5) + GET/POST/PATCH /api/grievances
+    → flip listGrievances / submitGrievance / updateGrievanceStatus
+        ↓
+16. IPFS evidence
+        ↓
+17. Blockchain audit event
+        ↓
+18. Audit Timeline
 ```
 
 If time becomes limited, stop at the highest completed stable priority rather than starting additional incomplete features.

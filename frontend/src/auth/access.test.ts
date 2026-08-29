@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { AREA_ROLES, canAccess } from './access';
+import { actionsGrievances, AREA_ROLES, canAccess, reviewsGrievances } from './access';
 import { ROLES } from './roles';
 
 describe('canAccess', () => {
@@ -31,6 +31,24 @@ describe('canAccess', () => {
       for (const role of roles) {
         expect(ROLES).toContain(role);
       }
+    }
+  });
+});
+
+describe('grievance role split', () => {
+  it('sends only the Citizen role to the submission form', () => {
+    expect(reviewsGrievances('CITIZEN')).toBe(false);
+    for (const role of ['MOSPI', 'STATE', 'DISTRICT', 'AUDITOR', 'MP'] as const) {
+      expect(reviewsGrievances(role)).toBe(true);
+    }
+  });
+
+  it('lets only MoSPI / State / District change a grievance status', () => {
+    for (const role of ['MOSPI', 'STATE', 'DISTRICT'] as const) {
+      expect(actionsGrievances(role)).toBe(true);
+    }
+    for (const role of ['AUDITOR', 'MP', 'CITIZEN'] as const) {
+      expect(actionsGrievances(role)).toBe(false);
     }
   });
 });

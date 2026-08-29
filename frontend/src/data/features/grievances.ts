@@ -1,5 +1,5 @@
 import type { DataProvider } from '../DataProvider';
-import type { Grievance, GrievanceInput } from '../types';
+import type { Grievance, GrievanceInput, GrievanceStatus, GrievanceStatusPatch } from '../types';
 
 /**
  * Feature service for the Grievances screen (`/grievances`).
@@ -18,6 +18,21 @@ export const GRIEVANCE_CATEGORIES = [
   'Other',
 ] as const;
 
+/** Review states, in workflow order. Authorities move a grievance forward. */
+export const GRIEVANCE_STATUSES: GrievanceStatus[] = [
+  'SUBMITTED',
+  'UNDER_REVIEW',
+  'ACTIONED',
+  'CLOSED',
+];
+
+export const GRIEVANCE_STATUS_LABEL: Record<GrievanceStatus, string> = {
+  SUBMITTED: 'Submitted',
+  UNDER_REVIEW: 'Under review',
+  ACTIONED: 'Actioned',
+  CLOSED: 'Closed',
+};
+
 export interface GrievanceWorkOption {
   reference: number;
   label: string;
@@ -32,6 +47,7 @@ export interface GrievancesData {
 export interface GrievancesService {
   load(signal?: AbortSignal): Promise<GrievancesData>;
   submit(input: GrievanceInput, signal?: AbortSignal): Promise<Grievance>;
+  updateStatus(id: string, patch: GrievanceStatusPatch, signal?: AbortSignal): Promise<Grievance>;
 }
 
 export function createGrievancesService(provider: DataProvider): GrievancesService {
@@ -50,5 +66,6 @@ export function createGrievancesService(provider: DataProvider): GrievancesServi
       return { grievances, workOptions };
     },
     submit: (input, signal) => provider.submitGrievance(input, signal),
+    updateStatus: (id, patch, signal) => provider.updateGrievanceStatus(id, patch, signal),
   };
 }

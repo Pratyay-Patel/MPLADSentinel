@@ -18,6 +18,7 @@ export type {
   Grievance,
   GrievanceInput,
   GrievanceStatus,
+  GrievanceStatusPatch,
   LifecycleState,
   Money,
   PaymentDataState,
@@ -89,6 +90,8 @@ export { useCitizenService } from './features/useCitizenService';
 export {
   createGrievancesService,
   GRIEVANCE_CATEGORIES,
+  GRIEVANCE_STATUSES,
+  GRIEVANCE_STATUS_LABEL,
   type GrievancesService,
   type GrievancesData,
   type GrievanceWorkOption,

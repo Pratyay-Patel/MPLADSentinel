@@ -105,5 +105,32 @@ describe('DemoDataProvider', () => {
     expect(after.length).toBe(before.length + 1);
     expect(after[0].id).toBe(saved.id);
     expect(after[0].subject).toBe('Work stalled');
+    expect(saved.status).toBe('SUBMITTED');
+    expect(saved.actionNote).toBeNull();
+  });
+
+  it('advances a grievance status and rejects an unknown id', async () => {
+    const saved = await provider.submitGrievance({
+      workReference: null,
+      category: 'Other',
+      subject: 'For review',
+      description: 'Long enough description for the record to be valid here.',
+      contactName: null,
+      contactEmail: null,
+    });
+
+    const updated = await provider.updateGrievanceStatus(saved.id, {
+      status: 'CLOSED',
+      actionNote: 'Resolved with the district office.',
+    });
+    expect(updated.status).toBe('CLOSED');
+    expect(updated.actionNote).toBe('Resolved with the district office.');
+
+    const relisted = await provider.listGrievances();
+    expect(relisted.find((g) => g.id === saved.id)?.status).toBe('CLOSED');
+
+    await expect(
+      provider.updateGrievanceStatus('no-such-id', { status: 'CLOSED' }),
+    ).rejects.toThrow(/no grievance/i);
   });
 });

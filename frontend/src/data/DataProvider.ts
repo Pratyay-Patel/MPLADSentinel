@@ -3,6 +3,7 @@ import type {
   DataSource,
   Grievance,
   GrievanceInput,
+  GrievanceStatusPatch,
   PaymentInstallment,
   Project,
   ProjectRisk,
@@ -55,4 +56,11 @@ export interface DataProvider {
 
   /** Record a new grievance and return the stored record. */
   submitGrievance(input: GrievanceInput, signal?: AbortSignal): Promise<Grievance>;
+
+  /** Advance a grievance's review status (authority action); returns the updated record. */
+  updateGrievanceStatus(
+    id: string,
+    patch: GrievanceStatusPatch,
+    signal?: AbortSignal,
+  ): Promise<Grievance>;
 }

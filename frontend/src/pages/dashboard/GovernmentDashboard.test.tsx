@@ -114,6 +114,7 @@ describe('GovernmentDashboard', () => {
       getProjectPayments: vi.fn().mockResolvedValue([]),
       listGrievances: vi.fn().mockResolvedValue([]),
       submitGrievance: vi.fn(),
+      updateGrievanceStatus: vi.fn(),
     };
     renderDashboard(emptyProvider);
     expect(await screen.findByText('No work data available')).toBeInTheDocument();
@@ -130,6 +131,7 @@ describe('GovernmentDashboard', () => {
       getProjectPayments: vi.fn().mockResolvedValue([]),
       listGrievances: vi.fn().mockResolvedValue([]),
       submitGrievance: vi.fn(),
+      updateGrievanceStatus: vi.fn(),
     };
     renderDashboard(failingProvider);
 

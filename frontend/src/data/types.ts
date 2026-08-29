@@ -142,8 +142,8 @@ export interface BackendHealth {
   service: string;
 }
 
-/** Lifecycle of a citizen grievance. Round 1 only records the initial state. */
-export type GrievanceStatus = 'SUBMITTED';
+/** Review lifecycle of a grievance. Authorities advance it through these states. */
+export type GrievanceStatus = 'SUBMITTED' | 'UNDER_REVIEW' | 'ACTIONED' | 'CLOSED';
 
 /** What a citizen fills in on the grievance form. */
 export interface GrievanceInput {
@@ -156,10 +156,20 @@ export interface GrievanceInput {
   contactEmail: string | null;
 }
 
-/** A submitted grievance. `id` / `submittedAt` / `status` are assigned on submit. */
+/** A grievance record. `id` / `submittedAt` / `status` are assigned on submit. */
 export interface Grievance extends GrievanceInput {
   id: string;
-  /** ISO timestamp. */
+  /** ISO timestamp of submission. */
   submittedAt: string;
   status: GrievanceStatus;
+  /** Authority note recorded with the most recent status change, or null. */
+  actionNote: string | null;
+  /** ISO timestamp of the last status/note change (= `submittedAt` until acted on). */
+  updatedAt: string;
+}
+
+/** Fields an authority can change when reviewing a grievance. */
+export interface GrievanceStatusPatch {
+  status: GrievanceStatus;
+  actionNote?: string | null;
 }

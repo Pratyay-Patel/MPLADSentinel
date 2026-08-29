@@ -77,12 +77,17 @@ src/
   only publicly releasable fields — no risk score, no data-quality flags, no
   payment-retrieval internals or provenance framing. Reads via
   `useCitizenService()` → `DataProvider`.
-- **`/grievances`** — Grievances (`src/pages/grievances/`). A validated
-  submission form (category, subject, description, optional related work / name /
-  email) plus a table of grievances recorded so far. New provider methods
-  `submitGrievance` / `listGrievances`; the `DemoDataProvider` holds submissions
-  for the browser session, `ApiDataProvider` is `notImplemented`. Reads/writes
-  via `useGrievancesService()`.
+- **`/grievances`** — Grievances (`src/pages/grievances/`). Role-aware:
+  - **Citizen** (`reviewsGrievances(role) === false`) — a validated submission
+    form (category, subject, description, optional related work / name / email)
+    plus a table of the grievances they have raised.
+  - **Authorities** — a review queue (no form). MoSPI / State / District can
+    move each grievance through `SUBMITTED → UNDER_REVIEW → ACTIONED → CLOSED`
+    and add an action note; Auditor and MP see it read-only.
+  Provider methods `submitGrievance` / `listGrievances` / `updateGrievanceStatus`;
+  the `DemoDataProvider` holds grievances for the browser session (lost on
+  reload — a `grievances` table lands with backend integration), `ApiDataProvider`
+  is `notImplemented`. Via `useGrievancesService()`.
 - `/audit` renders a placeholder — the Audit Timeline is deferred to the
   backend-integration phase (it needs verification / ledger events).
 

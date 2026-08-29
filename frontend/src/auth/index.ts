@@ -6,7 +6,7 @@
  */
 
 export { ROLES, ROLE_LABELS, DEFAULT_ROLE, isRole, type Role } from './roles';
-export { AREA_ROLES, canAccess, type Area } from './access';
+export { AREA_ROLES, canAccess, reviewsGrievances, actionsGrievances, type Area } from './access';
 export { SessionContext, useSession, type Session } from './context';
 export { SessionProvider } from './SessionProvider';
 export { RequireRole } from './RequireRole';

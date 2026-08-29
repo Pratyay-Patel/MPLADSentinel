@@ -77,6 +77,7 @@ describe('ApiDataProvider', () => {
           contactEmail: null,
         }),
     ],
+    ['updateGrievanceStatus', () => provider.updateGrievanceStatus('x', { status: 'CLOSED' })],
   ] as const)(
     'rejects %s with a notImplemented ProviderError (no backend endpoint yet)',
     async (_name, call) => {

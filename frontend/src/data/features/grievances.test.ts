@@ -34,6 +34,27 @@ describe('createGrievancesService', () => {
     expect(grievances.some((g) => g.id === saved.id)).toBe(true);
   });
 
+  it('updates a grievance status and action note through the service', async () => {
+    const service = createGrievancesService(createDemoDataProvider());
+    const saved = await service.submit({
+      workReference: null,
+      category: 'Other',
+      subject: 'Needs review',
+      description: 'A description long enough to satisfy the validation rule.',
+      contactName: null,
+      contactEmail: null,
+    });
+
+    const updated = await service.updateStatus(saved.id, {
+      status: 'ACTIONED',
+      actionNote: 'Site inspected, contractor notified.',
+    });
+
+    expect(updated.status).toBe('ACTIONED');
+    expect(updated.actionNote).toBe('Site inspected, contractor notified.');
+    expect(updated.updatedAt >= saved.submittedAt).toBe(true);
+  });
+
   it('propagates a load failure', async () => {
     const provider: DataProvider = {
       ...createDemoDataProvider(),

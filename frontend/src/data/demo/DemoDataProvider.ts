@@ -1,9 +1,11 @@
 import { deriveRisk } from '../risk/rules';
 import type { DataProvider } from '../DataProvider';
+import { ProviderError } from '../errors';
 import type {
   BackendHealth,
   Grievance,
   GrievanceInput,
+  GrievanceStatusPatch,
   LifecycleState,
   Money,
   PaymentDataState,
@@ -124,13 +126,30 @@ export function createDemoDataProvider(): DataProvider {
     async submitGrievance(input: GrievanceInput, signal) {
       ensureNotAborted(signal);
       grievanceSeq += 1;
+      const now = new Date().toISOString();
       const grievance: Grievance = {
         ...input,
         id: `demo-grievance-${grievanceSeq}`,
-        submittedAt: new Date().toISOString(),
+        submittedAt: now,
         status: 'SUBMITTED',
+        actionNote: null,
+        updatedAt: now,
       };
       demoGrievances.unshift(grievance);
+      return { ...grievance };
+    },
+
+    async updateGrievanceStatus(id: string, patch: GrievanceStatusPatch, signal) {
+      ensureNotAborted(signal);
+      const grievance = demoGrievances.find((g) => g.id === id);
+      if (!grievance) {
+        throw new ProviderError('unknown', `No grievance with id ${id}.`);
+      }
+      grievance.status = patch.status;
+      if (patch.actionNote !== undefined) {
+        grievance.actionNote = patch.actionNote;
+      }
+      grievance.updatedAt = new Date().toISOString();
       return { ...grievance };
     },
   };
