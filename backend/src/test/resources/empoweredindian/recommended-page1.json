@@ -1,0 +1,87 @@
+{
+  "success": true,
+  "data": {
+    "recommendedWorks": [
+      {
+        "_id": "6a89c8052f87e3172f71db3f",
+        "workId": 260540,
+        "house": "Lok Sabha",
+        "lsTerm": 18,
+        "work_description": "Extension of CC Road for 120 mtrs at Gonvind Nagar",
+        "work_description_hi": "Extension of CC Road for 120 mtrs at Gonvind Nagar",
+        "category": "Normal/Others",
+        "category_hi": "Normal/Others",
+        "estimated_cost": 2500000,
+        "recommended_date": "2026-01-20T00:00:00.000Z",
+        "recommended_year": 2026,
+        "status": "Recommended",
+        "status_hi": "Recommended",
+        "location": "SOUTH ANDAMANS(Implementing District Authority(SA))",
+        "location_hi": "SOUTH ANDAMANS(Implementing District Authority(SA))",
+        "district": "ANDAMAN AND NICOBAR ISLANDS",
+        "district_hi": "ANDAMAN AND NICOBAR ISLANDS",
+        "state": "Andaman And Nicobar Islands",
+        "state_hi": "Andaman And Nicobar Islands",
+        "expected_beneficiaries": 0,
+        "mp_details": {
+          "name": "BISHNU PADA RAY",
+          "name_hi": "BISHNU PADA RAY",
+          "constituency": "ANDAMAN AND NICOBAR ISLANDS",
+          "party": "Lok Sabha"
+        },
+        "hasPayments": true,
+        "totalPaid": 1350689,
+        "paymentCount": 1
+      },
+      {
+        "_id": "6a89c8052f87e3172f71dc40",
+        "workId": 260541,
+        "house": "Rajya Sabha",
+        "lsTerm": null,
+        "work_description": "Supply of furniture to Government Higher Secondary School",
+        "work_description_hi": "Supply of furniture to Government Higher Secondary School",
+        "category": "Education",
+        "category_hi": "Education",
+        "estimated_cost": 750000,
+        "recommended_date": "2025-11-03T00:00:00.000Z",
+        "recommended_year": 2025,
+        "status": "Recommended",
+        "status_hi": "Recommended",
+        "location": "KOCHI(Implementing District Authority(EKM))",
+        "location_hi": "KOCHI(Implementing District Authority(EKM))",
+        "district": "ERNAKULAM",
+        "district_hi": "ERNAKULAM",
+        "state": "Kerala",
+        "state_hi": "Kerala",
+        "expected_beneficiaries": 0,
+        "mp_details": {
+          "name": "A SAMPLE MEMBER",
+          "name_hi": "A SAMPLE MEMBER",
+          "constituency": "KERALA",
+          "party": "Rajya Sabha"
+        },
+        "hasPayments": false,
+        "totalPaid": 0,
+        "paymentCount": 0
+      }
+    ],
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 4190,
+      "totalCount": 83797,
+      "hasNext": true,
+      "hasPrev": false
+    },
+    "summary": {
+      "totalEstimatedCost": 0,
+      "avgEstimatedCost": 0,
+      "totalWorks": 0,
+      "uniqueCategories": [],
+      "uniqueDistricts": [],
+      "statusDistribution": [],
+      "totalExpectedBeneficiaries": 0
+    },
+    "filters": {},
+    "lastUpdated": "2026-08-28T10:39:08.492Z"
+  }
+}

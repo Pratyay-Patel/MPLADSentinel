@@ -18,6 +18,14 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+  jpa:
+    # Flyway is the single source of truth for the schema. Hibernate never
+    # creates or alters tables.
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
 
 server:
   # Local dev default is 8081 (8080 is commonly taken by other local apps).
@@ -27,6 +35,31 @@ mplads:
   security:
     # Comma-separated list of browser origins allowed to call /api/** via CORS.
     cors-allowed-origins: ${MPLADS_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  empowered-indian:
+    # Empowered Indian MPLADS API — a SECONDARY data-access source (no auth, no
+    # secret). Base URL verified in docs/data-source.md §13; override per
+    # environment. All values have safe defaults if the env vars are unset.
+    base-url: ${MPLADS_EI_BASE_URL:https://api.empoweredindian.in/api}
+    connect-timeout: ${MPLADS_EI_CONNECT_TIMEOUT:5s}
+    read-timeout: ${MPLADS_EI_READ_TIMEOUT:15s}
+    # Total attempts per call (1 = no retry). Retries cover transport failures,
+    # HTTP 429 and HTTP 5xx only, with a fixed delay — never unbounded.
+    max-attempts: ${MPLADS_EI_MAX_ATTEMPTS:3}
+    retry-delay: ${MPLADS_EI_RETRY_DELAY:500ms}
+    # Default page size (API 'limit'); the API accepts 1..100.
+    default-page-size: ${MPLADS_EI_DEFAULT_PAGE_SIZE:20}
+  ingestion:
+    # Manual-trigger ingestion pipeline (Phase 2E-2). No scheduler; all values
+    # have conservative defaults and are environment-overridable.
+    works-page-size: ${MPLADS_INGEST_WORKS_PAGE_SIZE:100}       # API 'limit' for works pages (1..100)
+    works-max-pages: ${MPLADS_INGEST_WORKS_MAX_PAGES:6000}      # absolute per-run page ceiling (safety guard)
+    works-inter-page-delay: ${MPLADS_INGEST_WORKS_INTER_PAGE_DELAY:0ms}
+    dead-letter-cap-per-run: ${MPLADS_INGEST_DEAD_LETTER_CAP:500}
+    partial-on-dead-letters: ${MPLADS_INGEST_PARTIAL_ON_DEAD_LETTERS:false}
+    payments-max-works-per-run: ${MPLADS_INGEST_PAYMENTS_MAX_WORKS:200}
+    payments-inter-request-delay: ${MPLADS_INGEST_PAYMENTS_DELAY:200ms}
+    payments-recheck-absent-after: ${MPLADS_INGEST_PAYMENTS_RECHECK_ABSENT:7d}
+    payments-recheck-present-after: ${MPLADS_INGEST_PAYMENTS_RECHECK_PRESENT:30d}
 
 management:
   endpoints:

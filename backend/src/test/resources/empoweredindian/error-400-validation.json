@@ -1,0 +1,4 @@
+{
+  "success": false,
+  "error": "Validation Error: page must be greater than or equal to 1"
+}

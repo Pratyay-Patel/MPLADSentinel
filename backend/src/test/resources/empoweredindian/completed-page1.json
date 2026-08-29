@@ -1,0 +1,74 @@
+{
+  "success": true,
+  "data": {
+    "completedWorks": [
+      {
+        "_id": "6a90da2960cc5ec1e4c4bcff",
+        "work_id": 134703,
+        "work_description": "Upgradation of Road from Madhavaram Village to the main road",
+        "work_description_hi": "Upgradation of Road from Madhavaram Village to the main road",
+        "category": "Normal/Others",
+        "category_hi": "Normal/Others",
+        "cost": 499993,
+        "completion_date": "2025-01-31T00:00:00.000Z",
+        "completion_year": 2025,
+        "location": "CHITTOOR(DISTRICT COLLECTOR CHITTOOR_IDA)",
+        "location_hi": "CHITTOOR(DISTRICT COLLECTOR CHITTOOR_IDA)",
+        "district": "CHITTOOR",
+        "district_hi": "CHITTOOR",
+        "state": "Andhra Pradesh",
+        "state_hi": "Andhra Pradesh",
+        "beneficiaries": 0,
+        "mp_details": {
+          "name": "A SAMPLE MEMBER",
+          "name_hi": "A SAMPLE MEMBER",
+          "constituency": "CHITTOOR",
+          "party": "Lok Sabha"
+        }
+      },
+      {
+        "_id": "6a90da2960cc5ec1e4c4bd07",
+        "work_id": 135593,
+        "work_description": "Construction of additional class rooms",
+        "work_description_hi": "Construction of additional class rooms",
+        "category": "Education",
+        "category_hi": "Education",
+        "cost": 545766.98,
+        "completion_date": "2024-12-10T00:00:00.000Z",
+        "completion_year": 2024,
+        "location": "GUNTUR(DISTRICT COLLECTOR GUNTUR_IDA)",
+        "location_hi": "GUNTUR(DISTRICT COLLECTOR GUNTUR_IDA)",
+        "district": "GUNTUR",
+        "district_hi": "GUNTUR",
+        "state": "Andhra Pradesh",
+        "state_hi": "Andhra Pradesh",
+        "beneficiaries": 0,
+        "mp_details": {
+          "name": "ANOTHER SAMPLE MEMBER",
+          "name_hi": "ANOTHER SAMPLE MEMBER",
+          "constituency": "GUNTUR",
+          "party": "Lok Sabha"
+        }
+      }
+    ],
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 2184,
+      "totalCount": 43667,
+      "hasNext": true,
+      "hasPrev": false
+    },
+    "summary": {
+      "_id": null,
+      "totalCost": 23832006686.61,
+      "avgCost": 545766.98,
+      "totalWorks": 43667,
+      "uniqueCategories": ["Normal/Others", "Education"],
+      "uniqueDistricts": ["CHITTOOR", "GUNTUR", "Sitting Rajya Sabha"],
+      "totalBeneficiaries": 0,
+      "avgBeneficiaries": 0
+    },
+    "filters": {},
+    "lastUpdated": "2026-08-28T10:40:12.114Z"
+  }
+}

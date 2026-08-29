@@ -1,0 +1,45 @@
+{
+  "success": true,
+  "data": {
+    "workId": 187484,
+    "workDetails": {
+      "description": "Construction of community centers and community halls",
+      "mpName": "BISHNU PADA RAY",
+      "constituency": "ANDAMAN AND NICOBAR ISLANDS",
+      "ida": "NORTH AND MIDDLE ANDAMAN(Implementing District Authority(N&MA))"
+    },
+    "summary": {
+      "totalInstallments": 1,
+      "totalAmountPaid": 1350689,
+      "successfulPayments": 1,
+      "pendingPayments": 0,
+      "firstPaymentDate": "2026-08-05T00:00:00.000Z",
+      "lastPaymentDate": "2026-08-05T00:00:00.000Z"
+    },
+    "paymentTimeline": [
+      {
+        "date": "2026-08-05",
+        "payments": [
+          {
+            "amount": 1350689,
+            "vendor": "Sulata Baroi",
+            "status": "Payment Success",
+            "ida": "NORTH AND MIDDLE ANDAMAN(Implementing District Authority(N&MA))"
+          }
+        ],
+        "totalAmount": 1350689,
+        "count": 1
+      }
+    ],
+    "allPayments": [
+      {
+        "amount": 1350689,
+        "date": "2026-08-05T00:00:00.000Z",
+        "status": "Payment Success",
+        "vendor": "Sulata Baroi",
+        "ida": "NORTH AND MIDDLE ANDAMAN(Implementing District Authority(N&MA))"
+      }
+    ]
+  },
+  "lastUpdated": "2026-08-28T10:39:08.492Z"
+}
