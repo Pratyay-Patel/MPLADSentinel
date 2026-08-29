@@ -174,9 +174,14 @@ function CitizenGrievances({
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [items, setItems] = useState<Grievance[]>(data.grievances);
+  const [added, setAdded] = useState<Grievance[]>([]);
   const [confirmation, setConfirmation] = useState<string | null>(null);
   const workLabel = useWorkLabel(data);
+
+  // Rows derive from the provider list (so a re-fetch flows through) plus any
+  // grievances submitted in this view, pinned on top without duplication.
+  const addedIds = new Set(added.map((g) => g.id));
+  const items = [...added, ...data.grievances.filter((g) => !addedIds.has(g.id))];
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -192,7 +197,7 @@ function CitizenGrievances({
     setConfirmation(null);
     try {
       const saved = await service.submit(toInput(form));
-      setItems((prev) => [saved, ...prev]);
+      setAdded((prev) => [saved, ...prev]);
       setForm(EMPTY_FORM);
       setConfirmation(`Grievance recorded — reference ${saved.id}.`);
     } catch (error) {
@@ -324,16 +329,17 @@ function ReviewQueue({
   service: GrievancesService;
   canAction: boolean;
 }) {
-  const [items, setItems] = useState<Grievance[]>(data.grievances);
+  const [overrides, setOverrides] = useState<Record<string, Grievance>>({});
   const [filters, setFilters] = useState({ status: '', category: '' });
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const workLabel = useWorkLabel(data);
 
-  const categories = useMemo(
-    () => [...new Set(items.map((g) => g.category))].sort((a, b) => a.localeCompare(b)),
-    [items],
-  );
+  // Rows come from the provider list (so a re-fetch flows through); local status
+  // changes are layered on by id.
+  const items = data.grievances.map((g) => overrides[g.id] ?? g);
+
+  const categories = [...new Set(items.map((g) => g.category))].sort((a, b) => a.localeCompare(b));
 
   const filtered = items.filter(
     (g) =>
@@ -346,7 +352,7 @@ function ReviewQueue({
     setNotice(null);
     try {
       const saved = await service.updateStatus(id, next);
-      setItems((prev) => prev.map((g) => (g.id === saved.id ? saved : g)));
+      setOverrides((prev) => ({ ...prev, [saved.id]: saved }));
       setNotice(`Grievance ${saved.id} updated.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not update the grievance.');
