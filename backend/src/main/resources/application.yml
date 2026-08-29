@@ -48,6 +48,18 @@ mplads:
     retry-delay: ${MPLADS_EI_RETRY_DELAY:500ms}
     # Default page size (API 'limit'); the API accepts 1..100.
     default-page-size: ${MPLADS_EI_DEFAULT_PAGE_SIZE:20}
+  ingestion:
+    # Manual-trigger ingestion pipeline (Phase 2E-2). No scheduler; all values
+    # have conservative defaults and are environment-overridable.
+    works-page-size: ${MPLADS_INGEST_WORKS_PAGE_SIZE:100}       # API 'limit' for works pages (1..100)
+    works-max-pages: ${MPLADS_INGEST_WORKS_MAX_PAGES:6000}      # absolute per-run page ceiling (safety guard)
+    works-inter-page-delay: ${MPLADS_INGEST_WORKS_INTER_PAGE_DELAY:0ms}
+    dead-letter-cap-per-run: ${MPLADS_INGEST_DEAD_LETTER_CAP:500}
+    partial-on-dead-letters: ${MPLADS_INGEST_PARTIAL_ON_DEAD_LETTERS:false}
+    payments-max-works-per-run: ${MPLADS_INGEST_PAYMENTS_MAX_WORKS:200}
+    payments-inter-request-delay: ${MPLADS_INGEST_PAYMENTS_DELAY:200ms}
+    payments-recheck-absent-after: ${MPLADS_INGEST_PAYMENTS_RECHECK_ABSENT:7d}
+    payments-recheck-present-after: ${MPLADS_INGEST_PAYMENTS_RECHECK_PRESENT:30d}
 
 management:
   endpoints:
