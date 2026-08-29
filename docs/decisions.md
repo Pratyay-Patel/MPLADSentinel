@@ -306,3 +306,26 @@ covers loading / empty / success / error.
 
 This decision does not change the overall system architecture (D1–D3): the web
 portal still communicates with the backend only through REST APIs.
+
+## D27 — Frontend Visual Foundation
+
+**Decision:**
+
+The Round-1 web portal's visual layer is built with plain CSS plus a centralized
+CSS-custom-property design-token system (`frontend/src/styles/tokens.css`) and a
+small set of reusable presentation primitives (`frontend/src/ui/`). It uses a
+reusable application shell (`frontend/src/layout/AppShell`) — sticky header, left
+sidebar navigation collapsing to a drawer below 1024px, routed content area.
+
+No UI-component library, CSS framework or CSS-in-JS runtime (Tailwind, MUI,
+Chakra, styled-components, …) is introduced. The system font stack is used; no
+web-font dependency is added.
+
+Status is never communicated by colour alone (semantic glyph + text label
+alongside colour).
+
+Charting: no charting dependency is added in this phase. The Government Dashboard
+phase decides whether a single lightweight charting library is warranted.
+
+This is a UI-implementation decision; it does not alter `architecture.md`,
+`requirements.md` or `round1-scope.md`.

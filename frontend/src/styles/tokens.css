@@ -1,0 +1,114 @@
+/**
+ * MPLADSentinel design tokens.
+ *
+ * Single source of truth for the visual language. Components reference these
+ * variables; they never hardcode the same colour / spacing / size twice.
+ * One restrained light theme aimed at a government analytics audience.
+ */
+
+:root {
+  /* ---- brand (deep institutional blue) ---------------------------------- */
+  --color-brand-900: #0b2540;
+  --color-brand-800: #12395f;
+  --color-brand-700: #1b4d80;
+  --color-brand-600: #23608f;
+  --color-brand-500: #2f74a8;
+  --color-brand-100: #e8f0f7;
+  --color-brand-050: #f2f7fb;
+
+  /* ---- neutrals -------------------------------------------------------- */
+  --color-bg: #f4f6f8;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #eef1f4;
+  --color-border: #d9dee5;
+  --color-border-strong: #c3cad4;
+  --color-text: #1f2733;
+  --color-text-secondary: #566072;
+  --color-text-muted: #79828f;
+  --color-text-inverse: #ffffff;
+
+  /* ---- semantic status (fg + bg + border for each) -------------------- */
+  --color-normal-fg: #37455a;
+  --color-normal-bg: #eceef2;
+  --color-normal-border: #d3d9e1;
+
+  --color-success-fg: #1a6b3c;
+  --color-success-bg: #e6f4ec;
+  --color-success-border: #b7dfc7;
+
+  --color-warning-fg: #855400;
+  --color-warning-bg: #fbf0da;
+  --color-warning-border: #edd39c;
+
+  --color-danger-fg: #9f2a2a;
+  --color-danger-bg: #fbe8e8;
+  --color-danger-border: #eebcbc;
+
+  --color-info-fg: #1c4f8a;
+  --color-info-bg: #e7f0fa;
+  --color-info-border: #bdd6f0;
+
+  --color-neutral-fg: #45505f;
+  --color-neutral-bg: #edeff2;
+  --color-neutral-border: #d6dbe2;
+
+  --color-focus: #1b6ac9;
+  --color-link: var(--color-brand-700);
+  --color-link-hover: var(--color-brand-800);
+
+  /* ---- typography --------------------------------------------------- */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'Cascadia Mono', Menlo, Consolas, monospace;
+
+  --text-xs: 0.75rem; /* 12 - labels, captions */
+  --text-sm: 0.8125rem; /* 13 - table text, secondary */
+  --text-md: 0.875rem; /* 14 - body default */
+  --text-lg: 1rem; /* 16 - lead / section title */
+  --text-xl: 1.25rem; /* 20 - page title */
+  --text-2xl: 1.5rem; /* 24 - metric value */
+  --text-3xl: 1.875rem; /* 30 - large metric */
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.55;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---- spacing (4px base) ---------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+
+  /* ---- radius (small, not toy-like) ---------------------------------- */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+  --radius-pill: 999px;
+
+  /* ---- borders ------------------------------------------------------- */
+  --border-width: 1px;
+  --border: var(--border-width) solid var(--color-border);
+  --border-strong: var(--border-width) solid var(--color-border-strong);
+
+  /* ---- shadows (subtle only) --------------------------------------- */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-md: 0 2px 6px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.05);
+
+  /* ---- layout ----------------------------------------------------- */
+  --layout-sidebar-width: 232px;
+  --layout-header-height: 56px;
+  --layout-content-max: 1200px;
+  --layout-content-pad-x: var(--space-6);
+  --layout-content-pad-y: var(--space-5);
+
+  /* ---- control sizing ------------------------------------------- */
+  --control-height-sm: 30px;
+  --control-height-md: 36px;
+  --control-radius: var(--radius-md);
+}

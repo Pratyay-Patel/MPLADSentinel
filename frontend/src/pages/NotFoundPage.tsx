@@ -1,12 +1,16 @@
 import { Link } from 'react-router-dom';
 
+import { Card, PageHeader } from '../ui';
+
 export function NotFoundPage() {
   return (
-    <section>
-      <h1>Page not found</h1>
-      <p>
-        The page you requested does not exist. <Link to="/">Return home</Link>.
-      </p>
-    </section>
+    <div className="ui-stack">
+      <PageHeader title="Page not found" description="The page you requested does not exist." />
+      <Card>
+        <p>
+          <Link to="/">Return to the home page</Link>.
+        </p>
+      </Card>
+    </div>
   );
 }

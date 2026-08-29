@@ -16,12 +16,30 @@ React + TypeScript web portal for MPLADSentinel (SIH PS 26102).
 src/
 ├── api/        centralized typed backend client (client.ts) + endpoint modules
 ├── data/       data-provider layer (see below)
-├── layout/     AppLayout — application shell
-├── pages/      route screens (HomePage, NotFoundPage)
+├── layout/     application shell — AppShell / AppHeader / AppSidebar + nav config
+├── pages/      route screens: HomePage, NotFoundPage, and placeholder feature pages
 ├── router/     route table (AppRouter.tsx)
-├── styles/     global styles
+├── styles/     design tokens (tokens.css) + global reset + shell layout css
+├── ui/         reusable presentation primitives + ui.css (see "UI foundation")
 └── test/       test setup
 ```
+
+## UI foundation (`src/styles/`, `src/layout/`, `src/ui/`)
+
+- **Design tokens** — `src/styles/tokens.css` is the single source of truth for
+  colour, typography, spacing, radius, borders, shadows, layout widths and
+  control heights (CSS custom properties). Components never hardcode a visual
+  value twice.
+- **Application shell** — `layout/AppShell` = sticky header + left sidebar nav +
+  scrollable content (`<Outlet />`). Below 1024px the sidebar becomes an
+  off-canvas drawer toggled from the header. Structural only — no auth / RBAC.
+- **Primitives** — import from `src/ui`: `Button`, `Card`, `Badge`,
+  `StatusBadge`, `MetricCard`, `SectionHeader`, `PageHeader`, `Input`, `Select`,
+  `SearchInput`, `Skeleton` / `LoadingState`, `EmptyState`, `ErrorState`,
+  `DataTable`. Presentation only — no data access, no business logic.
+- **Status** is never colour-only: `StatusBadge` also carries a shape glyph and a
+  screen-reader label.
+- **Charts** — no charting dependency yet; the dashboard phase decides.
 
 Rules:
 
