@@ -1,7 +1,12 @@
 import { RouterProvider } from 'react-router-dom';
 
+import { DataProviderProvider } from './data/DataProviderProvider';
 import { appRouter } from './router/AppRouter';
 
 export function App() {
-  return <RouterProvider router={appRouter} />;
+  return (
+    <DataProviderProvider>
+      <RouterProvider router={appRouter} />
+    </DataProviderProvider>
+  );
 }

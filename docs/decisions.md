@@ -273,3 +273,36 @@ The following versions/major versions are adopted for the initial MPLADSentinel 
 - npm
 - PostgreSQL 16.x
 - Flyway
+
+## D26 — Frontend Data Provider Abstraction
+
+**Decision:**
+
+The Round-1 frontend is built broadly across the planned screens using a
+controlled demo data source first, and individual screens migrate to the real
+Spring Boot REST APIs as those APIs are implemented.
+
+To make that migration a configuration change rather than a UI rewrite, the
+frontend accesses data only through a `DataProvider` abstraction
+(`frontend/src/data/`):
+
+- React screens call a feature-level service (e.g. `useProjectsService`), which
+  depends on a `DataProvider`, not on `fetch`, the API client, or fixtures.
+- Two `DataProvider` implementations exist: `DemoDataProvider` (local,
+  clearly-marked demo fixtures) and `ApiDataProvider` (real data via the existing
+  centralized API client in `frontend/src/api/`). The browser still never calls
+  PostgreSQL, IPFS, Hyperledger Fabric or external MPLADS/Empowered Indian APIs
+  directly.
+- The active provider is selected from the `VITE_DATA_SOURCE` env var
+  (`demo` default, or `api`).
+- Frontend domain types mirror the backend `Work` model; no field is introduced
+  that the backend does not expose.
+- Demo fixtures will later be derived from real ingested MPLADS records; they
+  remain served through `DemoDataProvider` so no UI change is needed.
+
+No new state-management or data-fetching framework (Redux, Zustand, React
+Query, …) is introduced. A small `AsyncState` contract + `useAsyncData` hook
+covers loading / empty / success / error.
+
+This decision does not change the overall system architecture (D1–D3): the web
+portal still communicates with the backend only through REST APIs.
