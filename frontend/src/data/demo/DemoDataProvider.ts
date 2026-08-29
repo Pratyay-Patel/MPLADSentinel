@@ -2,6 +2,8 @@ import { deriveRisk } from '../risk/rules';
 import type { DataProvider } from '../DataProvider';
 import type {
   BackendHealth,
+  Grievance,
+  GrievanceInput,
   LifecycleState,
   Money,
   PaymentDataState,
@@ -9,6 +11,13 @@ import type {
   ProjectSummary,
 } from '../types';
 import { demoPaymentsByWorkId, demoProjects, RISK_REFERENCE_DATE } from './fixtures';
+
+/**
+ * Grievances submitted during this browser session. Not persisted — a reload
+ * clears them. The real backend endpoint (Phase 3B) replaces this.
+ */
+const demoGrievances: Grievance[] = [];
+let grievanceSeq = 0;
 
 const LIFECYCLE_STATES: LifecycleState[] = [
   'RECOMMENDED',
@@ -105,6 +114,24 @@ export function createDemoDataProvider(): DataProvider {
       ensureNotAborted(signal);
       const rows = demoPaymentsByWorkId.get(sourceWorkId) ?? [];
       return rows.map((row) => ({ ...row }));
+    },
+
+    async listGrievances(signal) {
+      ensureNotAborted(signal);
+      return demoGrievances.map((g) => ({ ...g }));
+    },
+
+    async submitGrievance(input: GrievanceInput, signal) {
+      ensureNotAborted(signal);
+      grievanceSeq += 1;
+      const grievance: Grievance = {
+        ...input,
+        id: `demo-grievance-${grievanceSeq}`,
+        submittedAt: new Date().toISOString(),
+        status: 'SUBMITTED',
+      };
+      demoGrievances.unshift(grievance);
+      return { ...grievance };
     },
   };
 }

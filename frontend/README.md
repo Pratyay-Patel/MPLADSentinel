@@ -77,8 +77,14 @@ src/
   only publicly releasable fields — no risk score, no data-quality flags, no
   payment-retrieval internals or provenance framing. Reads via
   `useCitizenService()` → `DataProvider`.
-- Other feature routes (`/audit`, `/grievances`) render placeholders until their
-  own phases.
+- **`/grievances`** — Grievances (`src/pages/grievances/`). A validated
+  submission form (category, subject, description, optional related work / name /
+  email) plus a table of grievances recorded so far. New provider methods
+  `submitGrievance` / `listGrievances`; the `DemoDataProvider` holds submissions
+  for the browser session, `ApiDataProvider` is `notImplemented`. Reads/writes
+  via `useGrievancesService()`.
+- `/audit` renders a placeholder — the Audit Timeline is deferred to the
+  backend-integration phase (it needs verification / ledger events).
 
 Rules:
 

@@ -12,6 +12,7 @@ export { MetricCard, type MetricCardProps } from './MetricCard';
 export { SectionHeader, type SectionHeaderProps } from './SectionHeader';
 export { PageHeader, type PageHeaderProps, type Breadcrumb } from './PageHeader';
 export { Input, type InputProps } from './Input';
+export { Textarea, type TextareaProps } from './Textarea';
 export { Select, type SelectProps, type SelectOption } from './Select';
 export { SearchInput, type SearchInputProps } from './SearchInput';
 export { Skeleton, LoadingState, type SkeletonProps, type LoadingStateProps } from './Skeleton';

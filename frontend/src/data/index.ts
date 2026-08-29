@@ -15,6 +15,9 @@
 export type {
   BackendHealth,
   DataSource,
+  Grievance,
+  GrievanceInput,
+  GrievanceStatus,
   LifecycleState,
   Money,
   PaymentDataState,
@@ -82,5 +85,14 @@ export {
   type PublicProject,
 } from './features/citizen';
 export { useCitizenService } from './features/useCitizenService';
+
+export {
+  createGrievancesService,
+  GRIEVANCE_CATEGORIES,
+  type GrievancesService,
+  type GrievancesData,
+  type GrievanceWorkOption,
+} from './features/grievances';
+export { useGrievancesService } from './features/useGrievancesService';
 
 export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';

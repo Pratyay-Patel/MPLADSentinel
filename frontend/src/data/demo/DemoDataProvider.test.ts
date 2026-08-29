@@ -84,4 +84,26 @@ describe('DemoDataProvider', () => {
     expect(await provider.getProjectPayments(notFetched.sourceWorkId)).toEqual([]);
     expect(await provider.getProjectPayments(-1)).toEqual([]);
   });
+
+  it('records a submitted grievance and lists it back', async () => {
+    const before = await provider.listGrievances();
+
+    const saved = await provider.submitGrievance({
+      workReference: 900_000_002,
+      category: 'Delay in execution',
+      subject: 'Work stalled',
+      description: 'Nothing has happened on site for months.',
+      contactName: null,
+      contactEmail: null,
+    });
+
+    expect(saved.id).toBeTruthy();
+    expect(saved.status).toBe('SUBMITTED');
+    expect(Number.isNaN(Date.parse(saved.submittedAt))).toBe(false);
+
+    const after = await provider.listGrievances();
+    expect(after.length).toBe(before.length + 1);
+    expect(after[0].id).toBe(saved.id);
+    expect(after[0].subject).toBe('Work stalled');
+  });
 });

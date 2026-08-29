@@ -5,7 +5,8 @@ import { AppShell } from '../layout/AppShell';
 import { GovernmentDashboard } from '../pages/dashboard/GovernmentDashboard';
 import { CitizenPortal } from '../pages/citizen/CitizenPortal';
 import { CitizenProjectView } from '../pages/citizen/CitizenProjectView';
-import { AuditPage, GrievancesPage } from '../pages/featurePages';
+import { AuditPage } from '../pages/featurePages';
+import { Grievances } from '../pages/grievances/Grievances';
 import { HomePage } from '../pages/HomePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { ProjectDetail } from '../pages/project-detail/ProjectDetail';
@@ -87,7 +88,7 @@ export const appRouter = createBrowserRouter([
         path: 'grievances',
         element: (
           <RequireRole area="grievances">
-            <GrievancesPage />
+            <Grievances />
           </RequireRole>
         ),
       },

@@ -1,6 +1,8 @@
 import type {
   BackendHealth,
   DataSource,
+  Grievance,
+  GrievanceInput,
   PaymentInstallment,
   Project,
   ProjectRisk,
@@ -47,4 +49,10 @@ export interface DataProvider {
    * `paymentDataState === 'FETCHED_PRESENT'`.
    */
   getProjectPayments(sourceWorkId: number, signal?: AbortSignal): Promise<PaymentInstallment[]>;
+
+  /** All grievances known to the provider, newest first. */
+  listGrievances(signal?: AbortSignal): Promise<Grievance[]>;
+
+  /** Record a new grievance and return the stored record. */
+  submitGrievance(input: GrievanceInput, signal?: AbortSignal): Promise<Grievance>;
 }

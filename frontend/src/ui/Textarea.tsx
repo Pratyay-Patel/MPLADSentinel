@@ -1,31 +1,22 @@
-import { useId, type SelectHTMLAttributes } from 'react';
+import { useId, type TextareaHTMLAttributes } from 'react';
 
-export interface SelectOption {
-  value: string;
-  label: string;
-}
-
-export interface SelectProps extends Omit<
-  SelectHTMLAttributes<HTMLSelectElement>,
-  'id' | 'children'
-> {
+export interface TextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'id'> {
   label: string;
   hideLabel?: boolean;
-  options: SelectOption[];
   hint?: string;
   error?: string;
 }
 
-/** A labelled native `<select>` — the base for future filter controls. */
-export function Select({
+/** A labelled multi-line text input. Mirrors {@link ./Input#Input}. */
+export function Textarea({
   label,
   hideLabel,
-  options,
   hint,
   error,
   className,
+  rows = 4,
   ...rest
-}: SelectProps) {
+}: TextareaProps) {
   const id = useId();
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
@@ -35,19 +26,14 @@ export function Select({
       <label className={hideLabel ? 'visually-hidden' : 'ui-field__label'} htmlFor={id}>
         {label}
       </label>
-      <select
+      <textarea
         id={id}
+        rows={rows}
         className={['ui-control', className].filter(Boolean).join(' ')}
         aria-invalid={error ? true : undefined}
         aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
         {...rest}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      />
       {hint ? (
         <span id={hintId} className="ui-field__hint">
           {hint}

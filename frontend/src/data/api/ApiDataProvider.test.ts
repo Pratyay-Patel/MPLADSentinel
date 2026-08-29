@@ -63,6 +63,20 @@ describe('ApiDataProvider', () => {
     ['getProject', () => provider.getProject(1)],
     ['getProjectSummary', () => provider.getProjectSummary()],
     ['getProjectRisk', () => provider.getProjectRisk(1)],
+    ['getProjectPayments', () => provider.getProjectPayments(1)],
+    ['listGrievances', () => provider.listGrievances()],
+    [
+      'submitGrievance',
+      () =>
+        provider.submitGrievance({
+          workReference: null,
+          category: 'Other',
+          subject: 's',
+          description: 'd',
+          contactName: null,
+          contactEmail: null,
+        }),
+    ],
   ] as const)(
     'rejects %s with a notImplemented ProviderError (no backend endpoint yet)',
     async (_name, call) => {

@@ -51,5 +51,7 @@ export function createApiDataProvider(): DataProvider {
     getProjectSummary: () => Promise.resolve().then(() => notImplemented('getProjectSummary')),
     getProjectRisk: () => Promise.resolve().then(() => notImplemented('getProjectRisk')),
     getProjectPayments: () => Promise.resolve().then(() => notImplemented('getProjectPayments')),
+    listGrievances: () => Promise.resolve().then(() => notImplemented('listGrievances')),
+    submitGrievance: () => Promise.resolve().then(() => notImplemented('submitGrievance')),
   };
 }

@@ -10,6 +10,7 @@ import './pages/projects/projects.css';
 import './pages/project-detail/project-detail.css';
 import './pages/risk/risk.css';
 import './pages/citizen/citizen.css';
+import './pages/grievances/grievances.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

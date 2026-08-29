@@ -141,3 +141,25 @@ export interface BackendHealth {
   status: string;
   service: string;
 }
+
+/** Lifecycle of a citizen grievance. Round 1 only records the initial state. */
+export type GrievanceStatus = 'SUBMITTED';
+
+/** What a citizen fills in on the grievance form. */
+export interface GrievanceInput {
+  /** `sourceWorkId` of the work this grievance is about, or null if general. */
+  workReference: number | null;
+  category: string;
+  subject: string;
+  description: string;
+  contactName: string | null;
+  contactEmail: string | null;
+}
+
+/** A submitted grievance. `id` / `submittedAt` / `status` are assigned on submit. */
+export interface Grievance extends GrievanceInput {
+  id: string;
+  /** ISO timestamp. */
+  submittedAt: string;
+  status: GrievanceStatus;
+}
