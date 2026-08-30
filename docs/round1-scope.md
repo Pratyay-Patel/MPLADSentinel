@@ -249,8 +249,17 @@ Development follows this order. Steps 1–4 built the backend foundation and the
       was cut (one probe, not one rejected call per work, pre-B3). Proper
       server-side paging is B4b.
         ↓
-14. B3 — Risk engine: GET /api/works/{id}/risk (rule-based, server-side, D22)
-    → flip getProjectRisk; retire the client deriveRisk stand-in
+14. B3 — Risk engine (rule-based, server-side, D22)              [done]
+    - com.mpladsentinel.mplads.risk: RiskEngine + RiskRuleSet (the 6
+      rules ported 1:1 from the client deriveRisk — same ids/weights/
+      thresholds), injected Clock for deterministic tests
+    - GET /api/works/risk (bulk — the list screens call this once) and
+      GET /api/works/{id}/risk (single — the detail page); authority-only
+    - flip getProjectRisk + new listProjectRisks; loadProjectsWithRisk
+      fetches projects + risks in parallel (one request each, not one
+      per work)
+    - client deriveRisk (rules.ts) kept as the demo-mode risk source,
+      kept in sync with the backend by hand
         ↓
 15. B4 — grievances table (Flyway V6) + GET/POST/PATCH /api/grievances
     → flip listGrievances / submitGrievance / updateGrievanceStatus

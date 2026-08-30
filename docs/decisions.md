@@ -245,6 +245,19 @@ Decision: The initial Round 1 rule/statistical risk engine will be implemented
 inside Spring Boot. The separate Python AI service will be introduced when
 advanced ML functionality is required.
 
+**Implemented (B3):** `com.mpladsentinel.mplads.risk` — `RiskEngine` +
+`RiskRuleSet`, 6 rules (`PAYMENT_OVERSPEND`, `FULL_PAYOUT_BEFORE_COMPLETION`,
+`SINGLE_INSTALLMENT_FULL`, `DORMANT_NO_PAYMENTS`, `COST_COHORT_OUTLIER`,
+`PAYMENT_DATA_UNAVAILABLE`) using only verified source fields (no
+physical-progress / geospatial / duplicate / delay-prediction rule). Score =
+Σweights capped 100; ≥55 HIGH, ≥25 MEDIUM, >0 LOW; `UNKNOWN` when nothing fired
+and nothing is assessable. Deterministic (injected `Clock`). Exposed at
+`GET /api/works/risk` (bulk) and `GET /api/works/{id}/risk` (single),
+authority-only. Scores are **investigation indicators, never proof** (§17).
+
+The 6 rules are a 1:1 port of the client `frontend/src/data/risk/rules.ts`,
+which is retained as the demo-mode risk source and kept in sync by hand.
+
 ## D23 — Field Officer Role
 Decision: Field Officer is a backend RBAC role but does not have a dedicated
 web interface in Round 1. Field Officer functionality is primarily provided

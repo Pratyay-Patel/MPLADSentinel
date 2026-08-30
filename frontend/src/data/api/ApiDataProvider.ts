@@ -5,12 +5,14 @@ import {
   getPublicWorks,
   getWork,
   getWorkPayments,
+  getWorkRisk,
   getWorks,
+  getWorksRisk,
   getWorksSummary,
 } from '../../api/works';
 import type { DataProvider } from '../DataProvider';
 import { ProviderError } from '../errors';
-import type { BackendHealth, Project } from '../types';
+import type { BackendHealth, Project, ProjectRisk } from '../types';
 
 /** Maps a failed API call onto the ProviderError kinds the UI understands. */
 function toProviderError(operation: string, error: unknown): ProviderError {
@@ -43,11 +45,11 @@ function notImplemented(operation: string): never {
  * therefore only ever talks to the Spring Boot backend, never PostgreSQL or an
  * external MPLADS/Empowered Indian API.
  *
- * Wired today (Phase B2): backend health and the works read APIs — `listProjects`
- * / `getProject` / `getProjectSummary` / `getProjectPayments` (authority) and
- * `listPublicProjects` / `getPublicProject` (citizen-safe). `getProjectRisk`
- * (Phase B3) and the grievance methods (Phase B4) still reject with a
- * `notImplemented` `ProviderError`.
+ * Wired: backend health, the works read APIs (`listProjects` / `getProject` /
+ * `getProjectSummary` / `getProjectPayments` authority; `listPublicProjects` /
+ * `getPublicProject` citizen-safe), and the risk APIs (`getProjectRisk` /
+ * `listProjectRisks`, Phase B3). The grievance methods (Phase B4) still reject
+ * with a `notImplemented` `ProviderError`.
  */
 export function createApiDataProvider(): DataProvider {
   return {
@@ -114,9 +116,30 @@ export function createApiDataProvider(): DataProvider {
       }
     },
 
+    async getProjectRisk(sourceWorkId, signal) {
+      try {
+        return await getWorkRisk(sourceWorkId, signal);
+      } catch (error) {
+        if (isNotFound(error)) return null;
+        throw toProviderError('getProjectRisk', error);
+      }
+    },
+
+    async listProjectRisks(signal) {
+      try {
+        const rows = await getWorksRisk(signal);
+        const byWorkId: Record<number, ProjectRisk> = {};
+        for (const row of rows) {
+          byWorkId[row.sourceWorkId] = row;
+        }
+        return byWorkId;
+      } catch (error) {
+        throw toProviderError('listProjectRisks', error);
+      }
+    },
+
     // --- not yet wired -------------------------------------------------
 
-    getProjectRisk: () => Promise.resolve().then(() => notImplemented('getProjectRisk')),
     listGrievances: () => Promise.resolve().then(() => notImplemented('listGrievances')),
     submitGrievance: () => Promise.resolve().then(() => notImplemented('submitGrievance')),
     updateGrievanceStatus: () =>

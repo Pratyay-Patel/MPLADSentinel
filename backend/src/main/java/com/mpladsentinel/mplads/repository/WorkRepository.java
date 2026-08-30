@@ -41,4 +41,12 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
     @Query("select coalesce(sum(w.paymentTotalPaid), 0) from Work w "
             + "where w.paymentDataState = com.mpladsentinel.mplads.domain.PaymentDataState.FETCHED_PRESENT")
     BigDecimal sumRecordedPayments();
+
+    /**
+     * Per-category cost cohorts for the risk engine's {@code COST_COHORT_OUTLIER}
+     * rule: {@code [category, max(estimatedCost), count]} over works that have both.
+     */
+    @Query("select w.category, max(w.estimatedCost), count(w) from Work w "
+            + "where w.category is not null and w.estimatedCost is not null group by w.category")
+    List<Object[]> categoryCohorts();
 }

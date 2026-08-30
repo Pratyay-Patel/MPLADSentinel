@@ -1,5 +1,5 @@
 import type { PublicProject } from '../data/publicProject';
-import type { PaymentInstallment, Project, ProjectSummary } from '../data/types';
+import type { PaymentInstallment, Project, ProjectRisk, ProjectSummary } from '../data/types';
 import { apiClient } from './client';
 
 /**
@@ -32,3 +32,14 @@ export const getPublicWork = (
   reference: number,
   signal?: AbortSignal,
 ): Promise<PublicProject> => apiClient.get(`/public/works/${reference}`, { signal });
+
+// --- risk (Phase B3, authority-only) --------------------------------
+
+/** Every work's risk assessment — the list screens call this once. */
+export const getWorksRisk = (signal?: AbortSignal): Promise<ProjectRisk[]> =>
+  apiClient.get('/works/risk', { signal });
+
+export const getWorkRisk = (
+  sourceWorkId: number,
+  signal?: AbortSignal,
+): Promise<ProjectRisk> => apiClient.get(`/works/${sourceWorkId}/risk`, { signal });

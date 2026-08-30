@@ -159,6 +159,33 @@ describe('ApiDataProvider', () => {
     expect(await provider.getPublicProject(42)).toBeNull();
   });
 
+  // --- risk (Phase B3) --------------------------------------------
+
+  it('listProjectRisks fetches /api/works/risk and keys it by sourceWorkId', async () => {
+    const fetchMock = stubFetch(
+      jsonResponse([
+        { sourceWorkId: 900000001, level: 'HIGH', score: 90, reasons: ['x'], assessedAt: 't' },
+        { sourceWorkId: 900000002, level: 'LOW', score: 0, reasons: [], assessedAt: 't' },
+      ]),
+    );
+
+    const byId = await provider.listProjectRisks();
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/works/risk');
+    expect(byId[900000001].level).toBe('HIGH');
+    expect(byId[900000002].score).toBe(0);
+  });
+
+  it('getProjectRisk fetches /api/works/:id/risk and returns null on 404', async () => {
+    stubFetch(
+      jsonResponse({ sourceWorkId: 900000001, level: 'MEDIUM', score: 30, reasons: ['y'], assessedAt: 't' }),
+    );
+    expect((await provider.getProjectRisk(900000001))?.level).toBe('MEDIUM');
+
+    stubFetch(jsonResponse({}, { status: 404 }));
+    expect(await provider.getProjectRisk(42)).toBeNull();
+  });
+
   it('maps a backend error status to a ProviderError of kind "unavailable"', async () => {
     stubFetch(jsonResponse({ error: 'down' }, { status: 503 }));
 
@@ -180,7 +207,6 @@ describe('ApiDataProvider', () => {
   // --- not yet wired ----------------------------------------------
 
   it.each([
-    ['getProjectRisk', () => provider.getProjectRisk(1)],
     ['listGrievances', () => provider.listGrievances()],
     [
       'submitGrievance',

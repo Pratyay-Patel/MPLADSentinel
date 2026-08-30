@@ -85,6 +85,21 @@ describe('DemoDataProvider', () => {
     expect(await provider.getProjectRisk(-1)).toBeNull();
   });
 
+  it('listProjectRisks returns an assessment for every project, keyed by id', async () => {
+    const projects = await provider.listProjects();
+    const byId = await provider.listProjectRisks();
+
+    expect(Object.keys(byId)).toHaveLength(projects.length);
+    for (const project of projects) {
+      const risk = byId[project.sourceWorkId];
+      expect(risk.sourceWorkId).toBe(project.sourceWorkId);
+      expect(RISK).toContain(risk.level);
+    }
+    // agrees with the single-work lookup
+    const single = await provider.getProjectRisk(projects[0].sourceWorkId);
+    expect(byId[projects[0].sourceWorkId].level).toBe(single!.level);
+  });
+
   it('returns installment rows for a payments-present work and none otherwise', async () => {
     const projects = await provider.listProjects();
     const present = projects.find((p) => p.paymentDataState === 'FETCHED_PRESENT')!;

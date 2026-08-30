@@ -11,6 +11,7 @@ import type {
   Money,
   PaymentDataState,
   Project,
+  ProjectRisk,
   ProjectSummary,
 } from '../types';
 import { demoPaymentsByWorkId, demoProjects, RISK_REFERENCE_DATE } from './fixtures';
@@ -122,6 +123,16 @@ export function createDemoDataProvider(): DataProvider {
         allProjects: [...demoProjects],
         asOf: RISK_REFERENCE_DATE,
       });
+    },
+
+    async listProjectRisks(signal) {
+      ensureNotAborted(signal);
+      const ctx = { allProjects: [...demoProjects], asOf: RISK_REFERENCE_DATE };
+      const byWorkId: Record<number, ProjectRisk> = {};
+      for (const project of demoProjects) {
+        byWorkId[project.sourceWorkId] = deriveRisk(project, ctx);
+      }
+      return byWorkId;
     },
 
     async getProjectPayments(sourceWorkId, signal) {

@@ -1,21 +1,19 @@
 import type { Project, ProjectRisk, RiskLevel } from '../types';
 
 /**
- * Rule-based risk indicators — a frontend stand-in for the Round-1 risk engine.
+ * Rule-based risk indicators — the **demo-mode** risk source.
  *
- * The engine itself runs server-side in Spring Boot (decision D22). Until that
- * API exists, `deriveRisk` evaluates the same class of rules on the client
- * against whatever the DataProvider returns, so the Risk & Alerts screen and the
- * dashboard can be built and demoed. It is not an ML model and not the
- * production engine.
+ * The real Round-1 engine runs server-side in Spring Boot (decision D22,
+ * `com.mpladsentinel.mplads.risk`); `ApiDataProvider` reads it via
+ * `/api/works/risk`. This module is now used **only by `DemoDataProvider`** so
+ * `VITE_DATA_SOURCE=demo` still shows risk without a backend. The two
+ * implementations share the same rule ids, weights and thresholds and are kept
+ * in sync by hand.
  *
  * Every rule uses only fields the verified MPLADS source provides. There is
  * deliberately NO physical-progress, geospatial, duplicate-project or
  * delay-prediction rule (docs/data-source.md §14 — the source has none of that).
- *
- * When the risk API lands, `ApiDataProvider.getProjectRisk` returns its response
- * and this module is only used by the demo provider (or deleted) — the screens
- * do not change.
+ * It is not an ML model.
  */
 
 export interface RiskContext {

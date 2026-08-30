@@ -138,12 +138,13 @@ ApiDataProvider  ─→ src/api/client.ts ─→ Spring Boot REST API
   operation, the ApiDataProvider method getting a real endpoint) — the component
   is untouched.
 - **Backend-integration progress.** `demo` (the default) is fully working.
-  Under `api`, wired so far: auth (B1) and the works read APIs (B2) —
+  Under `api`, wired so far: auth (B1), the works read APIs (B2) —
   `listProjects` / `getProject` / `getProjectSummary` / `getProjectPayments`
   (authority `GET /api/works*`) and `listPublicProjects` / `getPublicProject`
-  (citizen-safe `GET /api/public/works*`). Still `notImplemented` under `api`:
-  `getProjectRisk` (B3 — dashboard / `/risk` degrade every work to `UNKNOWN`
-  risk until then) and the grievance methods (B4).
+  (citizen-safe `GET /api/public/works*`) — and the risk engine (B3):
+  `getProjectRisk` + `listProjectRisks` via `GET /api/works/{id}/risk` and
+  `GET /api/works/risk`. `rules.ts` is now the demo-mode risk source only.
+  Still `notImplemented` under `api`: the grievance methods (B4).
 
 ## Configuration
 

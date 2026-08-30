@@ -57,6 +57,12 @@ export interface DataProvider {
   getProjectRisk(sourceWorkId: number, signal?: AbortSignal): Promise<ProjectRisk | null>;
 
   /**
+   * Risk for every project, keyed by `sourceWorkId`. The list screens read this
+   * once instead of calling {@link getProjectRisk} per work.
+   */
+  listProjectRisks(signal?: AbortSignal): Promise<Record<number, ProjectRisk>>;
+
+  /**
    * Payment installments for one work. Empty unless the work's
    * `paymentDataState === 'FETCHED_PRESENT'`.
    */

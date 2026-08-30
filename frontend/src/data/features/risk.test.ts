@@ -42,10 +42,10 @@ describe('createRiskService', () => {
     await expect(createRiskService(provider).load()).rejects.toThrow('backend down');
   });
 
-  it('falls back to an UNKNOWN risk when a per-work risk lookup fails', async () => {
+  it('falls back to UNKNOWN risk for every work when the bulk risk call fails', async () => {
     const provider: DataProvider = {
       ...createDemoDataProvider(),
-      getProjectRisk: vi.fn().mockRejectedValue(new ProviderError('unknown', 'risk down')),
+      listProjectRisks: vi.fn().mockRejectedValue(new ProviderError('unavailable', 'risk down')),
     };
     const { rows } = await createRiskService(provider).load();
 
