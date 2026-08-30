@@ -8,7 +8,7 @@ import {
   type RegisterRow,
   type RiskLevel,
 } from '../../data';
-import { formatINRCompact } from '../../format';
+import { formatINRCompact, workTitle } from '../../format';
 import {
   Button,
   Card,
@@ -114,7 +114,7 @@ const columns: Column<RegisterRow>[] = [
     render: ({ project }) => (
       <div className="dash-cell-primary">
         <span className="dash-cell-primary__title">
-          {project.workDescription ?? `Work ${project.sourceWorkId}`}
+          {workTitle(project.workDescription, project.sourceWorkId)}
         </span>
         <span className="dash-cell-primary__sub">
           {[project.state, project.district].filter(Boolean).join(' · ')} · #{project.sourceWorkId}
@@ -170,7 +170,7 @@ const columns: Column<RegisterRow>[] = [
     header: 'Action',
     align: 'right',
     render: ({ project }) => (
-      <ViewProjectLink id={project.sourceWorkId} label={project.workDescription ?? undefined} />
+      <ViewProjectLink id={project.sourceWorkId} label={workTitle(project.workDescription, project.sourceWorkId)} />
     ),
   },
 ];

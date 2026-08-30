@@ -1,3 +1,4 @@
+import { hasReadableDescription, workTitle } from '../../format';
 import type { DataProvider } from '../DataProvider';
 import type { LifecycleState, Project, ProjectHouse, ProjectRisk, RiskLevel } from '../types';
 import { loadProjectsWithRisk } from './projectsWithRisk';
@@ -57,7 +58,11 @@ export function createProjectRegisterService(provider: DataProvider): ProjectReg
         .map((project) => ({ project, risk: risksByWorkId[project.sourceWorkId] }))
         .sort(
           (a, b) =>
-            (a.project.workDescription ?? '').localeCompare(b.project.workDescription ?? '') ||
+            Number(!hasReadableDescription(a.project.workDescription)) -
+              Number(!hasReadableDescription(b.project.workDescription)) ||
+            workTitle(a.project.workDescription, a.project.sourceWorkId).localeCompare(
+              workTitle(b.project.workDescription, b.project.sourceWorkId),
+            ) ||
             a.project.sourceWorkId - b.project.sourceWorkId,
         );
 

@@ -7,7 +7,7 @@ import {
   type Column,
   type StatusTone,
 } from '../../../ui';
-import { formatINRCompact } from '../../../format';
+import { formatINRCompact, workTitle } from '../../../format';
 import { RiskCell } from '../RiskCell';
 
 const LIFECYCLE_TONE: Record<Project['lifecycleState'], StatusTone> = {
@@ -40,7 +40,7 @@ export function ProjectExploration({ rows, risksByWorkId }: ProjectExplorationPr
       render: (project) => (
         <div className="dash-cell-primary">
           <span className="dash-cell-primary__title">
-            {project.workDescription ?? `Work ${project.sourceWorkId}`}
+            {workTitle(project.workDescription, project.sourceWorkId)}
           </span>
           <span className="dash-cell-primary__sub">#{project.sourceWorkId}</span>
         </div>
@@ -74,7 +74,7 @@ export function ProjectExploration({ rows, risksByWorkId }: ProjectExplorationPr
       header: 'Action',
       align: 'right',
       render: (project) => (
-        <ViewProjectLink id={project.sourceWorkId} label={project.workDescription ?? undefined} />
+        <ViewProjectLink id={project.sourceWorkId} label={workTitle(project.workDescription, project.sourceWorkId)} />
       ),
     },
   ];

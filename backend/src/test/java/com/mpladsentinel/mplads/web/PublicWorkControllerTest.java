@@ -43,6 +43,8 @@ class PublicWorkControllerTest extends AbstractPostgresIntegrationTest {
 
     private static final long BASE = 3_300_000_000L;
     private static final long REF = BASE + 1;
+    private static final long UNREADABLE_LOW_ID = BASE + 5;   // low id, unusable description
+    private static final long READABLE_HIGH_ID = BASE + 50;   // high id, good description
     private static final long UNKNOWN = 999_999_998L;
 
     private static final String[] FORBIDDEN_FIELDS = {
@@ -77,6 +79,19 @@ class PublicWorkControllerTest extends AbstractPostgresIntegrationTest {
         work.setPaymentTotalPaid(new BigDecimal("900000.00"));
         work.setDataQualityFlags(new String[] {"HI_FIELDS_MIRROR_EN"});
         workRepository.saveAndFlush(work);
+
+        Work unreadable = new Work(SourceName.EMPOWERED_INDIAN, UNREADABLE_LOW_ID,
+                LifecycleState.RECOMMENDED, true, false, run);
+        unreadable.setWorkDescription("?? ?? ??");
+        unreadable.setState("Uttar Pradesh");
+        unreadable.setDataQualityFlags(new String[] {"UNREADABLE_WORK_DESCRIPTION"});
+        workRepository.saveAndFlush(unreadable);
+
+        Work readableHigh = new Work(SourceName.EMPOWERED_INDIAN, READABLE_HIGH_ID,
+                LifecycleState.RECOMMENDED, true, false, run);
+        readableHigh.setWorkDescription("Community toilet block");
+        readableHigh.setState("Uttar Pradesh");
+        workRepository.saveAndFlush(readableHigh);
     }
 
     private HttpEntity<Void> as(String username) {
@@ -118,6 +133,24 @@ class PublicWorkControllerTest extends AbstractPostgresIntegrationTest {
         for (String field : FORBIDDEN_FIELDS) {
             assertThat(row.has(field)).as("public payload must not contain '%s'", field).isFalse();
         }
+    }
+
+    @Test
+    void listsWorksWithAnUnreadableDescriptionLast() {
+        PublicWorkResponse[] all = rest.exchange(
+                "/api/public/works", HttpMethod.GET, as("citizen"), PublicWorkResponse[].class).getBody();
+
+        int readableHigh = -1;
+        int unreadableLow = -1;
+        for (int i = 0; i < all.length; i++) {
+            if (all[i].reference() == READABLE_HIGH_ID) {
+                readableHigh = i;
+            } else if (all[i].reference() == UNREADABLE_LOW_ID) {
+                unreadableLow = i;
+            }
+        }
+        assertThat(readableHigh).isGreaterThanOrEqualTo(0);
+        assertThat(unreadableLow).isGreaterThan(readableHigh);
     }
 
     @Test

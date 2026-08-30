@@ -3,6 +3,7 @@ package com.mpladsentinel.mplads.normalization;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Component;
 
@@ -37,6 +38,18 @@ import com.mpladsentinel.mplads.source.empoweredindian.dto.RecommendedWorkDto;
 public class WorkNormalizer {
 
     private static final int STATUS_RAW_MAX = 64;
+
+    /** Minimum letters a description must have to count as readable content. */
+    private static final int MIN_READABLE_LETTERS = 3;
+
+    /**
+     * Leading/trailing separator noise to strip from a description for display
+     * (e.g. {@code ", Construction of road"} -> {@code "Construction of road"}).
+     * Deliberately excludes {@code ?} so an all-{@code ?} value survives verbatim
+     * and is flagged {@link DataQualityFlags#UNREADABLE_WORK_DESCRIPTION}.
+     */
+    private static final Pattern EDGE_NOISE =
+            Pattern.compile("^[\\s,.;:_/\\\\|~^*+=•·\\-\\u2013\\u2014]+|[\\s,.;:_/\\\\|~^*+=•·\\-\\u2013\\u2014]+$");
 
     /**
      * Normalise one {@code data.recommendedWorks[]} element.
@@ -179,13 +192,35 @@ public class WorkNormalizer {
     }
 
     private void applyDescriptive(Work work, String description, String category, Set<String> flags) {
-        String desc = NormalizationSupport.trimToNull(description);
+        String desc = tidyDescriptionEdges(NormalizationSupport.trimToNull(description));
         work.setWorkDescription(desc);
         if (desc == null) {
             flags.add(DataQualityFlags.MISSING_WORK_DESCRIPTION);
+        } else if (readableLetterCount(desc) < MIN_READABLE_LETTERS) {
+            // present but no readable content (e.g. "?? ?? ??", ", , ,").
+            flags.add(DataQualityFlags.UNREADABLE_WORK_DESCRIPTION);
         }
         work.setCategory(NormalizationSupport.trimToNull(category));
         work.setCategoryNormalized(NormalizationSupport.toMatchForm(category));
+    }
+
+    /** Strip leading/trailing separator noise; a result with nothing left becomes {@code null}. */
+    private static String tidyDescriptionEdges(String trimmed) {
+        if (trimmed == null) {
+            return null;
+        }
+        String cleaned = EDGE_NOISE.matcher(trimmed).replaceAll("");
+        return cleaned.isBlank() ? null : cleaned;
+    }
+
+    private static int readableLetterCount(String value) {
+        int count = 0;
+        for (int i = 0; i < value.length(); i++) {
+            if (Character.isLetter(value.charAt(i))) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private void applyMp(Work work, MpDetailsDto mp, Set<String> flags) {

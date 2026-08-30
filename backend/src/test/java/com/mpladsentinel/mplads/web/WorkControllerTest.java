@@ -48,6 +48,8 @@ class WorkControllerTest extends AbstractPostgresIntegrationTest {
     private static final long WITH_PAYMENTS = BASE + 1;
     private static final long NO_PAYMENTS = BASE + 2;
     private static final long COMPLETED = BASE + 3;
+    private static final long UNREADABLE_LOW_ID = BASE + 10;  // low id, but unusable description
+    private static final long READABLE_HIGH_ID = BASE + 90;   // high id, good description
     private static final long UNKNOWN = 999_999_999L;
 
     @Autowired
@@ -101,6 +103,21 @@ class WorkControllerTest extends AbstractPostgresIntegrationTest {
         completed.setFinalCost(new BigDecimal("1900000.00"));
         completed.setCompletedOn(LocalDate.of(2026, 3, 15));
         workRepository.saveAndFlush(completed);
+
+        // low id, but its source description is unreadable -> must list after readable works
+        Work unreadable = new Work(SourceName.EMPOWERED_INDIAN, UNREADABLE_LOW_ID,
+                LifecycleState.RECOMMENDED, true, false, run);
+        unreadable.setWorkDescription("?? ?? ??");
+        unreadable.setState("Uttar Pradesh");
+        unreadable.setDataQualityFlags(new String[] {"UNREADABLE_WORK_DESCRIPTION"});
+        workRepository.saveAndFlush(unreadable);
+
+        // high id, readable description
+        Work readableHigh = new Work(SourceName.EMPOWERED_INDIAN, READABLE_HIGH_ID,
+                LifecycleState.RECOMMENDED, true, false, run);
+        readableHigh.setWorkDescription("Boundary wall for the primary school");
+        readableHigh.setState("Uttar Pradesh");
+        workRepository.saveAndFlush(readableHigh);
     }
 
     private static WorkPayment payment(Work work, String amount, short ordinal, String fingerprint,
@@ -151,6 +168,26 @@ class WorkControllerTest extends AbstractPostgresIntegrationTest {
         assertThat(row.paymentDataState()).isEqualTo(PaymentDataState.FETCHED_PRESENT);
         assertThat(row.recordedPayments().amount()).isEqualByComparingTo("1200000.00");
         assertThat(row.lifecycleState()).isEqualTo(LifecycleState.RECOMMENDED);
+    }
+
+    @Test
+    void listsWorksWithAnUnreadableDescriptionAfterReadableOnes() {
+        WorkResponse[] all = rest.exchange(
+                "/api/works", HttpMethod.GET, as("mospi"), WorkResponse[].class).getBody();
+
+        int readableHighIndex = indexOf(all, READABLE_HIGH_ID);
+        int unreadableLowIndex = indexOf(all, UNREADABLE_LOW_ID);
+        // the unreadable work has the lower source id, yet must come last
+        assertThat(readableHighIndex).isLessThan(unreadableLowIndex);
+    }
+
+    private static int indexOf(WorkResponse[] rows, long sourceWorkId) {
+        for (int i = 0; i < rows.length; i++) {
+            if (rows[i].sourceWorkId() == sourceWorkId) {
+                return i;
+            }
+        }
+        throw new AssertionError("work " + sourceWorkId + " not in the response");
     }
 
     @Test

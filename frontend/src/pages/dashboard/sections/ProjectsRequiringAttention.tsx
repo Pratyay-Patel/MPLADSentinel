@@ -1,6 +1,6 @@
 import type { AttentionItem } from '../../../data';
 import { DataTable, EmptyState, ViewProjectLink, type Column } from '../../../ui';
-import { formatINRCompact } from '../../../format';
+import { formatINRCompact, workTitle } from '../../../format';
 import { RiskCell } from '../RiskCell';
 
 const columns: Column<AttentionItem>[] = [
@@ -10,7 +10,7 @@ const columns: Column<AttentionItem>[] = [
     render: ({ project }) => (
       <div className="dash-cell-primary">
         <span className="dash-cell-primary__title">
-          {project.workDescription ?? `Work ${project.sourceWorkId}`}
+          {workTitle(project.workDescription, project.sourceWorkId)}
         </span>
         <span className="dash-cell-primary__sub">
           {project.category ?? '—'} · #{project.sourceWorkId}
@@ -53,7 +53,7 @@ const columns: Column<AttentionItem>[] = [
     header: 'Action',
     align: 'right',
     render: ({ project }) => (
-      <ViewProjectLink id={project.sourceWorkId} label={project.workDescription ?? undefined} />
+      <ViewProjectLink id={project.sourceWorkId} label={workTitle(project.workDescription, project.sourceWorkId)} />
     ),
   },
 ];

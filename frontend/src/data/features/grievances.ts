@@ -1,3 +1,4 @@
+import { workTitle } from '../../format';
 import type { DataProvider } from '../DataProvider';
 import type { Grievance, GrievanceInput, GrievanceStatus, GrievanceStatusPatch } from '../types';
 
@@ -60,7 +61,7 @@ export function createGrievancesService(provider: DataProvider): GrievancesServi
       const workOptions: GrievanceWorkOption[] = projects
         .map((p) => ({
           reference: p.sourceWorkId,
-          label: p.workDescription ?? `Work ${p.sourceWorkId}`,
+          label: workTitle(p.workDescription, p.sourceWorkId),
         }))
         .sort((a, b) => a.label.localeCompare(b.label));
       return { grievances, workOptions };

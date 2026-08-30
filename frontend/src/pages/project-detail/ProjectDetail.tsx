@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { useAsyncData, useProjectDetailService, type ProjectDetailData } from '../../data';
-import { formatINRExact } from '../../format';
+import { formatINRExact, tidyDescription, workTitle } from '../../format';
 import {
   Badge,
   Card,
@@ -43,7 +43,11 @@ export function ProjectDetail() {
   );
 
   const project = state.status === 'success' ? state.data?.project : undefined;
-  const title = project?.workDescription ?? (validId ? `Work #${workId}` : 'Project details');
+  const title = project
+    ? workTitle(project.workDescription, workId)
+    : validId
+      ? `Work #${workId}`
+      : 'Project details';
   const subtitle = project
     ? [project.category, project.state].filter(Boolean).join(' · ')
     : undefined;
@@ -104,7 +108,10 @@ function ProjectDetailView({ data }: { data: ProjectDetailData }) {
         <SectionHeader title="Overview" />
         <KeyValueList
           items={[
-            { label: 'Work description', value: project.workDescription ?? '—' },
+            {
+              label: 'Work description',
+              value: tidyDescription(project.workDescription) ?? 'Not recorded in source',
+            },
             { label: 'Category', value: project.category ?? '—' },
             {
               label: 'Lifecycle',

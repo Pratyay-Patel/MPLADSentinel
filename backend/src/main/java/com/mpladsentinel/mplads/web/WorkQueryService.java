@@ -2,18 +2,19 @@ package com.mpladsentinel.mplads.web;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mpladsentinel.mplads.domain.LifecycleState;
 import com.mpladsentinel.mplads.domain.PaymentDataState;
 import com.mpladsentinel.mplads.domain.Work;
+import com.mpladsentinel.mplads.normalization.DataQualityFlags;
 import com.mpladsentinel.mplads.repository.WorkPaymentRepository;
 import com.mpladsentinel.mplads.repository.WorkRepository;
 
@@ -28,6 +29,15 @@ public class WorkQueryService {
 
     private static final String CURRENCY_INR = "INR";
 
+    /**
+     * List order: works with a usable description first, then by source work id.
+     * Keeps rows whose description is missing / unreadable in the source
+     * (e.g. {@code "?? ?? ??"}) out of the top of every list.
+     */
+    private static final Comparator<Work> LISTING_ORDER =
+            Comparator.comparing(WorkQueryService::hasUnusableDescription)
+                    .thenComparing(Work::getSourceWorkId);
+
     private final WorkRepository works;
     private final WorkPaymentRepository payments;
 
@@ -39,7 +49,8 @@ public class WorkQueryService {
     // --- authority-facing (full) view -----------------------------------
 
     public List<WorkResponse> listWorks() {
-        return works.findAll(Sort.by(Sort.Direction.ASC, "sourceWorkId")).stream()
+        return works.findAll().stream()
+                .sorted(LISTING_ORDER)
                 .map(WorkResponse::from)
                 .toList();
     }
@@ -77,7 +88,8 @@ public class WorkQueryService {
     // --- publicly releasable view --------------------------------------
 
     public List<PublicWorkResponse> listPublicWorks() {
-        return works.findAll(Sort.by(Sort.Direction.ASC, "sourceWorkId")).stream()
+        return works.findAll().stream()
+                .sorted(LISTING_ORDER)
                 .map(PublicWorkResponse::from)
                 .toList();
     }
@@ -87,6 +99,16 @@ public class WorkQueryService {
     }
 
     // --- helpers ------------------------------------------------------
+
+    private static boolean hasUnusableDescription(Work work) {
+        for (String flag : work.getDataQualityFlags()) {
+            if (DataQualityFlags.MISSING_WORK_DESCRIPTION.equals(flag)
+                    || DataQualityFlags.UNREADABLE_WORK_DESCRIPTION.equals(flag)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private static <E extends Enum<E>> Map<String, Long> tally(Class<E> type, List<Object[]> rows) {
         Map<String, Long> out = new LinkedHashMap<>();

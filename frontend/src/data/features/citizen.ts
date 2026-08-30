@@ -1,3 +1,4 @@
+import { hasReadableDescription, workTitle } from '../../format';
 import type { DataProvider } from '../DataProvider';
 import type { PublicProject } from '../publicProject';
 
@@ -34,7 +35,11 @@ export function createCitizenService(provider: DataProvider): CitizenService {
     async list(signal) {
       const projects = (await provider.listPublicProjects(signal)).sort(
         (a, b) =>
-          (a.workDescription ?? '').localeCompare(b.workDescription ?? '') ||
+          Number(!hasReadableDescription(a.workDescription)) -
+            Number(!hasReadableDescription(b.workDescription)) ||
+          workTitle(a.workDescription, a.reference).localeCompare(
+            workTitle(b.workDescription, b.reference),
+          ) ||
           a.reference - b.reference,
       );
       return {

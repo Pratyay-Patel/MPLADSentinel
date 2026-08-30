@@ -7,7 +7,7 @@ import {
   type LifecycleState,
   type PublicProject,
 } from '../../data';
-import { formatDate, formatINRExact } from '../../format';
+import { formatDate, formatINRExact, workTitle } from '../../format';
 import {
   Card,
   EmptyState,
@@ -58,7 +58,11 @@ export function CitizenProjectView() {
   );
 
   const project = state.status === 'success' ? state.data : undefined;
-  const title = project?.workDescription ?? (validId ? `Work ${reference}` : 'Work');
+  const title = project
+    ? workTitle(project.workDescription, reference)
+    : validId
+      ? `Work #${reference}`
+      : 'Work';
 
   return (
     <div className="ui-stack cit">

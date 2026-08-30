@@ -162,6 +162,43 @@ class WorkNormalizerRecommendedTest {
     }
 
     @Test
+    void flagsAContentlessDescriptionAsUnreadableButKeepsTheVerbatimValue() {
+        RecommendedWorkDto dto = recommended().withDistinctHindi()
+                .workDescription("?? ?? ??0?0??0   ??").build();
+
+        Work work = normalizer.fromRecommended(dto, responseAt, run);
+
+        assertThat(work.getWorkDescription()).isEqualTo("?? ?? ??0?0??0   ??"); // kept verbatim
+        assertThat(work.getDataQualityFlags())
+                .contains(DataQualityFlags.UNREADABLE_WORK_DESCRIPTION)
+                .doesNotContain(DataQualityFlags.MISSING_WORK_DESCRIPTION);
+    }
+
+    @Test
+    void trimsLeadingSeparatorNoiseFromAnOtherwiseGoodDescription() {
+        RecommendedWorkDto dto = recommended().withDistinctHindi()
+                .workDescription(", Construction of paver block road at Palaswadi").build();
+
+        Work work = normalizer.fromRecommended(dto, responseAt, run);
+
+        assertThat(work.getWorkDescription()).isEqualTo("Construction of paver block road at Palaswadi");
+        assertThat(work.getDataQualityFlags())
+                .doesNotContain(DataQualityFlags.UNREADABLE_WORK_DESCRIPTION,
+                        DataQualityFlags.MISSING_WORK_DESCRIPTION);
+    }
+
+    @Test
+    void treatsADescriptionOfOnlyPunctuationAsMissing() {
+        RecommendedWorkDto dto = recommended().withDistinctHindi()
+                .workDescription(" , , , , ").build();
+
+        Work work = normalizer.fromRecommended(dto, responseAt, run);
+
+        assertThat(work.getWorkDescription()).isNull();
+        assertThat(work.getDataQualityFlags()).contains(DataQualityFlags.MISSING_WORK_DESCRIPTION);
+    }
+
+    @Test
     void flagsHindiFieldsThatMirrorEnglish() {
         RecommendedWorkDto dto = recommended().build(); // default fixture mirrors all *_hi
 

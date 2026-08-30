@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatCount, formatDate, formatINRCompact, formatINRExact, formatPercent } from './format';
+import {
+  formatCount,
+  formatDate,
+  formatINRCompact,
+  formatINRExact,
+  formatPercent,
+  hasReadableDescription,
+  tidyDescription,
+  workTitle,
+} from './format';
 
 describe('formatters', () => {
   it('formatINRCompact uses lakh / crore and trims a trailing .0', () => {
@@ -27,5 +36,31 @@ describe('formatters', () => {
     expect(rendered).toContain('Aug');
     expect(rendered).toContain('15');
     expect(formatDate(null)).toBe('—');
+  });
+});
+
+describe('work description helpers', () => {
+  it('tidyDescription strips leading/trailing separator noise, not question marks', () => {
+    expect(tidyDescription(', Construction of road at X')).toBe('Construction of road at X');
+    expect(tidyDescription('  - Bridge work -  ')).toBe('Bridge work');
+    expect(tidyDescription(' , , , ')).toBeNull();
+    expect(tidyDescription('?? ??')).toBe('?? ??'); // kept verbatim
+    expect(tidyDescription(null)).toBeNull();
+  });
+
+  it('hasReadableDescription requires at least 3 letters after tidying', () => {
+    expect(hasReadableDescription('Community hall')).toBe(true);
+    expect(hasReadableDescription(', Gym block')).toBe(true);
+    expect(hasReadableDescription('?? ?? ??')).toBe(false);
+    expect(hasReadableDescription('- 2 ?? ?? ??')).toBe(false);
+    expect(hasReadableDescription('TV')).toBe(false);
+    expect(hasReadableDescription(null)).toBe(false);
+  });
+
+  it('workTitle falls back to "Work #<id>" for an unusable description', () => {
+    expect(workTitle('Boundary wall for school', 157315)).toBe('Boundary wall for school');
+    expect(workTitle(', Paver block road', 146709)).toBe('Paver block road');
+    expect(workTitle('?? ?? ??', 3493)).toBe('Work #3493');
+    expect(workTitle(null, 3552)).toBe('Work #3552');
   });
 });
