@@ -204,29 +204,65 @@ describe('ApiDataProvider', () => {
     expect((error as ProviderError).kind).toBe('network');
   });
 
-  // --- not yet wired ----------------------------------------------
+  // --- grievances (Phase B4) ------------------------------------
 
-  it.each([
-    ['listGrievances', () => provider.listGrievances()],
-    [
-      'submitGrievance',
-      () =>
-        provider.submitGrievance({
-          workReference: null,
-          category: 'Other',
-          subject: 's',
-          description: 'd',
-          contactName: null,
-          contactEmail: null,
-        }),
-    ],
-    ['updateGrievanceStatus', () => provider.updateGrievanceStatus('x', { status: 'CLOSED' })],
-  ] as const)(
-    'rejects %s with a notImplemented ProviderError (no backend endpoint yet)',
-    async (_name, call) => {
-      const error = await call().catch((e: unknown) => e);
-      expect(error).toBeInstanceOf(ProviderError);
-      expect((error as ProviderError).kind).toBe('notImplemented');
-    },
-  );
+  const GRIEVANCE = {
+    id: '7',
+    workReference: 900000001,
+    category: 'Delay in execution',
+    subject: 'Work stalled',
+    description: 'No visible progress for a long time on this work.',
+    contactName: null,
+    contactEmail: null,
+    status: 'SUBMITTED',
+    actionNote: null,
+    submittedAt: 't',
+    updatedAt: 't',
+  };
+
+  it('listGrievances fetches /api/grievances', async () => {
+    const fetchMock = stubFetch(jsonResponse([GRIEVANCE]));
+
+    const rows = await provider.listGrievances();
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/grievances');
+    expect(rows[0].id).toBe('7');
+  });
+
+  it('submitGrievance POSTs to /api/grievances and returns the created record', async () => {
+    const fetchMock = stubFetch(jsonResponse(GRIEVANCE, { status: 201 }));
+
+    const saved = await provider.submitGrievance({
+      workReference: 900000001,
+      category: 'Delay in execution',
+      subject: 'Work stalled',
+      description: 'No visible progress for a long time on this work.',
+      contactName: null,
+      contactEmail: null,
+    });
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/grievances');
+    expect(fetchMock.mock.calls[0][1].method).toBe('POST');
+    expect(saved.status).toBe('SUBMITTED');
+  });
+
+  it('updateGrievanceStatus PATCHes /api/grievances/:id', async () => {
+    const fetchMock = stubFetch(jsonResponse({ ...GRIEVANCE, status: 'UNDER_REVIEW' }));
+
+    const updated = await provider.updateGrievanceStatus('7', {
+      status: 'UNDER_REVIEW',
+      actionNote: 'checking',
+    });
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/grievances/7');
+    expect(fetchMock.mock.calls[0][1].method).toBe('PATCH');
+    expect(updated.status).toBe('UNDER_REVIEW');
+  });
+
+  it('maps a grievance API failure to a ProviderError', async () => {
+    stubFetch(jsonResponse({ error: 'boom' }, { status: 500 }));
+    const error = await provider.listGrievances().catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ProviderError);
+    expect((error as ProviderError).kind).toBe('unavailable');
+  });
 });

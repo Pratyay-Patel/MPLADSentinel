@@ -84,10 +84,11 @@ src/
   - **Authorities** — a review queue (no form). MoSPI / State / District can
     move each grievance through `SUBMITTED → UNDER_REVIEW → ACTIONED → CLOSED`
     and add an action note; Auditor and MP see it read-only.
-  Provider methods `submitGrievance` / `listGrievances` / `updateGrievanceStatus`;
-  the `DemoDataProvider` holds grievances for the browser session (lost on
-  reload — a `grievances` table lands with backend integration), `ApiDataProvider`
-  is `notImplemented`. Via `useGrievancesService()`.
+  Provider methods `submitGrievance` / `listGrievances` / `updateGrievanceStatus`
+  via `useGrievancesService()`. `DemoDataProvider` holds grievances for the
+  browser session (lost on reload); `ApiDataProvider` persists them via
+  `GET/POST/PATCH /api/grievances` (B4) — a citizen sees only their own, a
+  government role cannot raise one.
 - **`/login`** — sign-in screen (`src/pages/LoginPage.tsx`), rendered outside
   the shell. Posts to `POST /api/auth/login`; on success the session context
   flips to `authenticated` and the page redirects (to the attempted route, or a
@@ -141,10 +142,13 @@ ApiDataProvider  ─→ src/api/client.ts ─→ Spring Boot REST API
   Under `api`, wired so far: auth (B1), the works read APIs (B2) —
   `listProjects` / `getProject` / `getProjectSummary` / `getProjectPayments`
   (authority `GET /api/works*`) and `listPublicProjects` / `getPublicProject`
-  (citizen-safe `GET /api/public/works*`) — and the risk engine (B3):
+  (citizen-safe `GET /api/public/works*`); the risk engine (B3):
   `getProjectRisk` + `listProjectRisks` via `GET /api/works/{id}/risk` and
-  `GET /api/works/risk`. `rules.ts` is now the demo-mode risk source only.
-  Still `notImplemented` under `api`: the grievance methods (B4).
+  `GET /api/works/risk` (`rules.ts` is now the demo-mode risk source only);
+  and the grievance API (B4): `listGrievances` / `submitGrievance` /
+  `updateGrievanceStatus` via `GET/POST/PATCH /api/grievances`.
+  **Every `DataProvider` method is now wired** — `api` mode is a complete
+  path through B1–B4.
 
 ## Configuration
 

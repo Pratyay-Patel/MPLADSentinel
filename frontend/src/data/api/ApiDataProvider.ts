@@ -1,4 +1,5 @@
 import { ApiError } from '../../api/client';
+import { getGrievances, patchGrievanceStatus, postGrievance } from '../../api/grievances';
 import { getHealth } from '../../api/health';
 import {
   getPublicWork,
@@ -32,24 +33,15 @@ function normalizeProject(project: Project): Project {
   return { ...project, dataQualityFlags: project.dataQualityFlags ?? [] };
 }
 
-/** Rejects for every operation whose backend endpoint is a later phase. */
-function notImplemented(operation: string): never {
-  throw new ProviderError(
-    'notImplemented',
-    `${operation} has no backend endpoint yet — implemented in a later phase. Use DATA_SOURCE=demo for now.`,
-  );
-}
-
 /**
  * Serves real data through the centralized API client (`src/api/*`). The browser
  * therefore only ever talks to the Spring Boot backend, never PostgreSQL or an
  * external MPLADS/Empowered Indian API.
  *
- * Wired: backend health, the works read APIs (`listProjects` / `getProject` /
- * `getProjectSummary` / `getProjectPayments` authority; `listPublicProjects` /
- * `getPublicProject` citizen-safe), and the risk APIs (`getProjectRisk` /
- * `listProjectRisks`, Phase B3). The grievance methods (Phase B4) still reject
- * with a `notImplemented` `ProviderError`.
+ * Every `DataProvider` method is wired to a real endpoint: health, the works
+ * read APIs (authority + citizen-safe), the risk APIs (B3) and the grievance
+ * APIs (B4). Failures become a {@link ProviderError} whose `kind` the UI
+ * branches on.
  */
 export function createApiDataProvider(): DataProvider {
   return {
@@ -138,11 +130,28 @@ export function createApiDataProvider(): DataProvider {
       }
     },
 
-    // --- not yet wired -------------------------------------------------
+    async listGrievances(signal) {
+      try {
+        return await getGrievances(signal);
+      } catch (error) {
+        throw toProviderError('listGrievances', error);
+      }
+    },
 
-    listGrievances: () => Promise.resolve().then(() => notImplemented('listGrievances')),
-    submitGrievance: () => Promise.resolve().then(() => notImplemented('submitGrievance')),
-    updateGrievanceStatus: () =>
-      Promise.resolve().then(() => notImplemented('updateGrievanceStatus')),
+    async submitGrievance(input, signal) {
+      try {
+        return await postGrievance(input, signal);
+      } catch (error) {
+        throw toProviderError('submitGrievance', error);
+      }
+    },
+
+    async updateGrievanceStatus(id, patch, signal) {
+      try {
+        return await patchGrievanceStatus(id, patch, signal);
+      } catch (error) {
+        throw toProviderError('updateGrievanceStatus', error);
+      }
+    },
   };
 }

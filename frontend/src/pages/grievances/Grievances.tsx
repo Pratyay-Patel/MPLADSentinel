@@ -387,7 +387,12 @@ function ReviewQueue({
               value: s,
               label: GRIEVANCE_STATUS_LABEL[s],
             }))}
-            onChange={(e) => patch(g.id, { status: e.target.value as GrievanceStatus })}
+            onChange={(e) =>
+              patch(g.id, {
+                status: e.target.value as GrievanceStatus,
+                actionNote: g.actionNote,
+              })
+            }
           />
         ) : (
           <StatusBadgeFor status={g.status} />

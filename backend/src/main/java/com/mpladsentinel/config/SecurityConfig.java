@@ -97,6 +97,12 @@ public class SecurityConfig {
                         // needs a signed-in session (matched by anyRequest).
                         .requestMatchers(HttpMethod.GET, "/api/works", "/api/works/**")
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT", "AUDITOR", "MP")
+                        // Grievances: a citizen raises one; MoSPI/State/District
+                        // act on it; anyone signed in may read (the service scopes
+                        // a citizen to their own).
+                        .requestMatchers(HttpMethod.POST, "/api/grievances").hasRole("CITIZEN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/grievances/**")
+                        .hasAnyRole("MOSPI", "STATE", "DISTRICT")
                         // Everything else requires a signed-in session.
                         .anyRequest().authenticated());
 

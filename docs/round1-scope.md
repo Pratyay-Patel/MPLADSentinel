@@ -261,8 +261,17 @@ Development follows this order. Steps 1–4 built the backend foundation and the
     - client deriveRisk (rules.ts) kept as the demo-mode risk source,
       kept in sync with the backend by hand
         ↓
-15. B4 — grievances table (Flyway V6) + GET/POST/PATCH /api/grievances
-    → flip listGrievances / submitGrievance / updateGrievanceStatus
+15. B4 — Grievances API                                          [done]
+    - grievance table (Flyway V6); GET /api/grievances (citizen sees
+      only their own, every other role sees all), POST (CITIZEN only —
+      government roles cannot raise one), PATCH /{id} (MoSPI/State/
+      District only). submitted_by_user_id links the raiser (AppUserDetails
+      gained id()).
+    - flip listGrievances / submitGrievance / updateGrievanceStatus;
+      the grievances service builds its work-picker from
+      listPublicProjects (a citizen cannot call /api/works)
+    - EVERY DataProvider method is now backed by a real endpoint. This
+      closes the B1–B4 core set.
         ↓
 15a. B4a — Citizen self-registration (D32): public POST /api/auth/register
      (role always server-assigned CITIZEN), /register page linked from /login.

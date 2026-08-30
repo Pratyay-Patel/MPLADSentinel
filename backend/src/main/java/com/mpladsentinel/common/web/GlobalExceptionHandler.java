@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -54,6 +55,17 @@ public class GlobalExceptionHandler {
                 status.getReasonPhrase(),
                 detail,
                 currentRequestPath()));
+    }
+
+    /** Malformed request body (bad JSON, unknown enum value) or an invalid argument. */
+    @ExceptionHandler({HttpMessageNotReadableException.class, IllegalArgumentException.class})
+    public ResponseEntity<ApiErrorResponse> handleBadRequest(Exception ex) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        String detail = ex instanceof IllegalArgumentException
+                ? ex.getMessage()
+                : "Request body could not be read.";
+        return ResponseEntity.status(status).body(new ApiErrorResponse(
+                Instant.now(), status.value(), status.getReasonPhrase(), detail, currentRequestPath()));
     }
 
     @ExceptionHandler(Exception.class)

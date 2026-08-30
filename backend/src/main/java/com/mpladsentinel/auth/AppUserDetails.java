@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
  */
 public final class AppUserDetails implements UserDetails {
 
+    private final Long id;
     private final String username;
     private final String passwordHash;
     private final WebRole role;
@@ -21,11 +22,17 @@ public final class AppUserDetails implements UserDetails {
     private final boolean enabled;
 
     public AppUserDetails(AppUser user) {
+        this.id = user.getId();
         this.username = user.getUsername();
         this.passwordHash = user.getPasswordHash();
         this.role = user.getRole();
         this.displayName = user.getDisplayName();
         this.enabled = user.isEnabled();
+    }
+
+    /** The {@code app_user} row id, for linking user-generated records (e.g. grievances). */
+    public Long id() {
+        return id;
     }
 
     public WebRole role() {
