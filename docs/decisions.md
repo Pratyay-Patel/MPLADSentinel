@@ -409,7 +409,12 @@ sign-in exists.
 - **Access map** (`access.ts`): each routed screen belongs to an `Area`;
   `canAccess(role, area)` is the single role→visibility mapping. Round-1 rule:
   authority roles see all monitoring areas (overview, projects, risk, audit);
-  Citizen sees Projects and the public areas (citizen portal, grievances) only.
+  Citizen sees the public areas (citizen portal, grievances) only. *(Updated
+  2026-08-30, commit d6e5d39: the `projects` area — the authority Project
+  Register — was narrowed from all-roles to authorities. Citizens browse works
+  through the Citizen Portal (`/citizen`), which calls the public works API;
+  routing them at `/projects` sent them to the authority `/api/works` endpoint
+  and produced a 403.)*
 - **Session** (`SessionProvider` / `useSession`): the active role is chosen from
   the header **Viewing as** selector and persisted to `localStorage`. This
   stands in for authentication; it performs none.
@@ -525,7 +530,10 @@ omit them from the view. It keeps the pre-backend behaviour (the demo
 **Frontend:** the `DataProvider` gains `listPublicProjects` / `getPublicProject`;
 `DemoDataProvider` derives them via `toPublicProject`, `ApiDataProvider` calls
 the public endpoints. The Citizen Portal service (`citizen.ts`) uses only these
-two; it can no longer reach `listProjects` / `getProject`.
+two; it can no longer reach `listProjects` / `getProject`. *(2026-08-30, commit
+d6e5d39: the `projects` RBAC area was also narrowed to authorities (see D30), so
+a citizen no longer routes to the authority `/api/works` endpoint at all — the
+403 was still reachable via the `/projects` route before this.)*
 
 **Not done in B2** (revisit at B4b — round1-scope §5): pagination and filtering
 are client-side over the full list for both families. B4b makes `GET /api/works`

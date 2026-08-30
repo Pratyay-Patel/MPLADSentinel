@@ -135,7 +135,7 @@ P1.3 — Basic Audit Timeline (deferred to backend-integration phase)
 
 Display important project events in chronological order. Depends on verification/ledger events that do not exist until backend integration.
 
-P1.4 — Basic Citizen Portal
+P1.4 — Basic Citizen Portal *(done — frontend + B2 public works API)*
 
 Provide a read-only interface for:
 
@@ -146,7 +146,7 @@ Viewing blockchain-backed audit/integrity information through Spring Boot APIs
 
 Citizens must not directly access the Hyperledger Fabric network.
 
-P1.5 — Grievances (citizen submission + authority review)
+P1.5 — Grievances (citizen submission + authority review) *(done — frontend + B4 API)*
 
 - **Citizen:** a submission form (category, subject, description, optional
   related work / contact) plus a read-only list of grievances they have raised.
@@ -202,7 +202,7 @@ Development follows this order. Steps 1–4 built the backend foundation and the
         ↓
 3. PostgreSQL Data Layer                      [done]
         ↓
-4. Spring Boot REST APIs                      [auth + works read APIs done (B1, B2); risk = B3, grievances = B4]
+4. Spring Boot REST APIs                      [done — B1 auth, B2 works read APIs, B3 risk engine, B4 grievances, B4a citizen registration]
         ↓
 --- frontend sprint (DataProvider seam) ---
 5. React Dashboard                            [done]
@@ -291,6 +291,23 @@ Development follows this order. Steps 1–4 built the backend foundation and the
      pageSize=25) keeps loads ~2-3s, which is acceptable for Round 1. B4b is
      the correct shape for the real ~83k dataset and is a ~15-file change
      across every list screen — done properly after Round 1.
+        ↓
+15d. Demo DB population + polish pass                            [done 2026-08-30]
+     - Works ingested via the `sample` step (first page of recommended +
+       completed per state) → ~6044 works across 34 states.
+     - Payments ingested via the `payments` step (run 69, PARTIAL): 4212 works
+       `FETCHED_PRESENT`, 1483 `FETCHED_ABSENT`, 349 `FETCH_ERROR`
+       (Empowered Indian API burst-protection 429s — retryable). 7338
+       `work_payment` rows; `/api/works/summary` `totalRecordedPayments`
+       ≈ ₹289.9 cr. Top up the 349 later with
+       `MPLADS_INGEST_PAYMENTS_DELAY=1500ms`.
+     - Polish pass (commit d6e5d39): user-facing meta/disclaimer text softened
+       or removed across all screens; `AREA_ROLES.projects` narrowed from
+       all-roles to authorities (the Project Register is an authority screen —
+       citizens use the Citizen Portal), so a citizen no longer routes to the
+       authority `/api/works` endpoint; `ApiDataProvider` returns clean
+       user-facing messages for 401 / 403 / network failures; seeded account
+       display names lost the "(demo)" suffix and are refreshed on every boot.
         ↓
 16. IPFS evidence
         ↓
