@@ -153,7 +153,7 @@ function PublicView({ project }: { project: PublicProject }) {
           items={[
             { label: 'State', value: dash(project.state) },
             { label: 'District', value: dash(project.district) },
-            { label: 'Location (as recorded)', value: dash(project.location) },
+            { label: 'Location', value: dash(project.location) },
           ]}
         />
       </Card>
@@ -161,7 +161,7 @@ function PublicView({ project }: { project: PublicProject }) {
       <Card>
         <SectionHeader
           title="Funding"
-          description="Estimated and final cost are separate figures, as recorded in the source data."
+          description="Estimated and final cost are separate figures."
         />
         <KeyValueList
           items={[

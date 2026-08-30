@@ -196,7 +196,7 @@ export function ProjectRegister() {
     <div className="ui-stack reg">
       <PageHeader
         title="Project Register"
-        description="Every MPLADS work in the dataset, with status and risk indicators. Search and filter to narrow the list, then open a work for the full record."
+        description="Every MPLADS work, with status and risk indicators. Search and filter to narrow the list, then open a work for the full record."
       />
 
       {state.status === 'loading' && (

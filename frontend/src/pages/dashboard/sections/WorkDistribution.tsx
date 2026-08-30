@@ -13,7 +13,7 @@ export function WorkDistribution({ data }: { data: DashboardData }) {
     <Card>
       <SectionHeader
         title="Work distribution"
-        description="Records seen in each source listing. A work may appear in both."
+        description="Works by where they appear in the MPLADS listings. A work may appear in both."
       />
       <BarList
         caption="Recommended works versus completed works"
@@ -33,7 +33,7 @@ export function WorkDistribution({ data }: { data: DashboardData }) {
         ]}
       />
       <p className="dash-note">
-        Recommended and completed are two source listings, not a measured project lifecycle.
+        Recommended and completed are two MPLADS listings, not a measured project lifecycle.
       </p>
     </Card>
   );

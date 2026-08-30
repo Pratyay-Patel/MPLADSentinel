@@ -15,13 +15,36 @@ import type { DataProvider } from '../DataProvider';
 import { ProviderError } from '../errors';
 import type { BackendHealth, Project, ProjectRisk } from '../types';
 
-/** Maps a failed API call onto the ProviderError kinds the UI understands. */
-function toProviderError(operation: string, error: unknown): ProviderError {
+/**
+ * Maps a failed API call onto the ProviderError kinds the UI understands, with a
+ * message that is safe to show a user. The raw ApiError is kept as `cause` for
+ * debugging; the `_operation` label documents the call site but is never
+ * surfaced to the user.
+ */
+function toProviderError(_operation: string, error: unknown): ProviderError {
   if (error instanceof ApiError) {
-    const kind = error.status === 0 ? 'network' : 'unavailable';
-    return new ProviderError(kind, `${operation} failed: ${error.message}`, { cause: error });
+    if (error.status === 0) {
+      return new ProviderError('network', 'Could not reach the server. Check your connection and try again.', {
+        cause: error,
+      });
+    }
+    if (error.status === 401) {
+      return new ProviderError('unavailable', 'Your session has expired. Please sign in again.', {
+        cause: error,
+      });
+    }
+    if (error.status === 403) {
+      return new ProviderError('unavailable', 'You do not have access to this information.', {
+        cause: error,
+      });
+    }
+    return new ProviderError('unavailable', 'This information is not available right now. Please try again.', {
+      cause: error,
+    });
   }
-  return new ProviderError('unknown', `${operation} failed`, { cause: error });
+  return new ProviderError('unknown', 'Something went wrong. Please try again.', {
+    cause: error,
+  });
 }
 
 function isNotFound(error: unknown): boolean {

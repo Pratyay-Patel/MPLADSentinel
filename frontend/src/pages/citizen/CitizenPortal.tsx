@@ -164,7 +164,7 @@ export function CitizenPortal() {
     <div className="ui-stack cit">
       <PageHeader
         title="Citizen Portal"
-        description="Public information on MPLADS works — what was sanctioned, where, by which representative, and its current status. Figures are as recorded in the source data."
+        description="Public information on MPLADS works — what was sanctioned, where, by which representative, and its current status."
       />
 
       {state.status === 'loading' && (

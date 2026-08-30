@@ -282,15 +282,15 @@ Development follows this order. Steps 1–4 built the backend foundation and the
      - Government roles stay admin-provisioned. No email verification /
        password reset / rate-limiting in Round 1 (documented, D32).
         ↓
-15b. B4b — Works pagination + filtering API (updates D33): GET /api/works and
-     GET /api/public/works take page/size + server-side filters (state,
-     district, category, lifecycle, risk, search) and return a paged envelope
-     {content, page, size, totalElements}. DataProvider gains a
-     paged+filtered list method; Project Register / dashboard exploration /
-     Risk & Alerts / Citizen Portal adopt it and drop the "fetch everything,
-     filter + paginate client-side" approach. Needed because the real dataset
-     is ~83k works; deferred to here so it lands once risk (B3) is a real
-     filterable field.
+15b. B4b — Works pagination + filtering API (updates D33)  [DEFERRED to post-Round-1]
+     GET /api/works and GET /api/public/works to take page/size + server-side
+     filters (state, district, category, lifecycle, risk, search) and return a
+     paged envelope; DataProvider gains a paged+filtered list method; the 4 list
+     screens drop the "fetch everything" approach.
+     Deferred: at ~6k demo works the B2 client-side pagination (DataTable
+     pageSize=25) keeps loads ~2-3s, which is acceptable for Round 1. B4b is
+     the correct shape for the real ~83k dataset and is a ~15-file change
+     across every list screen — done properly after Round 1.
         ↓
 16. IPFS evidence
         ↓

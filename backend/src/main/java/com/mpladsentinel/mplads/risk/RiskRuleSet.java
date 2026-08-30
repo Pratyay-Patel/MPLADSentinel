@@ -122,7 +122,7 @@ public class RiskRuleSet {
             return null;
         }
         return new RuleHit("COST_COHORT_OUTLIER",
-                "Estimated cost is the highest for the " + category + " category in the dataset",
+                "Estimated cost is the highest for the " + category + " category among comparable works",
                 COHORT_OUTLIER_WEIGHT);
     }
 

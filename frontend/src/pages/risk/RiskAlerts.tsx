@@ -159,7 +159,7 @@ export function RiskAlerts() {
     <div className="ui-stack risk">
       <PageHeader
         title="Risk & Alerts"
-        description="Rule-based indicators over the available work data. Indicators are computed from financial and data-quality signals — not an ML model. The Round-1 risk engine runs server-side."
+        description="Risk indicators across every work, most severe first, with the factors behind each. Computed from financial and data-quality signals."
       />
 
       {state.status === 'loading' && (

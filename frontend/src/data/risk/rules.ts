@@ -124,7 +124,7 @@ const costCohortOutlier: Rule = (project, ctx) => {
   if (est < Math.max(...cohort)) return null;
   return {
     rule: 'COST_COHORT_OUTLIER',
-    reason: `Estimated cost is the highest for the ${project.category} category in the dataset`,
+    reason: `Estimated cost is the highest for the ${project.category} category among comparable works`,
     weight: 25,
   };
 };

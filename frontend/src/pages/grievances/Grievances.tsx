@@ -131,7 +131,7 @@ export function Grievances() {
         description={
           isReviewer
             ? 'Grievances raised by citizens about MPLADS works. Review each one and record the action taken.'
-            : 'Report a problem with an MPLADS work — its quality, delay, location or use of funds. Submissions are held in this browser until the backend is connected.'
+            : 'Report a problem with an MPLADS work — its quality, delay, location or use of funds.'
         }
       />
 
@@ -305,7 +305,7 @@ function CitizenGrievances({
           emptyState={
             <EmptyState
               title="No grievances yet"
-              description="Grievances you submit appear here, held in this browser until the backend is connected."
+              description="Grievances you raise appear here."
             />
           }
         />

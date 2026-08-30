@@ -16,7 +16,7 @@ const AUTHORITIES: Role[] = ['MOSPI', 'STATE', 'DISTRICT', 'AUDITOR', 'MP'];
 /** Roles allowed into each area. Keep in sync with docs/round1-scope.md P0.5. */
 export const AREA_ROLES: Record<Area, Role[]> = {
   overview: AUTHORITIES,
-  projects: ALL_ROLES,
+  projects: AUTHORITIES,
   risk: AUTHORITIES,
   audit: AUTHORITIES,
   citizen: ALL_ROLES,

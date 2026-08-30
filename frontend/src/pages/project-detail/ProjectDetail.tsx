@@ -136,7 +136,7 @@ function ProjectDetailView({ data }: { data: ProjectDetailData }) {
           items={[
             { label: 'State', value: project.state ?? '—' },
             { label: 'District', value: project.district ?? '—' },
-            { label: 'Location (as recorded)', value: project.locationRaw ?? '—' },
+            { label: 'Location', value: project.locationRaw ?? '—' },
           ]}
         />
         <p className="detail-note">
@@ -160,7 +160,7 @@ function ProjectDetailView({ data }: { data: ProjectDetailData }) {
       <Card>
         <SectionHeader
           title="Risk assessment"
-          description="Rule-based indicators over the available fields — not an ML model. The Round-1 risk engine runs server-side."
+          description="Indicators computed from this work's financial and data-quality signals."
           actions={<RiskLevelBadge level={risk.level} />}
         />
         {risk.level === 'UNKNOWN' ? (

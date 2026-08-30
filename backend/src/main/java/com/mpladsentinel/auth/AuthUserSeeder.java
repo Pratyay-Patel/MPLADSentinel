@@ -12,8 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Creates the Round 1 demo login accounts at application startup — one per web
- * role (decision D31). Idempotent: an account that already exists is left
- * untouched, so this is safe to run on every boot.
+ * role (decision D31). Idempotent: a missing account is created; an existing one
+ * keeps its credentials but has its display name refreshed to the current label,
+ * so this is safe to run on every boot.
  *
  * <p>Runs only when {@code mplads.auth.seeding-enabled} is {@code true} (the
  * default). Production-like environments that provision their own accounts, and
@@ -29,12 +30,12 @@ class AuthUserSeeder implements ApplicationRunner {
 
     /** username, role, human-readable label. Usernames are lowercase role keys. */
     private static final List<SeedAccount> ACCOUNTS = List.of(
-            new SeedAccount("mospi", WebRole.MOSPI, "MoSPI / Ministry (demo)"),
-            new SeedAccount("state", WebRole.STATE, "State Authority (demo)"),
-            new SeedAccount("district", WebRole.DISTRICT, "District Authority (demo)"),
-            new SeedAccount("auditor", WebRole.AUDITOR, "Auditor (demo)"),
-            new SeedAccount("mp", WebRole.MP, "Member of Parliament (demo)"),
-            new SeedAccount("citizen", WebRole.CITIZEN, "Citizen (demo)"));
+            new SeedAccount("mospi", WebRole.MOSPI, "MoSPI / Ministry"),
+            new SeedAccount("state", WebRole.STATE, "State Authority"),
+            new SeedAccount("district", WebRole.DISTRICT, "District Authority"),
+            new SeedAccount("auditor", WebRole.AUDITOR, "Auditor"),
+            new SeedAccount("mp", WebRole.MP, "Member of Parliament"),
+            new SeedAccount("citizen", WebRole.CITIZEN, "Citizen"));
 
     private final AppUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -58,8 +59,16 @@ class AuthUserSeeder implements ApplicationRunner {
 
         String hash = passwordEncoder.encode(authProperties.seedPassword());
         int created = 0;
+        int refreshed = 0;
         for (SeedAccount account : ACCOUNTS) {
-            if (userRepository.existsByUsername(account.username())) {
+            AppUser existing = userRepository.findByUsername(account.username()).orElse(null);
+            if (existing != null) {
+                if (!account.displayName().equals(existing.getDisplayName())) {
+                    existing.setDisplayName(account.displayName());
+                    userRepository.save(existing);
+                    refreshed++;
+                    log.info("Refreshed display name for login account '{}'", account.username());
+                }
                 continue;
             }
             userRepository.save(new AppUser(
@@ -67,7 +76,7 @@ class AuthUserSeeder implements ApplicationRunner {
             created++;
             log.info("Seeded demo login account '{}' ({})", account.username(), account.role());
         }
-        if (created == 0) {
+        if (created == 0 && refreshed == 0) {
             log.info("Demo login accounts already present; nothing to seed.");
         }
     }

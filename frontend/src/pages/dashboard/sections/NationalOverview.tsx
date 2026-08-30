@@ -17,22 +17,22 @@ export function NationalOverview({ data }: { data: DashboardData }) {
         <MetricCard
           label="Total works"
           value={formatCount(data.totalWorks)}
-          hint="Normalised work records in the dataset"
+          hint="MPLADS works tracked"
         />
         <MetricCard
           label="Recommended works"
           value={formatCount(data.recommendedWorks)}
-          hint="Records seen in the recommended listing"
+          hint="Works at the recommended stage"
         />
         <MetricCard
           label="Completed works"
           value={formatCount(data.completedWorks)}
-          hint="Records seen in the completed listing"
+          hint="Works at the completed stage"
         />
         <MetricCard
           label="Recorded payments"
           value={formatINRCompact(data.recordedPayments)}
-          hint="Total of successfully retrieved payment records"
+          hint="Total recorded vendor payments"
         />
       </div>
     </section>
