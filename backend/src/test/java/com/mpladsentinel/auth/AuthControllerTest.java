@@ -2,7 +2,9 @@ package com.mpladsentinel.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,6 +119,77 @@ class AuthControllerTest extends AbstractPostgresIntegrationTest {
     void healthRemainsPublicAfterAuthIsEnabled() {
         assertThat(rest.getForEntity("/api/health", String.class).getStatusCode())
                 .isEqualTo(HttpStatus.OK);
+    }
+
+    // --- citizen self-registration (B4a, D32) ---------------------------
+
+    @Test
+    void aCitizenCanSelfRegisterIsSignedInAndCanLogInAgain() {
+        RegisterRequest req = new RegisterRequest(
+                "Jane Citizen", "jane.b4a@example.com", "goodpassword", "goodpassword");
+
+        ResponseEntity<SessionUser> response = rest.postForEntity(
+                "/api/auth/register", req, SessionUser.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody().role()).isEqualTo("CITIZEN");
+        assertThat(response.getBody().username()).isEqualTo("jane.b4a@example.com");
+        assertThat(response.getBody().displayName()).isEqualTo("Jane Citizen");
+        assertThat(sessionCookie(response)).as("registration establishes a session").isNotNull();
+
+        // and the new account can log in normally with its email
+        ResponseEntity<SessionUser> login = rest.postForEntity("/api/auth/login",
+                new LoginRequest("jane.b4a@example.com", "goodpassword"), SessionUser.class);
+        assertThat(login.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(login.getBody().role()).isEqualTo("CITIZEN");
+    }
+
+    @Test
+    void registrationCannotForceAPrivilegedRole() {
+        Map<String, Object> body = new HashMap<>();
+        body.put("displayName", "Sneaky");
+        body.put("email", "sneaky.b4a@example.com");
+        body.put("password", "goodpassword");
+        body.put("passwordConfirm", "goodpassword");
+        body.put("role", "MOSPI"); // ignored — role is server-assigned
+
+        ResponseEntity<SessionUser> response = rest.postForEntity(
+                "/api/auth/register", body, SessionUser.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody().role()).isEqualTo("CITIZEN");
+    }
+
+    @Test
+    void registeringAnAlreadyUsedEmailIsConflict() {
+        RegisterRequest req = new RegisterRequest(
+                "First", "dupe.b4a@example.com", "goodpassword", "goodpassword");
+        assertThat(rest.postForEntity("/api/auth/register", req, String.class).getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
+
+        RegisterRequest again = new RegisterRequest(
+                "Second", "DUPE.b4a@example.com", "otherpassword", "otherpassword");
+        assertThat(rest.postForEntity("/api/auth/register", again, String.class).getStatusCode())
+                .isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void rejectsMismatchedPasswordsShortPasswordsAndBadEmails() {
+        assertThat(rest.postForEntity("/api/auth/register",
+                new RegisterRequest("A", "mismatch.b4a@example.com", "goodpassword", "different"),
+                String.class).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+        assertThat(rest.postForEntity("/api/auth/register",
+                new RegisterRequest("A", "short.b4a@example.com", "short", "short"),
+                String.class).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+        assertThat(rest.postForEntity("/api/auth/register",
+                new RegisterRequest("A", "not-an-email", "goodpassword", "goodpassword"),
+                String.class).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+        assertThat(rest.postForEntity("/api/auth/register",
+                new RegisterRequest("", "blankname.b4a@example.com", "goodpassword", "goodpassword"),
+                String.class).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     // --- helpers -----------------------------------------------------------

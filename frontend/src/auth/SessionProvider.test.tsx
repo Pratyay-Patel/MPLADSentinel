@@ -10,7 +10,7 @@ vi.mock('../api/auth');
 const mockedAuth = vi.mocked(authApi);
 
 function Probe() {
-  const { status, role, user, login, logout } = useSession();
+  const { status, role, user, login, register, logout } = useSession();
   return (
     <div>
       <span data-testid="status">{status}</span>
@@ -18,6 +18,9 @@ function Probe() {
       <span data-testid="name">{user?.username ?? 'none'}</span>
       <button type="button" onClick={() => void login('mospi', 'pw')}>
         sign in
+      </button>
+      <button type="button" onClick={() => void register('Jane', 'jane@example.com', 'goodpassword')}>
+        register
       </button>
       <button type="button" onClick={() => void logout()}>
         sign out
@@ -91,6 +94,28 @@ describe('SessionProvider', () => {
     await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'));
     expect(screen.getByTestId('role')).toHaveTextContent('AUDITOR');
     expect(mockedAuth.login).toHaveBeenCalledWith('mospi', 'pw');
+  });
+
+  it('register signs the new citizen in', async () => {
+    mockedAuth.fetchCurrentUser.mockResolvedValue(null);
+    mockedAuth.register.mockResolvedValue({
+      username: 'jane@example.com',
+      role: 'CITIZEN',
+      displayName: 'Jane',
+    });
+
+    render(
+      <SessionProvider>
+        <Probe />
+      </SessionProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('anonymous'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'register' }));
+
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'));
+    expect(screen.getByTestId('role')).toHaveTextContent('CITIZEN');
+    expect(mockedAuth.register).toHaveBeenCalledWith('Jane', 'jane@example.com', 'goodpassword');
   });
 
   it('logout returns the session to anonymous', async () => {

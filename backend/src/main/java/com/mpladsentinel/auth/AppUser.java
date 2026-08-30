@@ -26,8 +26,12 @@ public class AppUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 64)
+    @Column(nullable = false, unique = true, length = 256)
     private String username;
+
+    /** Login email for self-registered citizens (then {@code username == email}); {@code null} for seeded accounts. */
+    @Column(unique = true, length = 256)
+    private String email;
 
     @Column(name = "password_hash", nullable = false, length = 100)
     private String passwordHash;
@@ -65,6 +69,14 @@ public class AppUser {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPasswordHash() {

@@ -32,6 +32,26 @@ export async function login(username: string, password: string): Promise<Session
 }
 
 /**
+ * Creates a citizen account (decision D32), signs in, and resolves with the new
+ * user. The backend always assigns the `CITIZEN` role; the username is the email.
+ * Rejects with `ApiError` 409 when the email is already registered, 400 on
+ * validation failure.
+ */
+export async function register(
+  displayName: string,
+  email: string,
+  password: string,
+): Promise<SessionUser> {
+  const raw = await apiClient.post<RawSessionUser>('/auth/register', {
+    displayName,
+    email,
+    password,
+    passwordConfirm: password,
+  });
+  return toSessionUser(raw);
+}
+
+/**
  * Resolves with the current user, or `null` when there is no valid session
  * (HTTP 401). Any other failure rejects.
  */

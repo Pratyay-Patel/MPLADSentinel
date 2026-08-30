@@ -273,9 +273,14 @@ Development follows this order. Steps 1–4 built the backend foundation and the
     - EVERY DataProvider method is now backed by a real endpoint. This
       closes the B1–B4 core set.
         ↓
-15a. B4a — Citizen self-registration (D32): public POST /api/auth/register
-     (role always server-assigned CITIZEN), /register page linked from /login.
-     Government roles stay admin-provisioned. Only after B1–B4 are stable.
+15a. B4a — Citizen self-registration (D32)                       [done]
+     - app_user.email (Flyway V7); public POST /api/auth/register —
+       role ALWAYS server-assigned CITIZEN, username = email, signs in
+       on success; 409 on a duplicate email, 400 on validation.
+     - /register page (public, outside the shell) linked from /login;
+       the login field is now "Username or email".
+     - Government roles stay admin-provisioned. No email verification /
+       password reset / rate-limiting in Round 1 (documented, D32).
         ↓
 15b. B4b — Works pagination + filtering API (updates D33): GET /api/works and
      GET /api/public/works take page/size + server-side filters (state,

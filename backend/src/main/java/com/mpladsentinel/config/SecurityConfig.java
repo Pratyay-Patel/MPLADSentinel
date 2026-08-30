@@ -88,8 +88,10 @@ public class SecurityConfig {
                         .authenticationEntryPoint(restAuthenticationEntryPoint)
                         .accessDeniedHandler(restAccessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
-                        // Public: login + operational probes.
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        // Public: login + citizen self-registration + operational probes.
+                        // /register is unthrottled for Round 1 (documented limitation, D32).
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register")
+                        .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
                         // Authority-facing work APIs: government roles only. The

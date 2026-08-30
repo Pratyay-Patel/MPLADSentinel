@@ -50,3 +50,10 @@
   font-size: var(--text-sm);
   color: var(--color-danger-700, #b42318);
 }
+
+.login-card__alt {
+  margin: var(--space-5) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+}

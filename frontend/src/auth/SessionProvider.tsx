@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { fetchCurrentUser, login as apiLogin, logout as apiLogout, type SessionUser } from '../api/auth';
+import {
+  fetchCurrentUser,
+  login as apiLogin,
+  logout as apiLogout,
+  register as apiRegister,
+  type SessionUser,
+} from '../api/auth';
 import { SessionContext, type Session, type SessionStatus } from './context';
 import type { Role } from './roles';
 
@@ -62,6 +68,14 @@ export function SessionProvider({ children, initialRole }: SessionProviderProps)
     setState({ status: 'authenticated', user });
   }, []);
 
+  const register = useCallback(
+    async (displayName: string, email: string, password: string) => {
+      const user = await apiRegister(displayName, email, password);
+      setState({ status: 'authenticated', user });
+    },
+    [],
+  );
+
   const logout = useCallback(async () => {
     try {
       await apiLogout();
@@ -76,9 +90,10 @@ export function SessionProvider({ children, initialRole }: SessionProviderProps)
       user: state.user,
       role: state.user?.role ?? null,
       login,
+      register,
       logout,
     }),
-    [state, login, logout],
+    [state, login, register, logout],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

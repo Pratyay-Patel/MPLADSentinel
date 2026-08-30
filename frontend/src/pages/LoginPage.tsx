@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 
 import { ApiError } from '../api/client';
 import { landingPathFor, useSession } from '../auth';
@@ -59,7 +59,7 @@ export function LoginPage() {
 
         <form className="login-form" onSubmit={handleSubmit} noValidate>
           <Input
-            label="Username"
+            label="Username or email"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
             autoComplete="username"
@@ -85,6 +85,10 @@ export function LoginPage() {
             {submitting ? 'Signing in…' : 'Sign in'}
           </Button>
         </form>
+
+        <p className="login-card__alt">
+          New here? <Link to="/register">Create a citizen account</Link>
+        </p>
       </Card>
     </main>
   );

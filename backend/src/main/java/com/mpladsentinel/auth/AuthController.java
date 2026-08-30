@@ -21,11 +21,14 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
 /**
- * Round 1 authentication endpoints (decision D31).
+ * Round 1 authentication endpoints (decisions D31, D32).
  *
  * <ul>
  *   <li>{@code POST /api/auth/login} — validate credentials, start a server
  *       session, return the {@link SessionUser}. Public.</li>
+ *   <li>{@code POST /api/auth/register} — create a citizen account (role is
+ *       always {@code CITIZEN}), sign in, return the {@link SessionUser}. Public.
+ *       No email verification / rate-limiting in Round 1 (documented, D32).</li>
  *   <li>{@code GET /api/auth/me} — the current {@link SessionUser}; 401 when not
  *       signed in.</li>
  *   <li>{@code POST /api/auth/logout} — invalidate the session; 204.</li>
@@ -40,27 +43,29 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
+    private final AuthService authService;
     private final SecurityContextRepository securityContextRepository =
             new HttpSessionSecurityContextRepository();
 
-    public AuthController(AuthenticationManager authenticationManager) {
+    public AuthController(AuthenticationManager authenticationManager, AuthService authService) {
         this.authenticationManager = authenticationManager;
+        this.authService = authService;
     }
 
     @PostMapping("/login")
     public SessionUser login(@Valid @RequestBody LoginRequest request,
                              HttpServletRequest httpRequest,
                              HttpServletResponse httpResponse) {
-        Authentication authentication = authenticationManager.authenticate(
-                UsernamePasswordAuthenticationToken.unauthenticated(
-                        request.username(), request.password()));
+        return startSession(request.username(), request.password(), httpRequest, httpResponse);
+    }
 
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
-        SecurityContextHolder.setContext(context);
-        securityContextRepository.saveContext(context, httpRequest, httpResponse);
-
-        return SessionUser.from(authentication);
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    public SessionUser register(@Valid @RequestBody RegisterRequest request,
+                                HttpServletRequest httpRequest,
+                                HttpServletResponse httpResponse) {
+        AppUser created = authService.register(request);
+        return startSession(created.getUsername(), request.password(), httpRequest, httpResponse);
     }
 
     @GetMapping("/me")
@@ -76,5 +81,19 @@ public class AuthController {
             session.invalidate();
         }
         SecurityContextHolder.clearContext();
+    }
+
+    /** Authenticate the credentials and persist the security context to the HTTP session. */
+    private SessionUser startSession(String username, String rawPassword,
+                                     HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        Authentication authentication = authenticationManager.authenticate(
+                UsernamePasswordAuthenticationToken.unauthenticated(username, rawPassword));
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+        securityContextRepository.saveContext(context, httpRequest, httpResponse);
+
+        return SessionUser.from(authentication);
     }
 }

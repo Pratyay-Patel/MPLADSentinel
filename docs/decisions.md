@@ -490,6 +490,14 @@ signup.
 Superseded part of D31: "no self-registration" applied to B1; from B4a a
 citizen may self-register. Everything else in D31 stands.
 
+**Implemented (B4a).** `app_user.email` (Flyway V7, unique); `AuthService.register`
++ public `POST /api/auth/register` (`RegisterRequest` has no `role` field — the
+server always sets `CITIZEN`; `username = lower(email)`; establishes the session
+and returns the `SessionUser`). Duplicate email → 409; password mismatch /
+`< 8` chars / bad email → 400. Frontend `/register` page (public, outside the
+shell) linked from `/login`; the login field is relabelled "Username or email".
+Email verification, password reset and abuse throttling remain out of Round 1.
+
 ## D33 — Works read APIs: authority-facing vs. public split
 
 **Decision:**

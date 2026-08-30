@@ -92,7 +92,13 @@ src/
 - **`/login`** — sign-in screen (`src/pages/LoginPage.tsx`), rendered outside
   the shell. Posts to `POST /api/auth/login`; on success the session context
   flips to `authenticated` and the page redirects (to the attempted route, or a
-  role-appropriate landing — `/dashboard`, or `/citizen` for a citizen).
+  role-appropriate landing — `/dashboard`, or `/citizen` for a citizen). The
+  field accepts a username (seeded government accounts) or an email
+  (self-registered citizens).
+- **`/register`** — citizen self-registration (`src/pages/RegisterPage.tsx`,
+  D32), public, outside the shell, linked from `/login`. Name / email / password;
+  `POST /api/auth/register` always creates a `CITIZEN` (role can't be supplied)
+  and signs in → `/citizen`.
 - `/audit` renders a placeholder — the Audit Timeline is deferred to the
   backend-integration phase (it needs verification / ledger events).
 

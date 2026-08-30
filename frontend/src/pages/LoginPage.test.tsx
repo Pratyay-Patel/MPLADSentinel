@@ -38,7 +38,7 @@ describe('LoginPage', () => {
     renderLogin();
 
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Username')).toBeInTheDocument();
+    expect(screen.getByLabelText('Username or email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
   });
 
@@ -51,7 +51,7 @@ describe('LoginPage', () => {
     });
     renderLogin();
 
-    fireEvent.change(await screen.findByLabelText('Username'), { target: { value: 'mospi' } });
+    fireEvent.change(await screen.findByLabelText('Username or email'), { target: { value: 'mospi' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Demo@12345' } });
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 
@@ -64,7 +64,7 @@ describe('LoginPage', () => {
     mockedAuth.login.mockResolvedValue({ username: 'citizen', role: 'CITIZEN', displayName: null });
     renderLogin();
 
-    fireEvent.change(await screen.findByLabelText('Username'), { target: { value: 'citizen' } });
+    fireEvent.change(await screen.findByLabelText('Username or email'), { target: { value: 'citizen' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Demo@12345' } });
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 
@@ -76,7 +76,7 @@ describe('LoginPage', () => {
     mockedAuth.login.mockRejectedValue(new ApiError('bad', 401, null));
     renderLogin();
 
-    fireEvent.change(await screen.findByLabelText('Username'), { target: { value: 'mospi' } });
+    fireEvent.change(await screen.findByLabelText('Username or email'), { target: { value: 'mospi' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'wrong' } });
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 

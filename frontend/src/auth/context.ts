@@ -14,6 +14,11 @@ export interface Session {
   role: Role | null;
   /** Sign in with credentials. Rejects (ApiError) on bad credentials. */
   login: (username: string, password: string) => Promise<void>;
+  /**
+   * Register a new citizen account (D32) and sign in. Rejects (ApiError) with
+   * 409 when the email is taken, 400 on validation failure.
+   */
+  register: (displayName: string, email: string, password: string) => Promise<void>;
   /** End the session. Always resolves; local state is cleared regardless. */
   logout: () => Promise<void>;
 }

@@ -9,6 +9,7 @@ import { AuditPage } from '../pages/featurePages';
 import { Grievances } from '../pages/grievances/Grievances';
 import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
+import { RegisterPage } from '../pages/RegisterPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { ProjectDetail } from '../pages/project-detail/ProjectDetail';
 import { ProjectRegister } from '../pages/projects/ProjectRegister';
@@ -29,6 +30,10 @@ export const appRouter = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/register',
+    element: <RegisterPage />,
   },
   {
     path: '/',
