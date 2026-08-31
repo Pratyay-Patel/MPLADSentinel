@@ -33,7 +33,7 @@ describe('CitizenProjectView', () => {
     expect(screen.queryByText(/RISK/)).not.toBeInTheDocument();
     expect(screen.queryByText(/data-quality/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Risk assessment/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/not an official government record/i)).toBeInTheDocument();
+    expect(screen.getByText(/publicly available information about the work/i)).toBeInTheDocument();
   });
 
   it('shows a not-found state for an unknown work', async () => {

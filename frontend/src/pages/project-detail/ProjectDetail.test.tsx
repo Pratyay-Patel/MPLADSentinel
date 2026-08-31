@@ -39,14 +39,14 @@ describe('ProjectDetail', () => {
     expect(screen.getByRole('heading', { name: 'Risk assessment' })).toBeInTheDocument();
     expect(screen.getByText(/no current indicators for this work/i)).toBeInTheDocument();
 
-    expect(screen.getByText(/not an official MPLADS \/ e-SAKSHI id/i)).toBeInTheDocument();
+    expect(screen.getByText('MPLADS works data')).toBeInTheDocument();
   });
 
-  it('shows the "not ₹0" note for a FETCHED_ABSENT work and no installments table', async () => {
+  it('shows the missing-records note for a FETCHED_ABSENT work and no installments table', async () => {
     renderAt('900000003');
 
     await screen.findByRole('heading', { level: 1, name: 'Repair of an anganwadi building' });
-    expect(screen.getByText(/not the same as ₹0 spent/i)).toBeInTheDocument();
+    expect(screen.getByText(/not that no payment was made/i)).toBeInTheDocument();
     expect(screen.queryByRole('table', { name: 'Payment installments' })).not.toBeInTheDocument();
   });
 

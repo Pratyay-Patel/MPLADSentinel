@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 
+import { landingPathFor } from '../auth/access';
 import { ROLE_LABELS, type Role } from '../auth/roles';
 import { AlertTriangleIcon } from './icons';
 
@@ -20,12 +21,12 @@ export function ForbiddenState({ role }: ForbiddenStateProps) {
       </span>
       <p className="ui-placeholder-block__title">This area is not available for your role</p>
       <p className="ui-placeholder-block__desc">
-        The <strong>{ROLE_LABELS[role]}</strong> role does not have access to this section. Switch
-        role from the header, or return to a section you can view.
+        The <strong>{ROLE_LABELS[role]}</strong> role does not have access to this section. Return to
+        a section available to you to continue.
       </p>
       <div>
-        <Link className="ui-btn ui-btn--secondary ui-btn--sm" to="/projects">
-          Go to Projects
+        <Link className="ui-btn ui-btn--secondary ui-btn--sm" to={landingPathFor(role)}>
+          {role === 'CITIZEN' ? 'Go to Citizen Portal' : 'Go to dashboard'}
         </Link>
       </div>
     </div>

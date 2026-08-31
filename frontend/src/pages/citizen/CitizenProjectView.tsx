@@ -172,10 +172,7 @@ function PublicView({ project }: { project: PublicProject }) {
       </Card>
 
       <Card>
-        <SectionHeader
-          title="Dates"
-          description="Source-reported dates only — not a verified project lifecycle."
-        />
+        <SectionHeader title="Dates" description="Key dates recorded for this work." />
         <KeyValueList
           items={[
             { label: 'Recommended on', value: formatDate(project.recommendedOn) },
@@ -187,8 +184,8 @@ function PublicView({ project }: { project: PublicProject }) {
       </Card>
 
       <p className="detail-note">
-        This is publicly released summary information compiled from an MPLADS transparency data
-        source. It is not an official government record.
+        This page presents publicly available information about the work — what was sanctioned,
+        where, under which representative, and its current status.
       </p>
     </>
   );

@@ -28,11 +28,10 @@ export const PAYMENT_STATE_TONE: Record<PaymentDataState, StatusTone> = {
 };
 
 export const PAYMENT_STATE_NOTE: Record<PaymentDataState, string> = {
-  NOT_FETCHED: 'Payment records have not been retrieved for this work yet.',
-  FETCHED_PRESENT:
-    'Payment installment records were retrieved from the work-level payments endpoint.',
+  NOT_FETCHED: 'Payment records have not yet been retrieved for this work.',
+  FETCHED_PRESENT: 'Individual payment installment records are available for this work.',
   FETCHED_ABSENT:
-    'The payments endpoint returned no records for this work. This is not the same as ₹0 spent.',
+    'No payment records are available for this work. An absent record means none were found — not that no payment was made.',
   FETCH_ERROR: 'Payment records could not be retrieved for this work.',
 };
 
@@ -43,10 +42,12 @@ export function houseLabel(house: ProjectHouse | null): string {
 }
 
 const FLAG_LABELS: Record<string, string> = {
-  HI_FIELDS_MIRROR_EN: 'Hindi fields mirror English',
-  BENEFICIARIES_FIELD_UNPOPULATED: 'Beneficiary count not populated',
-  MISSING_WORK_DESCRIPTION: 'Work description missing at source',
+  HI_FIELDS_MIRROR_EN: 'Hindi fields duplicate the English text',
+  BENEFICIARIES_FIELD_UNPOPULATED: 'Beneficiary count not provided',
+  MISSING_WORK_DESCRIPTION: 'Work description not provided',
+  UNREADABLE_WORK_DESCRIPTION: 'Work description could not be read',
   UNMAPPED_HOUSE_VALUE: 'House value could not be mapped',
+  MP_PARTY_FIELD_IS_HOUSE_NOT_PARTY: 'Party field contains the house name',
 };
 
 export function flagLabel(flag: string): string {
