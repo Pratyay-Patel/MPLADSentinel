@@ -6,7 +6,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.mpladsentinel.common.web.PageResponse;
+import com.mpladsentinel.common.web.PaginationRequest;
 
 /**
  * Rule-based risk assessments over the ingested works (decision D22).
@@ -32,8 +36,11 @@ public class RiskController {
     }
 
     @GetMapping("/risk")
-    public List<RiskAssessment> all() {
-        return riskEngine.assessAll();
+    public PageResponse<RiskAssessment> all(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        PaginationRequest pagination = PaginationRequest.of(page, size);
+        return PageResponse.of(riskEngine.assessAll(), pagination.page(), pagination.size());
     }
 
     @GetMapping("/{sourceWorkId}/risk")

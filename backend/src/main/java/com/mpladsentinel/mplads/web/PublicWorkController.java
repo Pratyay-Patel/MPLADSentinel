@@ -6,7 +6,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.mpladsentinel.common.web.PageResponse;
+import com.mpladsentinel.common.web.PaginationRequest;
 
 /**
  * Publicly releasable read APIs over the ingested MPLADS works, used by the
@@ -25,8 +29,10 @@ public class PublicWorkController {
     }
 
     @GetMapping
-    public List<PublicWorkResponse> list() {
-        return queryService.listPublicWorks();
+    public PageResponse<PublicWorkResponse> list(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return queryService.listPublicWorks(PaginationRequest.of(page, size));
     }
 
     @GetMapping("/{reference}")

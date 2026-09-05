@@ -11,11 +11,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mpladsentinel.auth.AppUserDetails;
 import com.mpladsentinel.auth.WebRole;
+import com.mpladsentinel.common.web.PageResponse;
+import com.mpladsentinel.common.web.PaginationRequest;
 
 import jakarta.validation.Valid;
 
@@ -39,10 +42,14 @@ public class GrievanceController {
     }
 
     @GetMapping
-    public List<GrievanceResponse> list(@AuthenticationPrincipal AppUserDetails principal) {
+    public PageResponse<GrievanceResponse> list(
+            @AuthenticationPrincipal AppUserDetails principal,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        PaginationRequest pagination = PaginationRequest.of(page, size);
         return principal.role() == WebRole.CITIZEN
-                ? service.listOwnedBy(principal.id())
-                : service.listAll();
+                ? service.listOwnedBy(principal.id(), pagination)
+                : service.listAll(pagination);
     }
 
     @PostMapping

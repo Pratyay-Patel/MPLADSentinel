@@ -17,7 +17,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.ParameterizedTypeReference;
 
+import com.mpladsentinel.common.web.PageResponse;
 import com.mpladsentinel.mplads.domain.IngestionEndpoint;
 import com.mpladsentinel.mplads.domain.IngestionRun;
 import com.mpladsentinel.mplads.domain.IngestionRunStatus;
@@ -106,11 +108,12 @@ class PublicWorkControllerTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void citizenCanListPublicWorks() {
-        ResponseEntity<PublicWorkResponse[]> response = rest.exchange(
-                "/api/public/works", HttpMethod.GET, as("citizen"), PublicWorkResponse[].class);
+        ResponseEntity<PageResponse<PublicWorkResponse>> response = rest.exchange(
+            "/api/public/works", HttpMethod.GET, as("citizen"),
+            new ParameterizedTypeReference<PageResponse<PublicWorkResponse>>() {});
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        PublicWorkResponse row = Arrays.stream(response.getBody())
+        PublicWorkResponse row = response.getBody().content().stream()
                 .filter(w -> w.reference() == REF).findFirst().orElseThrow();
         assertThat(row.memberOfParliament()).isEqualTo("Test MP");
         assertThat(row.estimatedCost().amount()).isEqualByComparingTo("1500000.00");
@@ -138,7 +141,9 @@ class PublicWorkControllerTest extends AbstractPostgresIntegrationTest {
     @Test
     void listsWorksWithAnUnreadableDescriptionLast() {
         PublicWorkResponse[] all = rest.exchange(
-                "/api/public/works", HttpMethod.GET, as("citizen"), PublicWorkResponse[].class).getBody();
+            "/api/public/works", HttpMethod.GET, as("citizen"),
+            new ParameterizedTypeReference<PageResponse<PublicWorkResponse>>() {}).getBody()
+            .content().toArray(PublicWorkResponse[]::new);
 
         int readableHigh = -1;
         int unreadableLow = -1;

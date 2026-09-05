@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.ParameterizedTypeReference;
 
+import com.mpladsentinel.common.web.PageResponse;
 import com.mpladsentinel.mplads.domain.House;
 import com.mpladsentinel.mplads.domain.IngestionEndpoint;
 import com.mpladsentinel.mplads.domain.IngestionRun;
@@ -153,11 +156,12 @@ class WorkControllerTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void authorityListsWorksWithTheFullShape() {
-        ResponseEntity<WorkResponse[]> response = rest.exchange(
-                "/api/works", HttpMethod.GET, as("mospi"), WorkResponse[].class);
+        ResponseEntity<PageResponse<WorkResponse>> response = rest.exchange(
+                "/api/works", HttpMethod.GET, as("mospi"),
+                new ParameterizedTypeReference<PageResponse<WorkResponse>>() {});
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        WorkResponse row = Arrays.stream(response.getBody())
+        WorkResponse row = response.getBody().content().stream()
                 .filter(w -> w.sourceWorkId() == WITH_PAYMENTS)
                 .findFirst().orElseThrow();
 
@@ -172,8 +176,9 @@ class WorkControllerTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void listsWorksWithAnUnreadableDescriptionAfterReadableOnes() {
-        WorkResponse[] all = rest.exchange(
-                "/api/works", HttpMethod.GET, as("mospi"), WorkResponse[].class).getBody();
+        List<WorkResponse> all = rest.exchange(
+                "/api/works", HttpMethod.GET, as("mospi"),
+                new ParameterizedTypeReference<PageResponse<WorkResponse>>() {}).getBody().content();
 
         int readableHighIndex = indexOf(all, READABLE_HIGH_ID);
         int unreadableLowIndex = indexOf(all, UNREADABLE_LOW_ID);
@@ -181,9 +186,22 @@ class WorkControllerTest extends AbstractPostgresIntegrationTest {
         assertThat(readableHighIndex).isLessThan(unreadableLowIndex);
     }
 
-    private static int indexOf(WorkResponse[] rows, long sourceWorkId) {
-        for (int i = 0; i < rows.length; i++) {
-            if (rows[i].sourceWorkId() == sourceWorkId) {
+        @Test
+        void listSupportsPageAndSizeAndReportsMetadata() {
+                PageResponse<WorkResponse> page = rest.exchange(
+                                "/api/works?page=2&size=1", HttpMethod.GET, as("mospi"),
+                                new ParameterizedTypeReference<PageResponse<WorkResponse>>() {}).getBody();
+
+                assertThat(page).isNotNull();
+                assertThat(page.page()).isEqualTo(2);
+                assertThat(page.size()).isEqualTo(1);
+                assertThat(page.totalElements()).isEqualTo(workRepository.count());
+                assertThat(page.content()).hasSize(1);
+        }
+
+        private static int indexOf(List<WorkResponse> rows, long sourceWorkId) {
+                for (int i = 0; i < rows.size(); i++) {
+                        if (rows.get(i).sourceWorkId() == sourceWorkId) {
                 return i;
             }
         }
@@ -210,26 +228,26 @@ class WorkControllerTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void paymentsReturnsInstallmentsInOrder() {
-        ResponseEntity<WorkPaymentResponse[]> response = rest.exchange(
+        ResponseEntity<PageResponse<WorkPaymentResponse>> response = rest.exchange(
                 "/api/works/" + WITH_PAYMENTS + "/payments", HttpMethod.GET,
-                as("mospi"), WorkPaymentResponse[].class);
+                as("mospi"), new ParameterizedTypeReference<PageResponse<WorkPaymentResponse>>() {});
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).hasSize(2);
-        assertThat(response.getBody()[0].ordinal()).isEqualTo(0);
-        assertThat(response.getBody()[0].amount().amount()).isEqualByComparingTo("700000.00");
-        assertThat(response.getBody()[0].vendorName()).isEqualTo("Vendor A");
-        assertThat(response.getBody()[1].ordinal()).isEqualTo(1);
+        assertThat(response.getBody().content()).hasSize(2);
+        assertThat(response.getBody().content().get(0).ordinal()).isEqualTo(0);
+        assertThat(response.getBody().content().get(0).amount().amount()).isEqualByComparingTo("700000.00");
+        assertThat(response.getBody().content().get(0).vendorName()).isEqualTo("Vendor A");
+        assertThat(response.getBody().content().get(1).ordinal()).isEqualTo(1);
     }
 
     @Test
     void paymentsIsAnEmptyArrayForAKnownWorkWithNoPaymentRows() {
-        ResponseEntity<WorkPaymentResponse[]> response = rest.exchange(
+        ResponseEntity<PageResponse<WorkPaymentResponse>> response = rest.exchange(
                 "/api/works/" + NO_PAYMENTS + "/payments", HttpMethod.GET,
-                as("mospi"), WorkPaymentResponse[].class);
+                as("mospi"), new ParameterizedTypeReference<PageResponse<WorkPaymentResponse>>() {});
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEmpty();
+        assertThat(response.getBody().content()).isEmpty();
     }
 
     @Test

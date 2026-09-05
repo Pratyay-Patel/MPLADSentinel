@@ -11,6 +11,8 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mpladsentinel.common.web.PageResponse;
+import com.mpladsentinel.common.web.PaginationRequest;
 import com.mpladsentinel.mplads.domain.LifecycleState;
 import com.mpladsentinel.mplads.domain.PaymentDataState;
 import com.mpladsentinel.mplads.domain.Work;
@@ -48,11 +50,12 @@ public class WorkQueryService {
 
     // --- authority-facing (full) view -----------------------------------
 
-    public List<WorkResponse> listWorks() {
-        return works.findAll().stream()
+    public PageResponse<WorkResponse> listWorks(PaginationRequest pagination) {
+        List<WorkResponse> rows = works.findAll().stream()
                 .sorted(LISTING_ORDER)
                 .map(WorkResponse::from)
                 .toList();
+        return PageResponse.of(rows, pagination.page(), pagination.size());
     }
 
     public Optional<WorkResponse> getWork(long sourceWorkId) {
@@ -65,14 +68,15 @@ public class WorkQueryService {
      * list means the work exists with no payment rows (which is <em>not</em>
      * "&#8377;0 spent" — see {@link PaymentDataState}).
      */
-    public Optional<List<WorkPaymentResponse>> getPayments(long sourceWorkId) {
+        public Optional<PageResponse<WorkPaymentResponse>> getPayments(
+            long sourceWorkId, PaginationRequest pagination) {
         return works.findFirstBySourceWorkIdOrderByIdAsc(sourceWorkId).map(work -> {
             List<WorkPaymentResponse> rows = new ArrayList<>();
             var installments = payments.findByWorkIdOrderBySourceOrdinalAsc(work.getId());
             for (int i = 0; i < installments.size(); i++) {
                 rows.add(WorkPaymentResponse.from(installments.get(i), i));
             }
-            return rows;
+            return PageResponse.of(rows, pagination.page(), pagination.size());
         });
     }
 
@@ -87,11 +91,12 @@ public class WorkQueryService {
 
     // --- publicly releasable view --------------------------------------
 
-    public List<PublicWorkResponse> listPublicWorks() {
-        return works.findAll().stream()
+    public PageResponse<PublicWorkResponse> listPublicWorks(PaginationRequest pagination) {
+        List<PublicWorkResponse> rows = works.findAll().stream()
                 .sorted(LISTING_ORDER)
                 .map(PublicWorkResponse::from)
                 .toList();
+        return PageResponse.of(rows, pagination.page(), pagination.size());
     }
 
     public Optional<PublicWorkResponse> getPublicWork(long sourceWorkId) {

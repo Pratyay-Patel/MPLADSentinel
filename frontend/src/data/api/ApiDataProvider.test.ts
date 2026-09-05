@@ -97,7 +97,7 @@ describe('ApiDataProvider', () => {
   // --- works read APIs (Phase B2) -----------------------------------
 
   it('listProjects fetches /api/works and normalises the rows', async () => {
-    const fetchMock = stubFetch(jsonResponse([WORK, { ...WORK, dataQualityFlags: undefined }]));
+    const fetchMock = stubFetch(jsonResponse({ content: [WORK, { ...WORK, dataQualityFlags: undefined }], page: 1, size: 20, totalElements: 2, totalPages: 1 }));
 
     const rows = await provider.listProjects();
 
@@ -133,7 +133,7 @@ describe('ApiDataProvider', () => {
     const rows = [
       { ordinal: 0, amount: { amount: 700000, currency: 'INR' }, paidOn: '2026-02-01', vendorName: 'V', statusRaw: 'Payment Success', implementingAuthorityText: null },
     ];
-    const fetchMock = stubFetch(jsonResponse(rows));
+    const fetchMock = stubFetch(jsonResponse({ content: rows, page: 1, size: 20, totalElements: 1, totalPages: 1 }));
     expect(await provider.getProjectPayments(900000001)).toEqual(rows);
     expect(fetchMock.mock.calls[0][0]).toBe('/api/works/900000001/payments');
 
@@ -142,7 +142,7 @@ describe('ApiDataProvider', () => {
   });
 
   it('listPublicProjects fetches /api/public/works', async () => {
-    const fetchMock = stubFetch(jsonResponse([PUBLIC_WORK]));
+    const fetchMock = stubFetch(jsonResponse({ content: [PUBLIC_WORK], page: 1, size: 20, totalElements: 1, totalPages: 1 }));
 
     const rows = await provider.listPublicProjects();
 
@@ -163,10 +163,10 @@ describe('ApiDataProvider', () => {
 
   it('listProjectRisks fetches /api/works/risk and keys it by sourceWorkId', async () => {
     const fetchMock = stubFetch(
-      jsonResponse([
+      jsonResponse({ content: [
         { sourceWorkId: 900000001, level: 'HIGH', score: 90, reasons: ['x'], assessedAt: 't' },
         { sourceWorkId: 900000002, level: 'LOW', score: 0, reasons: [], assessedAt: 't' },
-      ]),
+      ], page: 1, size: 20, totalElements: 2, totalPages: 1 }),
     );
 
     const byId = await provider.listProjectRisks();
@@ -221,7 +221,7 @@ describe('ApiDataProvider', () => {
   };
 
   it('listGrievances fetches /api/grievances', async () => {
-    const fetchMock = stubFetch(jsonResponse([GRIEVANCE]));
+    const fetchMock = stubFetch(jsonResponse({ content: [GRIEVANCE], page: 1, size: 20, totalElements: 1, totalPages: 1 }));
 
     const rows = await provider.listGrievances();
 

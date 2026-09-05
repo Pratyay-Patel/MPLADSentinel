@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.mpladsentinel.common.web.PageResponse;
+import com.mpladsentinel.common.web.PaginationRequest;
+
 /**
  * Grievance workflow: a citizen raises one, MoSPI / State / District move it
  * through {@link GrievanceStatus}. Read visibility is caller-scoped — a citizen
@@ -30,15 +33,18 @@ public class GrievanceService {
 
     /** All grievances, newest first. */
     @Transactional(readOnly = true)
-    public List<GrievanceResponse> listAll() {
-        return grievances.findAllByOrderBySubmittedAtDesc().stream().map(GrievanceResponse::from).toList();
+    public PageResponse<GrievanceResponse> listAll(PaginationRequest pagination) {
+        List<GrievanceResponse> rows = grievances.findAllByOrderBySubmittedAtDesc().stream()
+                .map(GrievanceResponse::from).toList();
+        return PageResponse.of(rows, pagination.page(), pagination.size());
     }
 
     /** Grievances raised by one user, newest first. */
     @Transactional(readOnly = true)
-    public List<GrievanceResponse> listOwnedBy(Long userId) {
-        return grievances.findBySubmittedByUserIdOrderBySubmittedAtDesc(userId).stream()
+    public PageResponse<GrievanceResponse> listOwnedBy(Long userId, PaginationRequest pagination) {
+        List<GrievanceResponse> rows = grievances.findBySubmittedByUserIdOrderBySubmittedAtDesc(userId).stream()
                 .map(GrievanceResponse::from).toList();
+        return PageResponse.of(rows, pagination.page(), pagination.size());
     }
 
     /** Record a new grievance for {@code submitterUserId}. */

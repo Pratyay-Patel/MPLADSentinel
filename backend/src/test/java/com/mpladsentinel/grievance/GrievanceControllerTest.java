@@ -3,6 +3,7 @@ package com.mpladsentinel.grievance;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -18,8 +19,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.core.ParameterizedTypeReference;
 
 import com.mpladsentinel.auth.AppUserRepository;
+import com.mpladsentinel.common.web.PageResponse;
 import com.mpladsentinel.support.AbstractPostgresIntegrationTest;
 import com.mpladsentinel.support.SessionLogin;
 
@@ -136,23 +139,23 @@ class GrievanceControllerTest extends AbstractPostgresIntegrationTest {
     void citizenSeesOnlyTheirOwnGrievances() {
         long mine = raiseGrievanceAsCitizen();
 
-        Map<String, Object>[] list = rest.exchange("/api/grievances", HttpMethod.GET,
+        PageResponse<Map<String, Object>> page = rest.exchange("/api/grievances", HttpMethod.GET,
                 new HttpEntity<>(new HttpHeaders(SessionLogin.cookieFor(rest, "citizen"))),
-                Map[].class).getBody();
+            new ParameterizedTypeReference<PageResponse<Map<String, Object>>>() {}).getBody();
 
-        assertThat(ids(list)).contains(String.valueOf(mine));
-        assertThat(ids(list)).doesNotContain(String.valueOf(otherUsersGrievanceId));
+        assertThat(ids(page.content())).contains(String.valueOf(mine));
+        assertThat(ids(page.content())).doesNotContain(String.valueOf(otherUsersGrievanceId));
     }
 
     @Test
     void authoritySeesEveryGrievance() {
         long citizenGrievance = raiseGrievanceAsCitizen();
 
-        Map<String, Object>[] list = rest.exchange("/api/grievances", HttpMethod.GET,
+        PageResponse<Map<String, Object>> page = rest.exchange("/api/grievances", HttpMethod.GET,
                 new HttpEntity<>(new HttpHeaders(SessionLogin.cookieFor(rest, "auditor"))),
-                Map[].class).getBody();
+            new ParameterizedTypeReference<PageResponse<Map<String, Object>>>() {}).getBody();
 
-        assertThat(ids(list))
+        assertThat(ids(page.content()))
                 .contains(String.valueOf(citizenGrievance), String.valueOf(otherUsersGrievanceId));
     }
 
@@ -190,7 +193,7 @@ class GrievanceControllerTest extends AbstractPostgresIntegrationTest {
                 .isEqualTo(HttpStatus.NOT_FOUND);
     }
 
-    private static String[] ids(Map<String, Object>[] list) {
-        return Arrays.stream(list).map(g -> (String) g.get("id")).toArray(String[]::new);
+    private static String[] ids(List<Map<String, Object>> list) {
+        return list.stream().map(g -> (String) g.get("id")).toArray(String[]::new);
     }
 }

@@ -16,7 +16,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.ParameterizedTypeReference;
 
+import com.mpladsentinel.common.web.PageResponse;
 import com.mpladsentinel.mplads.domain.IngestionEndpoint;
 import com.mpladsentinel.mplads.domain.IngestionRun;
 import com.mpladsentinel.mplads.domain.IngestionRunStatus;
@@ -100,7 +102,9 @@ class RiskControllerTest extends AbstractPostgresIntegrationTest {
     @Test
     void bulkRiskAssessesEveryWork() {
         RiskAssessment[] all = rest.exchange(
-                "/api/works/risk", HttpMethod.GET, as("mospi"), RiskAssessment[].class).getBody();
+            "/api/works/risk", HttpMethod.GET, as("mospi"),
+            new ParameterizedTypeReference<PageResponse<RiskAssessment>>() {}).getBody()
+            .content().toArray(RiskAssessment[]::new);
 
         assertThat(level(all, CLEAN)).isEqualTo(RiskLevel.LOW);
         assertThat(assessment(all, CLEAN).score()).isZero();
