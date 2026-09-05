@@ -1,13 +1,13 @@
+import { workTitle } from '../../format';
 import type { DataProvider } from '../DataProvider';
 import type { Grievance, GrievanceInput, GrievanceStatus, GrievanceStatusPatch } from '../types';
 
 /**
  * Feature service for the Grievances screen (`/grievances`).
  *
- * Composes `listGrievances` + `listProjects` (for the "related work" picker) and
- * forwards `submitGrievance`. In the current phase the DemoDataProvider stores
- * grievances in memory for the session; the ApiDataProvider rejects with
- * `notImplemented` until the backend endpoint exists.
+ * Composes `listGrievances` + `listPublicProjects` (for the "related work"
+ * picker — the citizen-safe list, since a citizen cannot call `/api/works`) and
+ * forwards `submitGrievance` / `updateGrievanceStatus`.
  */
 export const GRIEVANCE_CATEGORIES = [
   'Quality of work',
@@ -55,12 +55,12 @@ export function createGrievancesService(provider: DataProvider): GrievancesServi
     async load(signal) {
       const [grievances, projects] = await Promise.all([
         provider.listGrievances(signal),
-        provider.listProjects(signal),
+        provider.listPublicProjects(signal),
       ]);
       const workOptions: GrievanceWorkOption[] = projects
         .map((p) => ({
-          reference: p.sourceWorkId,
-          label: p.workDescription ?? `Work ${p.sourceWorkId}`,
+          reference: p.reference,
+          label: workTitle(p.workDescription, p.reference),
         }))
         .sort((a, b) => a.label.localeCompare(b.label));
       return { grievances, workOptions };

@@ -8,7 +8,7 @@ import {
   type RegisterRow,
   type RiskLevel,
 } from '../../data';
-import { formatINRCompact } from '../../format';
+import { formatINRCompact, workTitle } from '../../format';
 import {
   Button,
   Card,
@@ -114,7 +114,7 @@ const columns: Column<RegisterRow>[] = [
     render: ({ project }) => (
       <div className="dash-cell-primary">
         <span className="dash-cell-primary__title">
-          {project.workDescription ?? `Work ${project.sourceWorkId}`}
+          {workTitle(project.workDescription, project.sourceWorkId)}
         </span>
         <span className="dash-cell-primary__sub">
           {[project.state, project.district].filter(Boolean).join(' · ')} · #{project.sourceWorkId}
@@ -170,7 +170,7 @@ const columns: Column<RegisterRow>[] = [
     header: 'Action',
     align: 'right',
     render: ({ project }) => (
-      <ViewProjectLink id={project.sourceWorkId} label={project.workDescription ?? undefined} />
+      <ViewProjectLink id={project.sourceWorkId} label={workTitle(project.workDescription, project.sourceWorkId)} />
     ),
   },
 ];
@@ -196,7 +196,7 @@ export function ProjectRegister() {
     <div className="ui-stack reg">
       <PageHeader
         title="Project Register"
-        description="Every MPLADS work in the dataset, with status and risk indicators. Search and filter to narrow the list, then open a work for the full record."
+        description="Every MPLADS work, with status and risk indicators. Search and filter to narrow the list, then open a work for the full record."
       />
 
       {state.status === 'loading' && (
@@ -316,6 +316,7 @@ function RegisterBody({ data }: { data: ProjectRegisterData }) {
         caption="Project register"
         columns={columns}
         rows={filtered}
+        pageSize={25}
         getRowKey={({ project }) => project.sourceWorkId}
         emptyState={
           <EmptyState

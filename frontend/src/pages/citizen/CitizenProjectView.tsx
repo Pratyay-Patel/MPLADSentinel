@@ -7,7 +7,7 @@ import {
   type LifecycleState,
   type PublicProject,
 } from '../../data';
-import { formatDate, formatINRExact } from '../../format';
+import { formatDate, formatINRExact, workTitle } from '../../format';
 import {
   Card,
   EmptyState,
@@ -58,7 +58,11 @@ export function CitizenProjectView() {
   );
 
   const project = state.status === 'success' ? state.data : undefined;
-  const title = project?.workDescription ?? (validId ? `Work ${reference}` : 'Work');
+  const title = project
+    ? workTitle(project.workDescription, reference)
+    : validId
+      ? `Work #${reference}`
+      : 'Work';
 
   return (
     <div className="ui-stack cit">
@@ -149,7 +153,7 @@ function PublicView({ project }: { project: PublicProject }) {
           items={[
             { label: 'State', value: dash(project.state) },
             { label: 'District', value: dash(project.district) },
-            { label: 'Location (as recorded)', value: dash(project.location) },
+            { label: 'Location', value: dash(project.location) },
           ]}
         />
       </Card>
@@ -157,7 +161,7 @@ function PublicView({ project }: { project: PublicProject }) {
       <Card>
         <SectionHeader
           title="Funding"
-          description="Estimated and final cost are separate figures, as recorded in the source data."
+          description="Estimated and final cost are separate figures."
         />
         <KeyValueList
           items={[
@@ -168,10 +172,7 @@ function PublicView({ project }: { project: PublicProject }) {
       </Card>
 
       <Card>
-        <SectionHeader
-          title="Dates"
-          description="Source-reported dates only — not a verified project lifecycle."
-        />
+        <SectionHeader title="Dates" description="Key dates recorded for this work." />
         <KeyValueList
           items={[
             { label: 'Recommended on', value: formatDate(project.recommendedOn) },
@@ -183,8 +184,8 @@ function PublicView({ project }: { project: PublicProject }) {
       </Card>
 
       <p className="detail-note">
-        This is publicly released summary information compiled from an MPLADS transparency data
-        source. It is not an official government record.
+        This page presents publicly available information about the work — what was sanctioned,
+        where, under which representative, and its current status.
       </p>
     </>
   );

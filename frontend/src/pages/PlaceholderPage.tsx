@@ -20,13 +20,7 @@ export function PlaceholderPage({ title, description, breadcrumbs, note }: Place
     <div className="ui-stack">
       <PageHeader title={title} description={description} breadcrumbs={breadcrumbs} />
       <Card>
-        <p>
-          This screen is part of the Round-1 web portal and will be implemented in a later phase.
-        </p>
-        <p className="text-muted" style={{ marginTop: 'var(--space-2)' }}>
-          It will read data through the feature-service / DataProvider layer established in Phase
-          3A-1 — never by calling an API or importing demo fixtures directly.
-        </p>
+        <p>This section is coming soon.</p>
         {note ? (
           <p className="text-muted" style={{ marginTop: 'var(--space-2)' }}>
             {note}

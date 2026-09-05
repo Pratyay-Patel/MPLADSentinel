@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 
-import { actionsGrievances, reviewsGrievances, useSession } from '../../auth';
+import { actionsGrievances, reviewsGrievances, useCurrentRole } from '../../auth';
 import {
   GRIEVANCE_CATEGORIES,
   GRIEVANCE_STATUS_LABEL,
@@ -114,7 +114,7 @@ function useWorkLabel(data: GrievancesData) {
  * `grievances` table / API exists.
  */
 export function Grievances() {
-  const { role } = useSession();
+  const role = useCurrentRole();
   const service = useGrievancesService();
   const [reloadKey, setReloadKey] = useState(0);
   const isReviewer = reviewsGrievances(role);
@@ -131,7 +131,7 @@ export function Grievances() {
         description={
           isReviewer
             ? 'Grievances raised by citizens about MPLADS works. Review each one and record the action taken.'
-            : 'Report a problem with an MPLADS work — its quality, delay, location or use of funds. Submissions are held in this browser until the backend is connected.'
+            : 'Report a problem with an MPLADS work — its quality, delay, location or use of funds.'
         }
       />
 
@@ -305,7 +305,7 @@ function CitizenGrievances({
           emptyState={
             <EmptyState
               title="No grievances yet"
-              description="Grievances you submit appear here, held in this browser until the backend is connected."
+              description="Grievances you raise appear here."
             />
           }
         />
@@ -387,7 +387,12 @@ function ReviewQueue({
               value: s,
               label: GRIEVANCE_STATUS_LABEL[s],
             }))}
-            onChange={(e) => patch(g.id, { status: e.target.value as GrievanceStatus })}
+            onChange={(e) =>
+              patch(g.id, {
+                status: e.target.value as GrievanceStatus,
+                actionNote: g.actionNote,
+              })
+            }
           />
         ) : (
           <StatusBadgeFor status={g.status} />

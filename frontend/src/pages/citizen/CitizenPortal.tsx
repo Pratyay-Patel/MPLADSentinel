@@ -8,7 +8,7 @@ import {
   type LifecycleState,
   type PublicProject,
 } from '../../data';
-import { formatINRCompact } from '../../format';
+import { formatINRCompact, workTitle } from '../../format';
 import {
   Button,
   Card,
@@ -83,7 +83,7 @@ const columns: Column<PublicProject>[] = [
     render: (project) => (
       <div className="dash-cell-primary">
         <span className="dash-cell-primary__title">
-          {project.workDescription ?? 'Work (no description in source)'}
+          {workTitle(project.workDescription, project.reference)}
         </span>
         <span className="dash-cell-primary__sub">
           {[project.state, project.district].filter(Boolean).join(' · ') || '—'}
@@ -132,7 +132,7 @@ const columns: Column<PublicProject>[] = [
       <Link
         className="ui-btn ui-btn--ghost ui-btn--sm"
         to={`/citizen/${project.reference}`}
-        aria-label={`View ${project.workDescription ?? `work ${project.reference}`}`}
+        aria-label={`View ${workTitle(project.workDescription, project.reference)}`}
       >
         View <span aria-hidden>→</span>
       </Link>
@@ -164,7 +164,7 @@ export function CitizenPortal() {
     <div className="ui-stack cit">
       <PageHeader
         title="Citizen Portal"
-        description="Public information on MPLADS works — what was sanctioned, where, by which representative, and its current status. Figures are as recorded in the source data."
+        description="Public information on MPLADS works — what was sanctioned, where, by which representative, and its current status."
       />
 
       {state.status === 'loading' && (
@@ -249,6 +249,7 @@ function PortalBody({ data }: { data: CitizenListData }) {
         caption="Public list of MPLADS works"
         columns={columns}
         rows={filtered}
+        pageSize={25}
         getRowKey={(project) => project.reference}
         emptyState={
           <EmptyState

@@ -44,6 +44,16 @@ public final class DataQualityFlags {
     public static final String MISSING_WORK_DESCRIPTION = "MISSING_WORK_DESCRIPTION";
 
     /**
+     * {@code work_description} was present but carries no readable content
+     * (fewer than 3 letters after trimming) &mdash; typically source encoding
+     * loss where non-Latin script became {@code ?} (e.g. {@code "?? ?? ??"}), or
+     * bare punctuation. The verbatim value is kept in {@code work.work_description}
+     * (and the raw JSON in {@code raw_source_record}); callers should present a
+     * {@code "Work #<id>"} placeholder and list these works last.
+     */
+    public static final String UNREADABLE_WORK_DESCRIPTION = "UNREADABLE_WORK_DESCRIPTION";
+
+    /**
      * The {@code mp_details} object was absent even though the source provides it
      * in 100/100 sampled records.
      */

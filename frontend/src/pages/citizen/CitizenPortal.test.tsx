@@ -68,7 +68,9 @@ describe('CitizenPortal', () => {
   it('shows an error state with retry when the load fails', async () => {
     const provider: DataProvider = {
       ...createDemoDataProvider(),
-      listProjects: vi.fn().mockRejectedValue(new ProviderError('unavailable', 'backend down')),
+      listPublicProjects: vi
+        .fn()
+        .mockRejectedValue(new ProviderError('unavailable', 'backend down')),
     };
     renderPortal(provider);
 

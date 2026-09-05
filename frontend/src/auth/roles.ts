@@ -6,7 +6,8 @@
  * Round 1 (D23 — it is served by the Flutter mobile app).
  *
  * Nothing here grants access on its own: the real check is Spring Security at
- * the API layer. This scaffold only decides what the current UI shows.
+ * the API layer (decision D5 / D31). This map only decides what the UI shows to
+ * the already-authenticated user.
  */
 
 export const ROLES = ['MOSPI', 'STATE', 'DISTRICT', 'AUDITOR', 'MP', 'CITIZEN'] as const;
@@ -21,9 +22,6 @@ export const ROLE_LABELS: Record<Role, string> = {
   MP: 'Member of Parliament',
   CITIZEN: 'Citizen',
 };
-
-/** Role assumed before any explicit selection. */
-export const DEFAULT_ROLE: Role = 'MOSPI';
 
 export function isRole(value: unknown): value is Role {
   return typeof value === 'string' && (ROLES as readonly string[]).includes(value);

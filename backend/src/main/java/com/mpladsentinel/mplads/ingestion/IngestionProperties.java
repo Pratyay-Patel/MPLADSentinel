@@ -1,6 +1,7 @@
 package com.mpladsentinel.mplads.ingestion;
 
 import java.time.Duration;
+import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
@@ -25,6 +26,16 @@ import jakarta.validation.constraints.NotNull;
  *                                   {@code last_ingested_at} is older than this (Q6; approximate — there is no
  *                                   dedicated last-checked column and none is being added)
  * @param paymentsRecheckPresentAfter a {@code FETCHED_PRESENT} work is refreshed once older than this
+ * @param runOnStartup               dev / demo convenience: ingestion steps to run once at application
+ *                                   startup. Any of {@code recommended}, {@code completed}, {@code payments},
+ *                                   {@code sample} (comma-separated or repeated). Empty (the default) = do
+ *                                   nothing. Production populates the database another way.
+ * @param sampleStates              the {@code sample} step ingests the first {@code samplePagesPerState}
+ *                                   pages of recommended + completed works for each of these states
+ *                                   (exact-match filter; Title Case). Gives a geographically diverse slice
+ *                                   without paging the whole (state-alphabetical) endpoint.
+ * @param samplePagesPerState       pages per state for the {@code sample} step (>= 1; at the default
+ *                                   page size of 100 that is up to 100 works per state per endpoint)
  */
 @ConfigurationProperties(prefix = "mplads.ingestion")
 @Validated
@@ -46,7 +57,13 @@ public record IngestionProperties(
 
         @DefaultValue("7d") @NotNull Duration paymentsRecheckAbsentAfter,
 
-        @DefaultValue("30d") @NotNull Duration paymentsRecheckPresentAfter
+        @DefaultValue("30d") @NotNull Duration paymentsRecheckPresentAfter,
+
+        @DefaultValue({}) List<String> runOnStartup,
+
+        @DefaultValue({}) List<String> sampleStates,
+
+        @DefaultValue("1") @Min(1) int samplePagesPerState
 ) {
 
     /** The API rejects {@code limit > 100}; keep the effective page size within the verified bound. */

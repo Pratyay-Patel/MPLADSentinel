@@ -16,7 +16,7 @@ const AUTHORITIES: Role[] = ['MOSPI', 'STATE', 'DISTRICT', 'AUDITOR', 'MP'];
 /** Roles allowed into each area. Keep in sync with docs/round1-scope.md P0.5. */
 export const AREA_ROLES: Record<Area, Role[]> = {
   overview: AUTHORITIES,
-  projects: ALL_ROLES,
+  projects: AUTHORITIES,
   risk: AUTHORITIES,
   audit: AUTHORITIES,
   citizen: ALL_ROLES,
@@ -41,4 +41,13 @@ export function reviewsGrievances(role: Role): boolean {
 /** True when the role may advance a grievance's review status / add an action note. */
 export function actionsGrievances(role: Role): boolean {
   return GRIEVANCE_ADMINS.includes(role);
+}
+
+/**
+ * Where to send a user straight after sign-in when they had no specific
+ * destination in mind. A citizen has no access to the government dashboard, so
+ * they land on the citizen portal instead.
+ */
+export function landingPathFor(role: Role): string {
+  return role === 'CITIZEN' ? '/citizen' : '/dashboard';
 }

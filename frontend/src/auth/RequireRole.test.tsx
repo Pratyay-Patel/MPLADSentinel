@@ -28,7 +28,9 @@ describe('RequireRole', () => {
     renderGuard('CITIZEN');
     expect(screen.queryByText('risk screen body')).not.toBeInTheDocument();
     expect(screen.getByText(/not available for your role/i)).toBeInTheDocument();
-    expect(screen.getByText(/Citizen/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /go to projects/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /go to citizen portal/i })).toHaveAttribute(
+      'href',
+      '/citizen',
+    );
   });
 });

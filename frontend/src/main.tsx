@@ -5,6 +5,7 @@ import { App } from './App';
 import './styles/global.css';
 import './styles/shell.css';
 import './ui/ui.css';
+import './pages/login.css';
 import './pages/dashboard/dashboard.css';
 import './pages/projects/projects.css';
 import './pages/project-detail/project-detail.css';

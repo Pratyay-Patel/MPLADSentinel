@@ -2,8 +2,13 @@ package com.mpladsentinel.mplads.ingestion;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.IntFunction;
 
 import org.slf4j.Logger;
@@ -75,29 +80,100 @@ public class IngestionService {
 
     public WorksIngestionOutcome ingestRecommendedWorks() {
         int pageSize = properties.effectiveWorksPageSize();
-        IntFunction<PageBatch> fetch = page -> {
-            RecommendedWorksResponse response = client.fetchRecommendedWorks(ApiPageRequest.of(page, pageSize));
-            List<?> records = response.recommendedWorks();
-            return new PageBatch(records.size(), response.pagination(),
-                    (runId, budget) -> pageProcessor.applyRecommendedPage(
-                            runId, response.recommendedWorks(), response.lastUpdated(), budget));
-        };
-        return runWorksLoop(IngestionEndpoint.WORKS_RECOMMENDED, pageSize, fetch);
+        return runWorksLoop(IngestionEndpoint.WORKS_RECOMMENDED, pageSize,
+                page -> fetchRecommendedPage(page, pageSize, null));
     }
 
     public WorksIngestionOutcome ingestCompletedWorks() {
         int pageSize = properties.effectiveWorksPageSize();
-        IntFunction<PageBatch> fetch = page -> {
-            CompletedWorksResponse response = client.fetchCompletedWorks(ApiPageRequest.of(page, pageSize));
-            List<?> records = response.completedWorks();
-            return new PageBatch(records.size(), response.pagination(),
-                    (runId, budget) -> pageProcessor.applyCompletedPage(
-                            runId, response.completedWorks(), response.lastUpdated(), budget));
-        };
-        return runWorksLoop(IngestionEndpoint.WORKS_COMPLETED, pageSize, fetch);
+        return runWorksLoop(IngestionEndpoint.WORKS_COMPLETED, pageSize,
+                page -> fetchCompletedPage(page, pageSize, null));
+    }
+
+    /**
+     * Dev/demo helper: ingest a shallow, geographically diverse slice — the first
+     * {@code pagesPerState} pages of {@code /works/recommended} for each named
+     * {@code state}. Sequential paging of the full endpoint is state-alphabetical,
+     * so a small run only ever reaches the first few states; this covers many.
+     *
+     * <p>One {@link com.mpladsentinel.mplads.domain.IngestionRun} per state. A
+     * state that returns zero records is logged (usually a name/casing mismatch —
+     * the filter is case-sensitive).
+     */
+    public List<WorksIngestionOutcome> ingestRecommendedWorksForStates(List<String> states,
+                                                                       int pagesPerState) {
+        int pageSize = properties.effectiveWorksPageSize();
+        return runForStates(IngestionEndpoint.WORKS_RECOMMENDED, states, pagesPerState,
+                (page, state) -> fetchRecommendedPage(page, pageSize, state));
+    }
+
+    /** As {@link #ingestRecommendedWorksForStates}, for {@code /works/completed}. */
+    public List<WorksIngestionOutcome> ingestCompletedWorksForStates(List<String> states,
+                                                                     int pagesPerState) {
+        int pageSize = properties.effectiveWorksPageSize();
+        return runForStates(IngestionEndpoint.WORKS_COMPLETED, states, pagesPerState,
+                (page, state) -> fetchCompletedPage(page, pageSize, state));
+    }
+
+    private PageBatch fetchRecommendedPage(int page, int pageSize, String state) {
+        RecommendedWorksResponse response =
+                client.fetchRecommendedWorks(ApiPageRequest.of(page, pageSize, state));
+        return new PageBatch(response.recommendedWorks().size(), response.pagination(),
+                (runId, budget) -> pageProcessor.applyRecommendedPage(
+                        runId, response.recommendedWorks(), response.lastUpdated(), budget));
+    }
+
+    private PageBatch fetchCompletedPage(int page, int pageSize, String state) {
+        CompletedWorksResponse response =
+                client.fetchCompletedWorks(ApiPageRequest.of(page, pageSize, state));
+        return new PageBatch(response.completedWorks().size(), response.pagination(),
+                (runId, budget) -> pageProcessor.applyCompletedPage(
+                        runId, response.completedWorks(), response.lastUpdated(), budget));
+    }
+
+    private List<WorksIngestionOutcome> runForStates(
+            IngestionEndpoint endpoint, List<String> states, int pagesPerState,
+            BiFunction<Integer, String, PageBatch> pageFetch) {
+        int cap = Math.max(1, pagesPerState);
+        int pageSize = properties.effectiveWorksPageSize();
+        List<WorksIngestionOutcome> outcomes = new ArrayList<>();
+        for (String state : sanitizeStates(states)) {
+            WorksIngestionOutcome outcome = runWorksLoop(endpoint, pageSize, cap,
+                    page -> pageFetch.apply(page, state));
+            if (outcome.recordsSeen() == 0) {
+                log.warn("sample ingestion for {} state '{}' returned 0 records "
+                        + "— check the state name/casing (the filter is case-sensitive)",
+                        endpoint, state);
+            }
+            outcomes.add(outcome);
+        }
+        return outcomes;
+    }
+
+    /** Trim, drop blanks, de-duplicate, preserve order. */
+    private static List<String> sanitizeStates(List<String> states) {
+        if (states == null) {
+            return List.of();
+        }
+        Set<String> seen = new LinkedHashSet<>();
+        for (String raw : states) {
+            if (raw == null) {
+                continue;
+            }
+            String trimmed = raw.trim();
+            if (!trimmed.isEmpty()) {
+                seen.add(trimmed);
+            }
+        }
+        return List.copyOf(seen);
     }
 
     private WorksIngestionOutcome runWorksLoop(IngestionEndpoint endpoint, int pageSize,
+                                               IntFunction<PageBatch> fetch) {
+        return runWorksLoop(endpoint, pageSize, properties.worksMaxPages(), fetch);
+    }
+
+    private WorksIngestionOutcome runWorksLoop(IngestionEndpoint endpoint, int pageSize, int maxPages,
                                                IntFunction<PageBatch> fetch) {
         long runId = tracker.start(endpoint, IngestionTrigger.MANUAL, pageSize, 1).getId();
         log.info("ingestion run {} started for {} (pageSize={})", runId, endpoint, pageSize);
@@ -112,7 +188,6 @@ public class IngestionService {
         int pagesFetched = 0;
         boolean committedAny = false;
 
-        int maxPages = properties.worksMaxPages();
         int page = 1;
         while (page <= maxPages) {
             PageBatch batch;

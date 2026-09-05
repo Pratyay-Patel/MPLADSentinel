@@ -45,10 +45,10 @@ describe('createDashboardService (demo provider)', () => {
 });
 
 describe('createDashboardService risk resilience', () => {
-  it('falls back to UNKNOWN risk when the provider risk call rejects', async () => {
+  it('falls back to UNKNOWN risk when the bulk risk call rejects', async () => {
     const provider: DataProvider = {
       ...createDemoDataProvider(),
-      getProjectRisk: vi.fn().mockRejectedValue(new ProviderError('notImplemented', 'no risk api')),
+      listProjectRisks: vi.fn().mockRejectedValue(new ProviderError('unavailable', 'risk down')),
     };
     const data = await createDashboardService(provider).load();
     expect(Object.values(data.risksByWorkId).every((r) => r.level === 'UNKNOWN')).toBe(true);

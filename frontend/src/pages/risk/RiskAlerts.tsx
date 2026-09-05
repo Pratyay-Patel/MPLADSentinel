@@ -7,7 +7,7 @@ import {
   type RiskLevel,
   type RiskRow,
 } from '../../data';
-import { formatINRCompact } from '../../format';
+import { formatINRCompact, workTitle } from '../../format';
 import {
   Card,
   DataTable,
@@ -95,7 +95,7 @@ const columns: Column<RiskRow>[] = [
     render: ({ project }) => (
       <div className="dash-cell-primary">
         <span className="dash-cell-primary__title">
-          {project.workDescription ?? `Work ${project.sourceWorkId}`}
+          {workTitle(project.workDescription, project.sourceWorkId)}
         </span>
         <span className="dash-cell-primary__sub">
           {[project.state, project.district].filter(Boolean).join(' · ')} · #{project.sourceWorkId}
@@ -135,7 +135,7 @@ const columns: Column<RiskRow>[] = [
     header: 'Action',
     align: 'right',
     render: ({ project }) => (
-      <ViewProjectLink id={project.sourceWorkId} label={project.workDescription ?? undefined} />
+      <ViewProjectLink id={project.sourceWorkId} label={workTitle(project.workDescription, project.sourceWorkId)} />
     ),
   },
 ];
@@ -159,7 +159,7 @@ export function RiskAlerts() {
     <div className="ui-stack risk">
       <PageHeader
         title="Risk & Alerts"
-        description="Rule-based indicators over the available work data. Indicators are computed from financial and data-quality signals — not an ML model. The Round-1 risk engine runs server-side."
+        description="Risk indicators across every work, most severe first, with the factors behind each. Computed from financial and data-quality signals."
       />
 
       {state.status === 'loading' && (
@@ -279,6 +279,7 @@ function RiskBody({ data }: { data: RiskListData }) {
         caption="Risk and alerts"
         columns={columns}
         rows={filtered}
+        pageSize={25}
         getRowKey={({ project }) => project.sourceWorkId}
         emptyState={
           <EmptyState

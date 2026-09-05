@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 
-import { canAccess, useSession } from '../auth';
+import { canAccess, useCurrentRole } from '../auth';
 import { NAV_GROUPS } from './navItems';
 
 export interface AppSidebarProps {
@@ -13,7 +13,7 @@ export interface AppSidebarProps {
 }
 
 export function AppSidebar({ open, onNavigate, id }: AppSidebarProps) {
-  const { role } = useSession();
+  const role = useCurrentRole();
 
   const groups = NAV_GROUPS.map((group) => ({
     ...group,

@@ -13,7 +13,7 @@ export function WorkDistribution({ data }: { data: DashboardData }) {
     <Card>
       <SectionHeader
         title="Work distribution"
-        description="Records seen in each source listing. A work may appear in both."
+        description="How works are split between the recommended and completed stages. Some works appear at both."
       />
       <BarList
         caption="Recommended works versus completed works"
@@ -33,7 +33,7 @@ export function WorkDistribution({ data }: { data: DashboardData }) {
         ]}
       />
       <p className="dash-note">
-        Recommended and completed are two source listings, not a measured project lifecycle.
+        A work can appear at both stages, so the two counts may overlap.
       </p>
     </Card>
   );

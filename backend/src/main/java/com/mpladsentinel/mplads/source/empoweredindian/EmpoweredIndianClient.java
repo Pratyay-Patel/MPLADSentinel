@@ -142,10 +142,16 @@ public class EmpoweredIndianClient {
 
     private <T> T exchangeForData(String path, ApiPageRequest page, Class<T> dataType) {
         return restClient.get()
-                .uri(builder -> builder.path(path)
-                        .queryParam("page", page.page())
-                        .queryParam("limit", page.limit())
-                        .build())
+                .uri(builder -> {
+                    builder.path(path)
+                            .queryParam("page", page.page())
+                            .queryParam("limit", page.limit());
+                    if (page.hasState()) {
+                        // VERIFIED filter (docs/data-source.md §13.2/§13.3): exact match on `state`.
+                        builder.queryParam("state", page.state());
+                    }
+                    return builder.build();
+                })
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange((request, response) -> {
                     HttpStatusCode status = response.getStatusCode();

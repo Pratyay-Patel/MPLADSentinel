@@ -6,7 +6,6 @@ import { ROLES } from './roles';
 describe('canAccess', () => {
   it('lets every role into the public areas', () => {
     for (const role of ROLES) {
-      expect(canAccess(role, 'projects')).toBe(true);
       expect(canAccess(role, 'citizen')).toBe(true);
       expect(canAccess(role, 'grievances')).toBe(true);
     }
@@ -14,6 +13,7 @@ describe('canAccess', () => {
 
   it('keeps the Citizen role out of the authority areas', () => {
     expect(canAccess('CITIZEN', 'overview')).toBe(false);
+    expect(canAccess('CITIZEN', 'projects')).toBe(false);
     expect(canAccess('CITIZEN', 'risk')).toBe(false);
     expect(canAccess('CITIZEN', 'audit')).toBe(false);
   });
@@ -21,6 +21,7 @@ describe('canAccess', () => {
   it('lets every authority role into the monitoring areas', () => {
     for (const role of ['MOSPI', 'STATE', 'DISTRICT', 'AUDITOR', 'MP'] as const) {
       expect(canAccess(role, 'overview')).toBe(true);
+      expect(canAccess(role, 'projects')).toBe(true);
       expect(canAccess(role, 'risk')).toBe(true);
       expect(canAccess(role, 'audit')).toBe(true);
     }

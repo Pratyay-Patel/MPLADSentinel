@@ -1,6 +1,6 @@
 import type { AttentionItem } from '../../../data';
 import { DataTable, EmptyState, ViewProjectLink, type Column } from '../../../ui';
-import { formatINRCompact } from '../../../format';
+import { formatINRCompact, workTitle } from '../../../format';
 import { RiskCell } from '../RiskCell';
 
 const columns: Column<AttentionItem>[] = [
@@ -10,7 +10,7 @@ const columns: Column<AttentionItem>[] = [
     render: ({ project }) => (
       <div className="dash-cell-primary">
         <span className="dash-cell-primary__title">
-          {project.workDescription ?? `Work ${project.sourceWorkId}`}
+          {workTitle(project.workDescription, project.sourceWorkId)}
         </span>
         <span className="dash-cell-primary__sub">
           {project.category ?? '—'} · #{project.sourceWorkId}
@@ -53,14 +53,14 @@ const columns: Column<AttentionItem>[] = [
     header: 'Action',
     align: 'right',
     render: ({ project }) => (
-      <ViewProjectLink id={project.sourceWorkId} label={project.workDescription ?? undefined} />
+      <ViewProjectLink id={project.sourceWorkId} label={workTitle(project.workDescription, project.sourceWorkId)} />
     ),
   },
 ];
 
 /**
  * Section 2 — the hero intelligence section. Surfaced by current financial /
- * data-driven demo indicators (no ML). Given the strongest visual emphasis.
+ * data-quality indicators. Given the strongest visual emphasis.
  */
 export function ProjectsRequiringAttention({ items }: { items: AttentionItem[] }) {
   return (
@@ -70,15 +70,15 @@ export function ProjectsRequiringAttention({ items }: { items: AttentionItem[] }
           Projects requiring attention
         </h2>
         <p className="dash-attention__lede">
-          Projects surfaced by current financial and data-quality indicators for further review.
-          Indicators are rule-based signals over the available work data, not an ML model.
+          Works with the strongest financial and data-quality indicators, surfaced for further
+          review.
         </p>
       </div>
 
       {items.length === 0 ? (
         <EmptyState
           title="No projects currently flagged"
-          description="No demo project meets an attention indicator threshold."
+          description="No work currently meets an attention threshold."
         />
       ) : (
         <DataTable

@@ -374,6 +374,32 @@ textarea.ui-control {
   padding-bottom: var(--space-3);
 }
 
+.ui-table-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-1);
+}
+
+.ui-table-pager__status {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.ui-table-pager__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ui-table-pager__page {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
 /* ---- Skeleton / LoadingState / EmptyState / ErrorState -- */
 
 .ui-skeleton {

@@ -110,12 +110,12 @@ P0.6a — Client RBAC scaffold *(done)*
 
 Role context, role→area access map (`canAccess`), role-gated navigation, and the `RequireRole` route guard. Role chosen from a header selector, persisted to `localStorage`. This is UX only — see decision D30.
 
-P0.6b — Backend authentication + login *(backend-integration phase)*
+P0.6b — Backend authentication + login *(done — backend-integration step B1)*
 
-- Seeded demo users, one per web role; no self-registration (decision D31).
-- `POST /api/auth/login`, `GET /api/auth/me`, logout. Stateful session preferred over JWT.
-- `SecurityConfig`: `anyRequest().permitAll()` → `authenticated()`, with per-endpoint authority rules matching the client `canAccess` map. `/api/health` stays public.
-- A login page replaces the header role selector; `SessionProvider` reads `GET /api/auth/me`. `RequireRole` / `canAccess` are unchanged — they now read the authenticated role.
+- Seeded demo users, one per web role (`app_user` table, Flyway V5; `AuthUserSeeder`); no self-registration (decision D31).
+- `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`. Stateful `HttpSession`, BCrypt password hashing.
+- `SecurityConfig`: `anyRequest().permitAll()` → `authenticated()`; public = `POST /api/auth/login`, `GET /api/health`, actuator health/info. Unauthenticated calls get a JSON `ApiErrorResponse` 401. Per-endpoint authority rules land with each business API (B2 onward). CSRF stays disabled for Round 1 (documented limitation in `SecurityConfig`).
+- A `/login` page replaces the header role selector; `SessionProvider` resolves the session from `GET /api/auth/me`. The header shows the signed-in user + "Sign out". `RequireAuth` gates the shell; `RequireRole` / `canAccess` are unchanged — they now read the authenticated role.
 
 ## 3. P1 — Implement If P0 Is Stable
 
@@ -135,7 +135,7 @@ P1.3 — Basic Audit Timeline (deferred to backend-integration phase)
 
 Display important project events in chronological order. Depends on verification/ledger events that do not exist until backend integration.
 
-P1.4 — Basic Citizen Portal
+P1.4 — Basic Citizen Portal *(done — frontend + B2 public works API)*
 
 Provide a read-only interface for:
 
@@ -146,7 +146,7 @@ Viewing blockchain-backed audit/integrity information through Spring Boot APIs
 
 Citizens must not directly access the Hyperledger Fabric network.
 
-P1.5 — Grievances (citizen submission + authority review)
+P1.5 — Grievances (citizen submission + authority review) *(done — frontend + B4 API)*
 
 - **Citizen:** a submission form (category, subject, description, optional
   related work / contact) plus a read-only list of grievances they have raised.
@@ -154,12 +154,26 @@ P1.5 — Grievances (citizen submission + authority review)
   form — a review queue. List all grievances, filter by status / work /
   category, open one, and move it through
   `SUBMITTED → UNDER_REVIEW → ACTIONED → CLOSED` with an action note.
-- **Persistence:** a `grievances` table (Flyway V5) with
+- **Persistence:** a `grievances` table (Flyway V6 — V5 is `app_user`) with
   `GET / POST / PATCH /api/grievances`.
 
 The frontend role-split (form vs. queue, status transitions) can land ahead of
 persistence on the `DataProvider` seam; until the table exists the
 `DemoDataProvider` holds grievances for the browser session only.
+
+P1.6 — Citizen self-registration *(backend-integration step B4a — after B1–B4, decision D32)*
+
+- Public `POST /api/auth/register` creating an `app_user` with role **always
+  server-assigned `CITIZEN`** — the role is never read from the request body.
+- Fields: display name, email (unique), password + confirmation, with
+  server-side strength / format validation; duplicate email → 409.
+- Frontend `/register` page (public, outside the shell) linked from `/login`
+  ("Create a citizen account"). On success: sign in and land on `/citizen`.
+- Government roles (MoSPI / State / District / Auditor / MP) remain
+  administrator-provisioned — they cannot self-register.
+- Round-1 minimal: email verification, password reset and abuse throttling /
+  captcha on the public endpoint are noted as limitations to add before any
+  production use, not built for the demo unless time allows.
 
 ## 4. P2 — Deferred
 
@@ -188,7 +202,7 @@ Development follows this order. Steps 1–4 built the backend foundation and the
         ↓
 3. PostgreSQL Data Layer                      [done]
         ↓
-4. Spring Boot REST APIs                      [partial — deferred to step 12]
+4. Spring Boot REST APIs                      [done — B1 auth, B2 works read APIs, B3 risk engine, B4 grievances, B4a citizen registration]
         ↓
 --- frontend sprint (DataProvider seam) ---
 5. React Dashboard                            [done]
@@ -205,24 +219,95 @@ Development follows this order. Steps 1–4 built the backend foundation and the
         ↓
 11. Grievances (frontend, DataProvider seam)  [done]
         ↓
-11a. Grievances role-split (citizen form vs.  [current]
+11a. Grievances role-split (citizen form vs.  [done]
      authority review queue + status flow),
      still on the DataProvider seam
         ↓
      P0 FRONTEND COMPLETE — Round 1 demo surface ready
         ↓
 --- backend integration (flip VITE_DATA_SOURCE=api per capability) ---
-12. Backend auth + login page (seeded demo users, D31)
+12. B1 — Backend auth + login page             [done]
+    (seeded demo users, D31; app_user Flyway V5;
+     /api/auth/login|me|logout; stateful session;
+     SecurityConfig → authenticated(); /login page +
+     RequireAuth; header sign-out)
         ↓
-13. GET /api/works, /api/works/{id}, /api/works/summary,
-    /api/works/{id}/payments  → flip listProjects / getProject /
-    getProjectSummary / getProjectPayments
+13. B2 — Works read APIs                        [done]
+    - GET /api/works, /api/works/{id}, /api/works/summary,
+      /api/works/{id}/payments — authority roles only (D33)
+    - GET /api/public/works, /api/public/works/{id} — limited public
+      projection for the Citizen Portal (D33)
+    - flip listProjects / getProject / getProjectSummary /
+      getProjectPayments + listPublicProjects / getPublicProject
+    - IngestionStartupRunner (mplads.ingestion.run-on-startup) populates
+      the dev/demo DB; ingestion stays HTTP-free otherwise. The `sample`
+      step ingests the first N pages of recommended+completed works per
+      state (verified `state` filter) for a geographically diverse slice,
+      instead of state-alphabetical sequential paging
+    - interim frontend perf: the list screens render all works at once, so
+      DataTable got client-side pagination (pageSize=25) and the risk fan-out
+      was cut (one probe, not one rejected call per work, pre-B3). Proper
+      server-side paging is B4b.
         ↓
-14. Risk engine: GET /api/works/{id}/risk (rule-based, server-side, D22)
-    → flip getProjectRisk; retire the client deriveRisk stand-in
+14. B3 — Risk engine (rule-based, server-side, D22)              [done]
+    - com.mpladsentinel.mplads.risk: RiskEngine + RiskRuleSet (the 6
+      rules ported 1:1 from the client deriveRisk — same ids/weights/
+      thresholds), injected Clock for deterministic tests
+    - GET /api/works/risk (bulk — the list screens call this once) and
+      GET /api/works/{id}/risk (single — the detail page); authority-only
+    - flip getProjectRisk + new listProjectRisks; loadProjectsWithRisk
+      fetches projects + risks in parallel (one request each, not one
+      per work)
+    - client deriveRisk (rules.ts) kept as the demo-mode risk source,
+      kept in sync with the backend by hand
         ↓
-15. grievances table (Flyway V5) + GET/POST/PATCH /api/grievances
-    → flip listGrievances / submitGrievance / updateGrievanceStatus
+15. B4 — Grievances API                                          [done]
+    - grievance table (Flyway V6); GET /api/grievances (citizen sees
+      only their own, every other role sees all), POST (CITIZEN only —
+      government roles cannot raise one), PATCH /{id} (MoSPI/State/
+      District only). submitted_by_user_id links the raiser (AppUserDetails
+      gained id()).
+    - flip listGrievances / submitGrievance / updateGrievanceStatus;
+      the grievances service builds its work-picker from
+      listPublicProjects (a citizen cannot call /api/works)
+    - EVERY DataProvider method is now backed by a real endpoint. This
+      closes the B1–B4 core set.
+        ↓
+15a. B4a — Citizen self-registration (D32)                       [done]
+     - app_user.email (Flyway V7); public POST /api/auth/register —
+       role ALWAYS server-assigned CITIZEN, username = email, signs in
+       on success; 409 on a duplicate email, 400 on validation.
+     - /register page (public, outside the shell) linked from /login;
+       the login field is now "Username or email".
+     - Government roles stay admin-provisioned. No email verification /
+       password reset / rate-limiting in Round 1 (documented, D32).
+        ↓
+15b. B4b — Works pagination + filtering API (updates D33)  [DEFERRED to post-Round-1]
+     GET /api/works and GET /api/public/works to take page/size + server-side
+     filters (state, district, category, lifecycle, risk, search) and return a
+     paged envelope; DataProvider gains a paged+filtered list method; the 4 list
+     screens drop the "fetch everything" approach.
+     Deferred: at ~6k demo works the B2 client-side pagination (DataTable
+     pageSize=25) keeps loads ~2-3s, which is acceptable for Round 1. B4b is
+     the correct shape for the real ~83k dataset and is a ~15-file change
+     across every list screen — done properly after Round 1.
+        ↓
+15d. Demo DB population + polish pass                            [done 2026-08-30]
+     - Works ingested via the `sample` step (first page of recommended +
+       completed per state) → ~6044 works across 34 states.
+     - Payments ingested via the `payments` step (run 69, PARTIAL): 4212 works
+       `FETCHED_PRESENT`, 1483 `FETCHED_ABSENT`, 349 `FETCH_ERROR`
+       (Empowered Indian API burst-protection 429s — retryable). 7338
+       `work_payment` rows; `/api/works/summary` `totalRecordedPayments`
+       ≈ ₹289.9 cr. Top up the 349 later with
+       `MPLADS_INGEST_PAYMENTS_DELAY=1500ms`.
+     - Polish pass (commit d6e5d39): user-facing meta/disclaimer text softened
+       or removed across all screens; `AREA_ROLES.projects` narrowed from
+       all-roles to authorities (the Project Register is an authority screen —
+       citizens use the Citizen Portal), so a citizen no longer routes to the
+       authority `/api/works` endpoint; `ApiDataProvider` returns clean
+       user-facing messages for 401 / 403 / network failures; seeded account
+       display names lost the "(demo)" suffix and are refreshed on every boot.
         ↓
 16. IPFS evidence
         ↓

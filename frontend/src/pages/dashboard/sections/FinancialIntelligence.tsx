@@ -16,7 +16,7 @@ export function FinancialIntelligence({ data }: { data: DashboardData }) {
     <Card>
       <SectionHeader
         title="Financial intelligence"
-        description="Estimated cost and successfully recorded payments across the current dataset."
+        description="Estimated cost and recorded payments across these works."
       />
       <BarList
         caption="Estimated cost versus recorded payments"
@@ -39,8 +39,7 @@ export function FinancialIntelligence({ data }: { data: DashboardData }) {
         {ratio == null
           ? 'No estimated-cost total is available for comparison.'
           : `Recorded payments represent about ${formatPercent(ratio)} of the estimated cost total ` +
-            'for works in this dataset. Recorded payments reflect only payment records that were ' +
-            'successfully retrieved — not every rupee spent under the scheme.'}
+            'for these works.'}
       </p>
     </Card>
   );

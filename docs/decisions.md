@@ -245,6 +245,19 @@ Decision: The initial Round 1 rule/statistical risk engine will be implemented
 inside Spring Boot. The separate Python AI service will be introduced when
 advanced ML functionality is required.
 
+**Implemented (B3):** `com.mpladsentinel.mplads.risk` — `RiskEngine` +
+`RiskRuleSet`, 6 rules (`PAYMENT_OVERSPEND`, `FULL_PAYOUT_BEFORE_COMPLETION`,
+`SINGLE_INSTALLMENT_FULL`, `DORMANT_NO_PAYMENTS`, `COST_COHORT_OUTLIER`,
+`PAYMENT_DATA_UNAVAILABLE`) using only verified source fields (no
+physical-progress / geospatial / duplicate / delay-prediction rule). Score =
+Σweights capped 100; ≥55 HIGH, ≥25 MEDIUM, >0 LOW; `UNKNOWN` when nothing fired
+and nothing is assessable. Deterministic (injected `Clock`). Exposed at
+`GET /api/works/risk` (bulk) and `GET /api/works/{id}/risk` (single),
+authority-only. Scores are **investigation indicators, never proof** (§17).
+
+The 6 rules are a 1:1 port of the client `frontend/src/data/risk/rules.ts`,
+which is retained as the demo-mode risk source and kept in sync by hand.
+
 ## D23 — Field Officer Role
 Decision: Field Officer is a backend RBAC role but does not have a dedicated
 web interface in Round 1. Field Officer functionality is primarily provided
@@ -396,7 +409,12 @@ sign-in exists.
 - **Access map** (`access.ts`): each routed screen belongs to an `Area`;
   `canAccess(role, area)` is the single role→visibility mapping. Round-1 rule:
   authority roles see all monitoring areas (overview, projects, risk, audit);
-  Citizen sees Projects and the public areas (citizen portal, grievances) only.
+  Citizen sees the public areas (citizen portal, grievances) only. *(Updated
+  2026-08-30, commit d6e5d39: the `projects` area — the authority Project
+  Register — was narrowed from all-roles to authorities. Citizens browse works
+  through the Citizen Portal (`/citizen`), which calls the public works API;
+  routing them at `/projects` sent them to the authority `/api/works` endpoint
+  and produced a 403.)*
 - **Session** (`SessionProvider` / `useSession`): the active role is chosen from
   the header **Viewing as** selector and persisted to `localStorage`. This
   stands in for authentication; it performs none.
@@ -444,3 +462,89 @@ authoritative check.
 
 Advanced identity work (real IdP / SSO, Field Officer mobile auth, granular
 approval permissions) is out of Round 1 scope.
+
+## D32 — Citizen self-registration (post-B4)
+
+**Decision:**
+
+After the core backend integration (B1 auth, B2 works APIs, B3 risk engine,
+B4 grievances API) is built and stable, add **citizen-only self-registration**.
+This refines D31, which deliberately shipped B1 with seeded accounts and no
+signup.
+
+- **Scope: citizens only.** `POST /api/auth/register` is public and always
+  creates the account with role `CITIZEN`. The role is assigned by the server
+  and never taken from the request body. Government roles (MoSPI / Ministry,
+  State Authority, District Authority, Auditor, MP) stay
+  administrator-provisioned — there is no self-service path to a privileged
+  role.
+- **Data.** Registration collects display name, a unique email, and a password
+  (with confirmation). A Flyway migration (V7, after `app_user` V5 and
+  `grievances` V6) adds the columns needed — at minimum `email`, and an
+  `email_verified` flag if verification is implemented.
+- **Frontend.** A `/register` page, public and outside the application shell,
+  linked from `/login`. On success the user is signed in and lands on
+  `/citizen`.
+- **Sequencing.** This is backend-integration step **B4a**. It must not begin
+  before B1–B4 are stable, and it must not delay them.
+- **Deliberately minimal for Round 1** (documented limitations, revisit before
+  production): email verification, password reset, and abuse protection
+  (rate limiting / captcha) on the public endpoint are optional and added only
+  if time allows.
+
+Superseded part of D31: "no self-registration" applied to B1; from B4a a
+citizen may self-register. Everything else in D31 stands.
+
+**Implemented (B4a).** `app_user.email` (Flyway V7, unique); `AuthService.register`
++ public `POST /api/auth/register` (`RegisterRequest` has no `role` field — the
+server always sets `CITIZEN`; `username = lower(email)`; establishes the session
+and returns the `SessionUser`). Duplicate email → 409; password mismatch /
+`< 8` chars / bad email → 400. Frontend `/register` page (public, outside the
+shell) linked from `/login`; the login field is relabelled "Username or email".
+Email verification, password reset and abuse throttling remain out of Round 1.
+
+## D33 — Works read APIs: authority-facing vs. public split
+
+**Decision:**
+
+The B2 works read APIs are split into two endpoint families rather than one
+shared endpoint with client-side field stripping:
+
+- **`GET /api/works`, `/api/works/{id}`, `/api/works/summary`,
+  `/api/works/{id}/payments`** — the full internal view (`WorkResponse`:
+  data-quality flags, payment state, lifecycle, etc.). Restricted in
+  `SecurityConfig` to the government roles (`MOSPI`, `STATE`, `DISTRICT`,
+  `AUDITOR`, `MP`); a citizen session gets `403`.
+- **`GET /api/public/works`, `/api/public/works/{id}`** — a server-narrowed
+  projection (`PublicWorkResponse` / frontend `PublicProject`): only publicly
+  releasable fields, no risk data, no data-quality flags, no payment internals,
+  no provenance. Any authenticated session may read it; this is what the Citizen
+  Portal calls.
+
+**Why:** CLAUDE.md §5 / §14 — "only publicly releasable information should be
+exposed to citizens." Narrowing on the server means a citizen's browser never
+receives the internal fields at all, rather than relying on the frontend to
+omit them from the view. It keeps the pre-backend behaviour (the demo
+`toPublicProject` projection) but now enforced at the data boundary.
+
+**Frontend:** the `DataProvider` gains `listPublicProjects` / `getPublicProject`;
+`DemoDataProvider` derives them via `toPublicProject`, `ApiDataProvider` calls
+the public endpoints. The Citizen Portal service (`citizen.ts`) uses only these
+two; it can no longer reach `listProjects` / `getProject`. *(2026-08-30, commit
+d6e5d39: the `projects` RBAC area was also narrowed to authorities (see D30), so
+a citizen no longer routes to the authority `/api/works` endpoint at all — the
+403 was still reachable via the `/projects` route before this.)*
+
+**Not done in B2** (revisit at B4b — round1-scope §5): pagination and filtering
+are client-side over the full list for both families. B4b makes `GET /api/works`
+and `GET /api/public/works` take `page`/`size` + server-side filters and return a
+paged envelope; the frontend adopts a paged list method and drops the
+fetch-everything approach. Deferred to B4b so it lands once risk (B3) is a real
+filterable field. A dedicated public *summary* endpoint is also not built (the
+portal derives filter options from the list) — folded into B4b.
+
+**Interim (B2, perf):** with ~6k demo works the list screens rendered 130k+ DOM
+nodes and took 9–12 s. `DataTable` gained client-side pagination (`pageSize=25`)
+and `loadProjectsWithRisk` now probes the risk endpoint once instead of firing
+one rejected call per work while it is unimplemented (pre-B3). Stopgap; B4b is
+the real fix.

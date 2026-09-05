@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { useAsyncData, useProjectDetailService, type ProjectDetailData } from '../../data';
-import { formatINRExact } from '../../format';
+import { formatINRExact, tidyDescription, workTitle } from '../../format';
 import {
   Badge,
   Card,
@@ -43,7 +43,11 @@ export function ProjectDetail() {
   );
 
   const project = state.status === 'success' ? state.data?.project : undefined;
-  const title = project?.workDescription ?? (validId ? `Work #${workId}` : 'Project details');
+  const title = project
+    ? workTitle(project.workDescription, workId)
+    : validId
+      ? `Work #${workId}`
+      : 'Project details';
   const subtitle = project
     ? [project.category, project.state].filter(Boolean).join(' · ')
     : undefined;
@@ -104,7 +108,10 @@ function ProjectDetailView({ data }: { data: ProjectDetailData }) {
         <SectionHeader title="Overview" />
         <KeyValueList
           items={[
-            { label: 'Work description', value: project.workDescription ?? '—' },
+            {
+              label: 'Work description',
+              value: tidyDescription(project.workDescription) ?? 'Not recorded',
+            },
             { label: 'Category', value: project.category ?? '—' },
             {
               label: 'Lifecycle',
@@ -114,7 +121,7 @@ function ProjectDetailView({ data }: { data: ProjectDetailData }) {
                 </StatusBadge>
               ),
             },
-            { label: 'Source status', value: project.sourceStatusRaw ?? '—' },
+            { label: 'Status detail', value: project.sourceStatusRaw ?? '—' },
             { label: 'House', value: houseLabel(project.house) },
             { label: 'Lok Sabha term', value: project.lsTerm ?? '—' },
             { label: 'Member of Parliament', value: project.mpName ?? '—' },
@@ -129,11 +136,12 @@ function ProjectDetailView({ data }: { data: ProjectDetailData }) {
           items={[
             { label: 'State', value: project.state ?? '—' },
             { label: 'District', value: project.district ?? '—' },
-            { label: 'Location (as recorded)', value: project.locationRaw ?? '—' },
+            { label: 'Location', value: project.locationRaw ?? '—' },
           ]}
         />
         <p className="detail-note">
-          Location is free text from the source. No map coordinates are available for MPLADS works.
+          Location is recorded as a free-text description. Map coordinates are not maintained for
+          MPLADS works.
         </p>
       </Card>
 
@@ -153,7 +161,7 @@ function ProjectDetailView({ data }: { data: ProjectDetailData }) {
       <Card>
         <SectionHeader
           title="Risk assessment"
-          description="Rule-based indicators over the available fields — not an ML model. The Round-1 risk engine runs server-side."
+          description="Indicators computed from this work's financial and data-quality signals."
           actions={<RiskLevelBadge level={risk.level} />}
         />
         {risk.level === 'UNKNOWN' ? (
@@ -181,41 +189,31 @@ function ProjectDetailView({ data }: { data: ProjectDetailData }) {
       <Card>
         <SectionHeader
           title="Timeline"
-          description="Source-reported dates only — not a verified project lifecycle."
+          description="Key dates recorded for this work, in chronological order."
         />
         <DetailTimeline project={project} payments={payments} />
       </Card>
 
       <Card>
-        <SectionHeader title="Provenance & data quality" />
+        <SectionHeader title="Data source & quality" />
         <KeyValueList
           items={[
-            { label: 'Data source', value: 'Empowered Indian (secondary data-access source)' },
-            {
-              label: 'Source work id',
-              value: (
-                <>
-                  {project.sourceWorkId}{' '}
-                  <span className="detail-note">
-                    — source identifier, not an official MPLADS / e-SAKSHI id
-                  </span>
-                </>
-              ),
-            },
+            { label: 'Data source', value: 'MPLADS works data' },
+            { label: 'Work ID', value: String(project.sourceWorkId) },
           ]}
         />
         <div className="detail-flags">
           {project.dataQualityFlags.length === 0 ? (
             <p className="detail-note" style={{ marginTop: 0 }}>
-              No data-quality flags on this record.
+              No data-quality flags for this work.
             </p>
           ) : (
             project.dataQualityFlags.map((flag) => <Badge key={flag}>{flagLabel(flag)}</Badge>)
           )}
         </div>
         <p className="detail-note">
-          Data-quality flags are descriptive observations about the source record — not fraud
-          findings.
+          Data-quality flags mark fields that are incomplete or formatted unexpectedly in the
+          underlying data, so the figures above can be read with the right context.
         </p>
       </Card>
     </>

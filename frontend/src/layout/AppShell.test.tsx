@@ -83,9 +83,9 @@ describe('AppShell', () => {
     expect(screen.getByLabelText('Section navigation')).toHaveAttribute('data-open', 'true');
   });
 
-  it('offers the role switcher in the header', () => {
+  it('shows the signed-in user and a sign-out control in the header', () => {
     renderAt('/');
-    const select = screen.getByLabelText('Viewing as');
-    expect(select).toHaveValue('MOSPI');
+    expect(screen.getByText('MoSPI / Ministry')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
   });
 });

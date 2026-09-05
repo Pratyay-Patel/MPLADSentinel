@@ -84,18 +84,34 @@ src/
   - **Authorities** — a review queue (no form). MoSPI / State / District can
     move each grievance through `SUBMITTED → UNDER_REVIEW → ACTIONED → CLOSED`
     and add an action note; Auditor and MP see it read-only.
-  Provider methods `submitGrievance` / `listGrievances` / `updateGrievanceStatus`;
-  the `DemoDataProvider` holds grievances for the browser session (lost on
-  reload — a `grievances` table lands with backend integration), `ApiDataProvider`
-  is `notImplemented`. Via `useGrievancesService()`.
+  Provider methods `submitGrievance` / `listGrievances` / `updateGrievanceStatus`
+  via `useGrievancesService()`. `DemoDataProvider` holds grievances for the
+  browser session (lost on reload); `ApiDataProvider` persists them via
+  `GET/POST/PATCH /api/grievances` (B4) — a citizen sees only their own, a
+  government role cannot raise one.
+- **`/login`** — sign-in screen (`src/pages/LoginPage.tsx`), rendered outside
+  the shell. Posts to `POST /api/auth/login`; on success the session context
+  flips to `authenticated` and the page redirects (to the attempted route, or a
+  role-appropriate landing — `/dashboard`, or `/citizen` for a citizen). The
+  field accepts a username (seeded government accounts) or an email
+  (self-registered citizens).
+- **`/register`** — citizen self-registration (`src/pages/RegisterPage.tsx`,
+  D32), public, outside the shell, linked from `/login`. Name / email / password;
+  `POST /api/auth/register` always creates a `CITIZEN` (role can't be supplied)
+  and signs in → `/citizen`.
 - `/audit` renders a placeholder — the Audit Timeline is deferred to the
   backend-integration phase (it needs verification / ledger events).
 
 Rules:
 
-- Screens are role-gated (`src/auth/`). The header **Viewing as** selector sets
-  the active role (persisted to `localStorage`); the sidebar hides sections the
-  role cannot enter and `RequireRole` shows a "not available" state on a blocked
+- **Authentication (decision D31).** `SessionProvider` resolves the session from
+  `GET /api/auth/me` on load; `RequireAuth` gates the whole shell and redirects
+  anonymous visitors to `/login`. The header shows the signed-in user and a
+  **Sign out** control (`src/layout/UserMenu.tsx`) — there is no role selector;
+  the role is whatever the account holds. Round-1 accounts are seeded demo logins
+  (`mospi`, `state`, `district`, `auditor`, `mp`, `citizen`).
+- Screens are role-gated (`src/auth/`): the sidebar hides sections the role
+  cannot enter and `RequireRole` shows a "not available" state on a blocked
   route. Roles: MoSPI/Ministry, State/District Authority, Auditor, MP (all
   monitoring sections) and Citizen (Projects + public sections only). This is UX
   only — backend authorization (Spring Security, D5) is the real check.
@@ -128,6 +144,17 @@ ApiDataProvider  ─→ src/api/client.ts ─→ Spring Boot REST API
 - A screen migrates from demo to API by flipping `VITE_DATA_SOURCE` (and, per
   operation, the ApiDataProvider method getting a real endpoint) — the component
   is untouched.
+- **Backend-integration progress.** `demo` (the default) is fully working.
+  Under `api`, wired so far: auth (B1), the works read APIs (B2) —
+  `listProjects` / `getProject` / `getProjectSummary` / `getProjectPayments`
+  (authority `GET /api/works*`) and `listPublicProjects` / `getPublicProject`
+  (citizen-safe `GET /api/public/works*`); the risk engine (B3):
+  `getProjectRisk` + `listProjectRisks` via `GET /api/works/{id}/risk` and
+  `GET /api/works/risk` (`rules.ts` is now the demo-mode risk source only);
+  and the grievance API (B4): `listGrievances` / `submitGrievance` /
+  `updateGrievanceStatus` via `GET/POST/PATCH /api/grievances`.
+  **Every `DataProvider` method is now wired** — `api` mode is a complete
+  path through B1–B4.
 
 ## Configuration
 

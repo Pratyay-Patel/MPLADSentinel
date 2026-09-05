@@ -9,9 +9,9 @@ class ApiPageRequestTest {
 
     @Test
     void acceptsValuesWithinTheVerifiedContractBounds() {
-        assertThat(ApiPageRequest.of(1, 1)).isEqualTo(new ApiPageRequest(1, 1));
-        assertThat(ApiPageRequest.of(4190, 100)).isEqualTo(new ApiPageRequest(4190, 100));
-        assertThat(ApiPageRequest.firstPage(20)).isEqualTo(new ApiPageRequest(1, 20));
+        assertThat(ApiPageRequest.of(1, 1)).isEqualTo(new ApiPageRequest(1, 1, null));
+        assertThat(ApiPageRequest.of(4190, 100)).isEqualTo(new ApiPageRequest(4190, 100, null));
+        assertThat(ApiPageRequest.firstPage(20)).isEqualTo(new ApiPageRequest(1, 20, null));
     }
 
     @Test
@@ -29,5 +29,19 @@ class ApiPageRequestTest {
         assertThatThrownBy(() -> ApiPageRequest.of(1, 101))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("limit");
+    }
+
+    @Test
+    void carriesAnOptionalStateFilter() {
+        ApiPageRequest withState = ApiPageRequest.of(1, 100, "Kerala");
+        assertThat(withState.hasState()).isTrue();
+        assertThat(withState.state()).isEqualTo("Kerala");
+    }
+
+    @Test
+    void normalisesNullOrBlankStateToNoFilter() {
+        assertThat(ApiPageRequest.of(1, 100, null).hasState()).isFalse();
+        assertThat(ApiPageRequest.of(1, 100, "   ").hasState()).isFalse();
+        assertThat(ApiPageRequest.of(1, 100, "   ").state()).isNull();
     }
 }

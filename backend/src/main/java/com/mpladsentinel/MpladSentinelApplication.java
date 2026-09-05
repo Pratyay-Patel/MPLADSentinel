@@ -2,25 +2,23 @@ package com.mpladsentinel;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 
 /**
  * Entry point for the MPLADSentinel backend.
  *
  * <p>MPLADSentinel is built as a Spring Boot <em>modular monolith</em>: business
  * capabilities live in sibling packages under {@code com.mpladsentinel} (for
- * example {@code project}, {@code risk}, {@code ingestion}, {@code audit}), each
- * with its own controller / service / repository layers, while sharing a single
+ * example {@code auth}, {@code mplads}, {@code risk}, {@code audit}), each with
+ * its own controller / service / repository layers, while sharing a single
  * deployable application and datasource. Cross-cutting concerns live in
  * {@code com.mpladsentinel.config} and {@code com.mpladsentinel.common}.
  *
- * <p>{@link UserDetailsServiceAutoConfiguration} is excluded so that Spring
- * Security does not create a default in-memory user with a generated password.
- * The Project Foundation phase deliberately ships no authentication. A real
- * {@code UserDetailsService} is added in the RBAC phase, at which point this
- * exclusion is removed.
+ * <p>Authentication (decision D31) is backed by a real
+ * {@link com.mpladsentinel.auth.AppUserDetailsService} over seeded
+ * {@code app_user} rows, so Spring Security's default in-memory user
+ * auto-configuration stays out of the way on its own — no exclusion needed.
  */
-@SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
+@SpringBootApplication
 public class MpladSentinelApplication {
 
     public static void main(String[] args) {

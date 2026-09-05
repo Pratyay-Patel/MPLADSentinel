@@ -106,4 +106,19 @@ class RecommendedWorksClientTest extends AbstractEmpoweredIndianClientTest {
         assertThat(server.takeRequest().getPath())
                 .isEqualTo("/api/works/recommended?page=7&limit=50");
     }
+
+    @Test
+    void addsTheStateFilterToTheQueryWhenSet() throws InterruptedException {
+        server.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(fixture("recommended-empty.json")));
+
+        defaultClient().fetchRecommendedWorks(ApiPageRequest.of(1, 100, "Tamil Nadu"));
+
+        RecordedRequest request = server.takeRequest();
+        assertThat(request.getRequestUrl().queryParameter("state")).isEqualTo("Tamil Nadu");
+        assertThat(request.getRequestUrl().queryParameter("page")).isEqualTo("1");
+        assertThat(request.getRequestUrl().queryParameter("limit")).isEqualTo("100");
+    }
 }

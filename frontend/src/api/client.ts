@@ -50,6 +50,10 @@ export async function apiRequest<TResponse>(
       ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
       ...headers,
     },
+    // Send the session cookie so authenticated endpoints work cross-origin in
+    // dev (the SPA and the backend are on different ports). The backend's CORS
+    // config sets Allow-Credentials for the allow-listed origin.
+    credentials: 'include',
     signal,
   };
 
@@ -86,4 +90,6 @@ export const apiClient = {
     apiRequest<T>(path, { ...options, method: 'GET' }),
   post: <T>(path: string, body?: unknown, options?: Omit<ApiRequestOptions, 'method'>) =>
     apiRequest<T>(path, { ...options, method: 'POST', body }),
+  patch: <T>(path: string, body?: unknown, options?: Omit<ApiRequestOptions, 'method'>) =>
+    apiRequest<T>(path, { ...options, method: 'PATCH', body }),
 };

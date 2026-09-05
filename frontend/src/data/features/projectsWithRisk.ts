@@ -3,7 +3,7 @@ import type { Project, ProjectRisk } from '../types';
 
 export interface ProjectsWithRisk {
   projects: Project[];
-  /** Risk view model per `sourceWorkId`; always populated (`UNKNOWN` on failure). */
+  /** Risk view model per `sourceWorkId`; always populated (`UNKNOWN` on a gap or failure). */
   risksByWorkId: Record<number, ProjectRisk>;
 }
 
@@ -12,27 +12,26 @@ function unknownRisk(sourceWorkId: number): ProjectRisk {
 }
 
 /**
- * Loads every project plus its risk view model. A per-project risk failure
- * degrades to `UNKNOWN` rather than failing the whole load; a `listProjects`
- * failure propagates. Shared by the dashboard and Risk & Alerts services.
+ * Loads every project plus its risk view model. `listProjects` and the bulk
+ * `listProjectRisks` are fetched in parallel (one request each). A risk failure
+ * degrades every work to `UNKNOWN` rather than failing the whole load; a
+ * `listProjects` failure propagates. Shared by the dashboard, Risk & Alerts and
+ * Project Register services.
  */
 export async function loadProjectsWithRisk(
   provider: DataProvider,
   signal?: AbortSignal,
 ): Promise<ProjectsWithRisk> {
-  const projects = await provider.listProjects(signal);
-  const riskResults = await Promise.allSettled(
-    projects.map((p) => provider.getProjectRisk(p.sourceWorkId, signal)),
-  );
+  const [projects, risksByWorkId] = await Promise.all([
+    provider.listProjects(signal),
+    provider
+      .listProjectRisks(signal)
+      .catch((): Record<number, ProjectRisk> => ({})),
+  ]);
 
-  const risksByWorkId: Record<number, ProjectRisk> = {};
-  projects.forEach((project, index) => {
-    const result = riskResults[index];
-    risksByWorkId[project.sourceWorkId] =
-      result.status === 'fulfilled' && result.value
-        ? result.value
-        : unknownRisk(project.sourceWorkId);
-  });
+  for (const project of projects) {
+    risksByWorkId[project.sourceWorkId] ??= unknownRisk(project.sourceWorkId);
+  }
 
   return { projects, risksByWorkId };
 }
