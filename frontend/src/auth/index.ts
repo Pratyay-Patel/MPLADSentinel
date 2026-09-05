@@ -25,3 +25,4 @@ export type { SessionUser } from '../api/auth';
 export { SessionProvider } from './SessionProvider';
 export { RequireRole } from './RequireRole';
 export { RequireAuth } from './RequireAuth';
+export { demoAuthEnabled, DEMO_PERSONAS, type DemoPersona } from './demoAuth';

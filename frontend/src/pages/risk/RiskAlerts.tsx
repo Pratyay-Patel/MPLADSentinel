@@ -1,21 +1,27 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import {
+  summarizeRiskFactors,
   useAsyncData,
   useRiskService,
   type RiskListData,
   type RiskLevel,
   type RiskRow,
 } from '../../data';
-import { formatINRCompact, workTitle } from '../../format';
+import { formatCount, formatINRCompact, workTitle } from '../../format';
 import {
+  BarList,
   Card,
   DataTable,
+  DonutChart,
   EmptyState,
   ErrorState,
   LoadingState,
   MetricCard,
   PageHeader,
+  RISK_LEVEL_COLOR,
+  RISK_LEVEL_ORDER,
   RiskLevelBadge,
   SearchInput,
   Select,
@@ -46,6 +52,16 @@ interface RiskFilters {
 }
 
 const EMPTY_FILTERS: RiskFilters = { level: '', state: '', category: '', search: '' };
+
+/** Seed the filters from `?level=` / `?state=` (used by the voice command bar). */
+function filtersFromParams(params: URLSearchParams): RiskFilters {
+  const level = params.get('level')?.toUpperCase() ?? '';
+  return {
+    ...EMPTY_FILTERS,
+    level: (LEVELS as string[]).includes(level) ? (level as RiskLevel) : '',
+    state: params.get('state') ?? '',
+  };
+}
 
 function filterRows(rows: RiskRow[], filters: RiskFilters): RiskRow[] {
   const search = filters.search.trim().toLowerCase();
@@ -193,7 +209,8 @@ export function RiskAlerts() {
 }
 
 function RiskBody({ data }: { data: RiskListData }) {
-  const [filters, setFilters] = useState<RiskFilters>(EMPTY_FILTERS);
+  const [searchParams] = useSearchParams();
+  const [filters, setFilters] = useState<RiskFilters>(() => filtersFromParams(searchParams));
   const filtered = useMemo(() => filterRows(data.rows, filters), [data.rows, filters]);
 
   const states = useMemo(
@@ -216,6 +233,15 @@ function RiskBody({ data }: { data: RiskListData }) {
     filters.category !== '' ||
     filters.search.trim() !== '';
 
+  const risks = useMemo(() => data.rows.map((r) => r.risk), [data.rows]);
+  const factors = useMemo(() => summarizeRiskFactors(risks), [risks]);
+  const assessed = data.rows.length - data.countsByLevel.UNKNOWN;
+  const slices = RISK_LEVEL_ORDER.map((level) => ({
+    label: `${level} risk`,
+    value: data.countsByLevel[level],
+    color: RISK_LEVEL_COLOR[level],
+  })).filter((slice) => slice.value > 0);
+
   return (
     <>
       <div className="ui-metric-grid">
@@ -223,6 +249,35 @@ function RiskBody({ data }: { data: RiskListData }) {
           <MetricCard key={level} label={`${level} risk`} value={data.countsByLevel[level]} />
         ))}
       </div>
+
+      <Card>
+        <div className="risk-signals">
+          <div className="risk-signals__donut">
+            <DonutChart
+              slices={slices}
+              centerValue={formatCount(assessed)}
+              centerCaption="works assessed"
+              ariaLabel="Works by assessed risk level"
+            />
+          </div>
+          <div className="risk-signals__factors">
+            <h2 className="risk-signals__subtitle">Most common risk factors</h2>
+            {factors.length === 0 ? (
+              <p className="risk-signals__note">No risk factors flagged in the current dataset.</p>
+            ) : (
+              <BarList
+                caption="How often each risk factor is flagged across all works"
+                items={factors.map((factor) => ({
+                  label: factor.label,
+                  value: factor.count,
+                  valueLabel: formatCount(factor.count),
+                  tone: 'warning',
+                }))}
+              />
+            )}
+          </div>
+        </div>
+      </Card>
 
       <div className="risk-filters" role="search" aria-label="Filter risk list">
         <div className="risk-filters__grid">

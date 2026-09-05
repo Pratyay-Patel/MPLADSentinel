@@ -10,6 +10,7 @@ import { NationalOverview } from './sections/NationalOverview';
 import { ProjectExploration } from './sections/ProjectExploration';
 import { ProjectsRequiringAttention } from './sections/ProjectsRequiringAttention';
 import { RegionalInsight } from './sections/RegionalInsight';
+import { RiskSignals } from './sections/RiskSignals';
 import { WorkDistribution } from './sections/WorkDistribution';
 
 /**
@@ -78,6 +79,8 @@ function DashboardBody({ data }: { data: DashboardData }) {
     <>
       <NationalOverview data={data} />
 
+      <RiskSignals data={data} />
+
       <ProjectsRequiringAttention items={data.attention} />
 
       <div className="dash-two-col">
@@ -103,7 +106,7 @@ function DashboardBody({ data }: { data: DashboardData }) {
         <ProjectExploration rows={filtered} risksByWorkId={data.risksByWorkId} />
       </section>
 
-      <RegionalInsight topStates={data.topStates} />
+      <RegionalInsight regions={data.regions} />
     </>
   );
 }

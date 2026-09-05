@@ -46,11 +46,13 @@ export {
   createDashboardService,
   buildFilterOptions,
   topStatesByWorkCount,
+  regionStats,
   type DashboardService,
   type DashboardData,
   type DashboardFilterOptions,
   type AttentionItem,
   type StateWorkCount,
+  type RegionStat,
 } from './features/dashboard';
 export { useDashboardService } from './features/useDashboardService';
 
@@ -99,3 +101,10 @@ export {
 export { useGrievancesService } from './features/useGrievancesService';
 
 export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';
+export {
+  classifyRiskReason,
+  summarizeRiskFactors,
+  RISK_FACTOR_CATEGORIES,
+  type RiskFactorCategory,
+  type RiskFactorCount,
+} from './risk/riskFactors';

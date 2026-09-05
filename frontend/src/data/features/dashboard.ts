@@ -27,6 +27,16 @@ export interface StateWorkCount {
   works: number;
 }
 
+/** Per-state roll-up for the map: work count and risk-level split. */
+export interface RegionStat {
+  state: string;
+  works: number;
+  high: number;
+  medium: number;
+  low: number;
+  unknown: number;
+}
+
 /** Distinct values available for each dashboard filter, derived from the dataset. */
 export interface DashboardFilterOptions {
   states: string[];
@@ -54,6 +64,8 @@ export interface DashboardData {
   // --- intelligence groupings ---
   attention: AttentionItem[];
   topStates: StateWorkCount[];
+  /** Every state in the dataset, with its risk-level split (for the map). */
+  regions: RegionStat[];
   filterOptions: DashboardFilterOptions;
 }
 
@@ -98,10 +110,43 @@ export function createDashboardService(provider: DataProvider): DashboardService
         recordedPayments: summary.totalRecordedPayments,
         attention,
         topStates: topStatesByWorkCount(projects, TOP_STATES_LIMIT),
+        regions: regionStats(projects, risksByWorkId),
         filterOptions: buildFilterOptions(projects),
       };
     },
   };
+}
+
+/** Group works by state and tally the risk-level split. Sorted by work count desc. */
+export function regionStats(
+  projects: Project[],
+  risksByWorkId: Record<number, ProjectRisk>,
+): RegionStat[] {
+  const byState = new Map<string, RegionStat>();
+  for (const project of projects) {
+    const state = project.state?.trim();
+    if (!state) continue;
+    let stat = byState.get(state);
+    if (!stat) {
+      stat = { state, works: 0, high: 0, medium: 0, low: 0, unknown: 0 };
+      byState.set(state, stat);
+    }
+    stat.works += 1;
+    switch (risksByWorkId[project.sourceWorkId]?.level) {
+      case 'HIGH':
+        stat.high += 1;
+        break;
+      case 'MEDIUM':
+        stat.medium += 1;
+        break;
+      case 'LOW':
+        stat.low += 1;
+        break;
+      default:
+        stat.unknown += 1;
+    }
+  }
+  return [...byState.values()].sort((a, b) => b.works - a.works || a.state.localeCompare(b.state));
 }
 
 export function topStatesByWorkCount(projects: Project[], limit: number): StateWorkCount[] {

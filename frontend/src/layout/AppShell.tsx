@@ -17,10 +17,13 @@ export function AppShell() {
   const [navOpen, setNavOpen] = useState(false);
   const location = useLocation();
 
-  // Close the mobile drawer whenever the route changes.
+  // On route change: close the mobile drawer and scroll the content back to top
+  // (so a link / voice command doesn't land mid-page).
   useEffect(() => {
     setNavOpen(false);
-  }, [location.pathname]);
+    document.getElementById('app-main-content')?.scrollTo?.({ top: 0 });
+    window.scrollTo?.({ top: 0 });
+  }, [location.pathname, location.search]);
 
   // Close the drawer on Escape.
   useEffect(() => {

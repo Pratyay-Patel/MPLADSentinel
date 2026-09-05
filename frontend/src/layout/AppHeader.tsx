@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 
 import { CloseIcon, MenuIcon } from '../ui/icons';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { UserMenu } from './UserMenu';
+import { VoiceCommand } from './VoiceCommand';
 
 export interface AppHeaderProps {
   /** Whether the mobile nav drawer is open. */
@@ -31,6 +33,9 @@ export function AppHeader({ navOpen, onToggleNav, navId }: AppHeaderProps) {
       </Link>
 
       <div className="app-header__spacer" />
+
+      <VoiceCommand />
+      <LanguageSwitcher />
 
       <div className="app-header__user">
         <UserMenu />
