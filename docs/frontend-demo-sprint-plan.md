@@ -211,13 +211,28 @@ allocation** (`docs/data-source.md`), so ours must NOT show a "utilisation %"; i
 compares only real per-work aggregates.
 
 - [x] **F1 — CSV export.** Done as P3.3 above.
-- [ ] **F2 — Compare MPs.** New sidebar tab (`/compare`, `Area` `'compare'`,
-  authorities only). `data/features/mpComparison.ts` aggregates `listProjects` +
-  risk by `mpName` → works / recommended / completed / completion rate /
-  Σ estimated cost / Σ recorded payments / payments-vs-estimate ratio / risk
-  mix. Picker (max 4, `?mps=` in URL) → recharts bar chart + detailed
-  comparison table + honest "key insights". **No fabricated allocation / no
-  "fund utilisation %".**
+- [x] **F2 — Compare MPs.** New sidebar tab (`/compare`, `Area` `'compare'`,
+  authorities only). `data/features/mpComparison.ts` (+test) `aggregateMps()`
+  groups every work by `mpName` → works / recommended / completed / completion
+  rate / Σ estimated cost / Σ recorded payments / payments÷estimate ratio /
+  risk mix / flagged share / avg risk score. `CompareMps.tsx`: search-driven
+  picker (max 4, `?mp=` repeated in URL), 3 summary KPI cards, a **recharts bar
+  chart** (`MpCompareChart.tsx`, one coloured bar per MP + dashed all-MP-average
+  reference line, dataviz palette slots 1–4, metric selector, value labels +
+  x-axis names carry identity), detailed comparison table + "key insights"
+  MetricCards + honesty note. **No allocation column, no "fund utilisation %"**
+  (real aggregates only). Chart uses explicit-px `ResponsiveContainer` height
+  (the DonutChart fix) to avoid the layout blow-up.
+- [ ] **F2b — official per-MP allocation (follow-up).** Teammate pointed to
+  `mplads.mospi.gov.in/digigov/dashboard.html` → "Allocated Limit for Hon'ble
+  MPs" (State / MP / Constituency / Allocated Amount; 18th LS; Excel/CSV/PDF
+  export). Adds an `Allocated` column + a real `Fund utilisation %` (recommended
+  ÷ allocated) to Compare MPs **only after**: (1) the CSV is fetched and put in
+  the repo, (2) a written check of how many of our ingested MPs join to it by
+  name+constituency and how the totals line up (must not contradict Empowered
+  Indian's per-MP recommended amounts), (3) unmatched MPs show "allocation
+  unavailable", never a guess. Needs a fixture (demo build has no backend) or a
+  backend table. Blocked on the dataset file.
 - [ ] **F3+F4 — visual polish (one commit).** `tokens.css`: deepen
   `--shadow-sm/md` (+ raise `--shadow-lg`) so cards read lifted; darken
   `--color-text` / `-secondary` / `-muted` (+ dark-theme) for more contrast,

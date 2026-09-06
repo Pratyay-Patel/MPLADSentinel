@@ -31,6 +31,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Overview', to: '/dashboard', area: 'overview' },
       { label: 'Projects', to: '/projects', area: 'projects' },
       { label: 'Risk & Alerts', to: '/risk', area: 'risk' },
+      { label: 'Compare MPs', to: '/compare', area: 'compare' },
       { label: 'Audit', to: '/audit', area: 'audit' },
     ],
   },

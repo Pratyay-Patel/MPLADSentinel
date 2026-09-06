@@ -8,7 +8,14 @@ import { ROLES, type Role } from './roles';
  * Client-side only — a convenience for navigation and page rendering. Backend
  * authorization (Spring Security, D5) remains the authoritative check.
  */
-export type Area = 'overview' | 'projects' | 'risk' | 'audit' | 'citizen' | 'grievances';
+export type Area =
+  | 'overview'
+  | 'projects'
+  | 'risk'
+  | 'compare'
+  | 'audit'
+  | 'citizen'
+  | 'grievances';
 
 const ALL_ROLES: Role[] = [...ROLES];
 const AUTHORITIES: Role[] = ['MOSPI', 'STATE', 'DISTRICT', 'AUDITOR', 'MP'];
@@ -18,6 +25,7 @@ export const AREA_ROLES: Record<Area, Role[]> = {
   overview: AUTHORITIES,
   projects: AUTHORITIES,
   risk: AUTHORITIES,
+  compare: AUTHORITIES,
   audit: AUTHORITIES,
   citizen: ALL_ROLES,
   grievances: ALL_ROLES,

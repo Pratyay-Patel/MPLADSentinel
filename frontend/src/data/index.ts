@@ -74,6 +74,15 @@ export {
 export { useRiskService } from './features/useRiskService';
 
 export {
+  createMpComparisonService,
+  aggregateMps,
+  type MpComparisonService,
+  type MpComparisonData,
+  type MpStat,
+} from './features/mpComparison';
+export { useMpComparisonService } from './features/useMpComparisonService';
+
+export {
   createProjectRegisterService,
   type ProjectRegisterService,
   type ProjectRegisterData,
