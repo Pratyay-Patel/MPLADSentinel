@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "gen:allocations": "node scripts/gen-mp-allocations.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",

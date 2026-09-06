@@ -1,15 +1,15 @@
 import type { DataProvider } from '../DataProvider';
+import { lookupAllocation } from '../mpAllocations';
 import type { Money, Project, ProjectHouse, ProjectRisk, RiskLevel } from '../types';
 import { loadProjectsWithRisk } from './projectsWithRisk';
 
 /**
  * Feature service for "Compare MPs" (`/compare`).
  *
- * Aggregates every work by its `mpName` into per-MP totals. Deliberately does
- * NOT produce a "fund utilisation %": the source has no per-MP MPLADS
- * allocation (docs/data-source.md), so the only spend signal available is
- * Σ recorded vendor payments ÷ Σ recommended estimate — a ratio, clearly
- * labelled as such, not an official utilisation-of-allocation figure.
+ * Aggregates every work by its `mpName` into per-MP totals, then joins the
+ * official MPLADS allocated limit (`src/data/mpAllocations.ts`, from the MoSPI
+ * eSAKSHI dashboard) by normalised name. `allocated` / `fundUtilisation` are
+ * `null` for any MP not on the official list — never a guess.
  */
 
 export interface MpStat {
@@ -29,8 +29,13 @@ export interface MpStat {
 
   estimatedCost: Money;
   recordedPayments: Money;
-  /** Σ recorded ÷ Σ estimated when Σ estimated > 0. NOT an allocation-utilisation figure. */
+  /** Σ recorded ÷ Σ estimated when Σ estimated > 0. */
   paymentsToEstimateRatio: number | null;
+
+  /** Official MPLADS allocated limit (rupees), or null when the MP isn't on the official list. */
+  allocated: number | null;
+  /** Σ recommended estimate ÷ allocated; null when unmatched or no estimate. */
+  fundUtilisation: number | null;
 
   risk: Record<RiskLevel, number>;
   /** (HIGH + MEDIUM) ÷ assessed works, or null when nothing is assessed. */
@@ -127,6 +132,8 @@ export function aggregateMps(
     .map((acc): MpStat => {
       const assessed = acc.works - acc.risk.UNKNOWN;
       const topHouse = [...acc.houses.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+      const allocation = lookupAllocation(acc.mpName, acc.state);
+      const allocated = allocation ? allocation.allocated : null;
       return {
         id: acc.mpName,
         mpName: acc.mpName,
@@ -140,6 +147,8 @@ export function aggregateMps(
         estimatedCost: { amount: acc.estimated, currency: acc.currency },
         recordedPayments: { amount: acc.paid, currency: acc.currency },
         paymentsToEstimateRatio: acc.estimated > 0 ? acc.paid / acc.estimated : null,
+        allocated,
+        fundUtilisation: allocated && acc.estimated > 0 ? acc.estimated / allocated : null,
         risk: acc.risk,
         flaggedShare: assessed > 0 ? (acc.risk.HIGH + acc.risk.MEDIUM) / assessed : null,
         avgRiskScore: acc.scoreCount > 0 ? acc.scoreSum / acc.scoreCount : null,

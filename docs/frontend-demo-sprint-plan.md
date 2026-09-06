@@ -223,16 +223,19 @@ compares only real per-work aggregates.
   MetricCards + honesty note. **No allocation column, no "fund utilisation %"**
   (real aggregates only). Chart uses explicit-px `ResponsiveContainer` height
   (the DonutChart fix) to avoid the layout blow-up.
-- [ ] **F2b — official per-MP allocation (follow-up).** Teammate pointed to
-  `mplads.mospi.gov.in/digigov/dashboard.html` → "Allocated Limit for Hon'ble
-  MPs" (State / MP / Constituency / Allocated Amount; 18th LS; Excel/CSV/PDF
-  export). Adds an `Allocated` column + a real `Fund utilisation %` (recommended
-  ÷ allocated) to Compare MPs **only after**: (1) the CSV is fetched and put in
-  the repo, (2) a written check of how many of our ingested MPs join to it by
-  name+constituency and how the totals line up (must not contradict Empowered
-  Indian's per-MP recommended amounts), (3) unmatched MPs show "allocation
-  unavailable", never a guess. Needs a fixture (demo build has no backend) or a
-  backend table. Blocked on the dataset file.
+- [x] **F2b — official per-MP allocation.** Source CSVs (MoSPI eSAKSHI
+  "Allocated Limit for Hon'ble MPs", 18th LS 543 + RS 230) in `docs/data/`.
+  **Verification:** all 248 of our ingested MPs matched by normalised name +
+  state (100%, 0 unmatched, 2 same-name collisions resolved by state); every one
+  of the 201 MPs with recommended estimates has Σ estimated ≤ allocation.
+  `scripts/gen-mp-allocations.mjs` (npm `gen:allocations`) → generated
+  `src/data/mpAllocations.ts` (773 MPs keyed by normalised name; `lookupAllocation`
+  disambiguates by state; +test). `mpComparison.ts` joins it → `MpStat.allocated`
+  / `fundUtilisation` (both `null` when unmatched; +tests). Compare MPs gains an
+  **Allocated limit** row + a real **Fund utilisation % (Σ estimated ÷
+  allocated)** row and chart metric; a "Highest fund utilisation" insight card;
+  footnote names the source. Unmatched / demo MPs show "—". Verified full-stack
+  against real data (Andrew J. Syngkon ₹9.8 cr / 22%, etc.).
 - [ ] **F3+F4 — visual polish (one commit).** `tokens.css`: deepen
   `--shadow-sm/md` (+ raise `--shadow-lg`) so cards read lifted; darken
   `--color-text` / `-secondary` / `-muted` (+ dark-theme) for more contrast,

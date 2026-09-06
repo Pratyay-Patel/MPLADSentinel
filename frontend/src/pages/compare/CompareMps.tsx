@@ -220,12 +220,15 @@ function Comparison({
   metricKey: string;
   onMetric: (key: string) => void;
 }) {
+  const inr = (n: number) => formatINRCompact({ amount: n, currency: 'INR' });
   const rows: { label: string; cell: (m: MpStat) => string }[] = [
     { label: 'Total works', cell: (m) => formatCount(m.works) },
     { label: 'Recommended works', cell: (m) => formatCount(m.recommended) },
     { label: 'Completed works', cell: (m) => formatCount(m.completed) },
     { label: 'Completion rate', cell: (m) => pct(m.completionRate) },
+    { label: 'Allocated limit (MPLADS)', cell: (m) => (m.allocated == null ? '—' : inr(m.allocated)) },
     { label: 'Σ estimated cost', cell: (m) => formatINRCompact(m.estimatedCost) },
+    { label: 'Fund utilisation % (Σ estimated ÷ allocated)', cell: (m) => pct(m.fundUtilisation) },
     { label: 'Σ recorded payments', cell: (m) => formatINRCompact(m.recordedPayments) },
     { label: 'Recorded payments ÷ estimated cost', cell: (m) => pct(m.paymentsToEstimateRatio) },
     { label: 'HIGH-risk works', cell: (m) => formatCount(m.risk.HIGH) },
@@ -239,9 +242,9 @@ function Comparison({
   ];
 
   const mostWorks = [...selected].sort((a, b) => b.works - a.works)[0];
-  const bestCompletion = [...selected]
-    .filter((m) => m.completionRate != null)
-    .sort((a, b) => (b.completionRate ?? 0) - (a.completionRate ?? 0))[0];
+  const bestUtilisation = [...selected]
+    .filter((m) => m.fundUtilisation != null)
+    .sort((a, b) => (b.fundUtilisation ?? 0) - (a.fundUtilisation ?? 0))[0];
   const lowestFlagged = [...selected]
     .filter((m) => m.flaggedShare != null)
     .sort((a, b) => (a.flaggedShare ?? 0) - (b.flaggedShare ?? 0))[0];
@@ -308,10 +311,10 @@ function Comparison({
           </table>
         </div>
         <p className="mpc-note">
-          Aggregated from each MP's recorded works. “Σ estimated cost” sums the recommended
-          estimates; “Σ recorded payments” sums the vendor payments ingested so far (not every
-          work has payment data yet). Risk levels are rule-based indicators, not proof of
-          wrongdoing.
+          Aggregated from each MP's recorded works. “Allocated limit” is the MP's MPLADS
+          entitlement from the MoSPI eSAKSHI dashboard; “Fund utilisation %” is Σ estimated ÷
+          allocated. “Σ recorded payments” sums the vendor payments ingested so far. Risk levels
+          are not proof of wrongdoing.
         </p>
       </Card>
 
@@ -322,9 +325,11 @@ function Comparison({
           hint={`${formatCount(mostWorks.works)} works recorded`}
         />
         <MetricCard
-          label="Highest completion rate"
-          value={bestCompletion ? bestCompletion.mpName : '—'}
-          hint={bestCompletion ? pct(bestCompletion.completionRate) : 'No recommended works'}
+          label="Highest fund utilisation"
+          value={bestUtilisation ? bestUtilisation.mpName : '—'}
+          hint={
+            bestUtilisation ? `${pct(bestUtilisation.fundUtilisation)} of allocated` : 'No allocation data'
+          }
         />
         <MetricCard
           label="Lowest flagged share"

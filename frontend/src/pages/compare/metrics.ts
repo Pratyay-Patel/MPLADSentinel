@@ -47,6 +47,22 @@ export const METRICS: Metric[] = [
     higherIsBetter: true,
   },
   {
+    key: 'fundUtilisation',
+    label: 'Fund utilisation %',
+    value: (m) => m.fundUtilisation ?? 0,
+    fmt: (n) => `${Math.round(n * 100)}%`,
+    format: (m) => pct(m.fundUtilisation),
+    higherIsBetter: true,
+  },
+  {
+    key: 'allocated',
+    label: 'Allocated limit',
+    value: (m) => m.allocated ?? 0,
+    fmt: inr,
+    format: (m) => (m.allocated == null ? '—' : inr(m.allocated)),
+    higherIsBetter: true,
+  },
+  {
     key: 'recordedPayments',
     label: 'Recorded payments',
     value: (m) => m.recordedPayments.amount,

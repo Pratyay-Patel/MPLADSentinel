@@ -113,4 +113,46 @@ describe('aggregateMps', () => {
     expect(b.flaggedShare).toBeNull(); // only work is UNKNOWN
     expect(b.avgRiskScore).toBeNull();
   });
+
+  it('leaves allocation null for an MP not on the official list', () => {
+    const a = mps.find((m) => m.mpName === 'A. Kumar')!;
+    expect(a.allocated).toBeNull();
+    expect(a.fundUtilisation).toBeNull();
+  });
+});
+
+describe('aggregateMps — official allocation join', () => {
+  it('joins the official allocation by normalised name and derives fund utilisation', () => {
+    // "Adv Abhay Kumar Sinha" → normalises to "ABHAY KUMAR SINHA" (Bihar, ₹14.7 cr)
+    const mps = aggregateMps(
+      [
+        project({
+          sourceWorkId: 10,
+          mpName: 'Adv Abhay Kumar Sinha',
+          state: 'Bihar',
+          seenInRecommended: true,
+          estimatedCost: { amount: 73_500_000, currency: 'INR' },
+        }),
+      ],
+      {},
+    );
+    const m = mps[0];
+    expect(m.allocated).toBe(147_000_000);
+    expect(m.fundUtilisation).toBeCloseTo(0.5); // 7.35 cr of 14.7 cr
+  });
+
+  it('breaks a same-name collision by state', () => {
+    // "SANJAY SETH": LS Jharkhand (₹14.706 cr) vs RS Uttar Pradesh (₹14.7 cr)
+    const [jh] = aggregateMps(
+      [project({ sourceWorkId: 20, mpName: 'Sanjay Seth', state: 'Jharkhand', seenInRecommended: true })],
+      {},
+    );
+    expect(jh.allocated).toBe(147_064_357.11);
+
+    const [unknownState] = aggregateMps(
+      [project({ sourceWorkId: 21, mpName: 'Sanjay Seth', state: 'Karnataka', seenInRecommended: true })],
+      {},
+    );
+    expect(unknownState.allocated).toBeNull(); // tie can't be resolved → no guess
+  });
 });
