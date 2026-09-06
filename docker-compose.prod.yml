@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mpladsentinel-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mpladsentinel}
+      POSTGRES_USER: ${POSTGRES_USER:-mpladsentinel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-locally}
+    ports:
+      # Host port 5544 (not the conventional 5432) to avoid clashing with a
+      # native PostgreSQL install that may already own 5432. Override with
+      # POSTGRES_PORT in a local .env if needed.
+      - "${POSTGRES_PORT:-5544}:5432"
+    volumes:
+      - mpladsentinel-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mpladsentinel} -d ${POSTGRES_DB:-mpladsentinel}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  backend:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      MPLADS_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-mpladsentinel}
+      MPLADS_DB_USERNAME: ${POSTGRES_USER:-mpladsentinel}
+      MPLADS_DB_PASSWORD: ${POSTGRES_PASSWORD:-change-me-locally}
+    ports:
+    - "8081:8081"
+  nginx:
+    image: nginx:latest
+    container_name: nginx_prod
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - ./nginx/prod.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/www:/var/www/certbot
+
+      - /etc/letsencrypt/live/parthakadam.in/fullchain.pem:/etc/nginx/ssl/fullchain.pem:ro
+      - /etc/letsencrypt/live/parthakadam.in/privkey.pem:/etc/nginx/ssl/privkey.pem:ro
+        - backend
+    extra_hosts:
+        - "host.docker.internal:host-gateway"
+
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: >
+      sh -c "trap exit TERM;
+      while :; do
+        certbot renew --webroot -w /var/www/certbot --quiet --agree-tos &&
+        nginx -s reload;
+        sleep 12h;
+      done"
+
+volumes:
+  mpladsentinel-pgdata:
