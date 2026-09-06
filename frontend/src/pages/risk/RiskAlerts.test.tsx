@@ -5,12 +5,23 @@ import { describe, expect, it, vi } from 'vitest';
 import { DataProviderProvider, type DataProvider } from '../../data';
 import { createDemoDataProvider } from '../../data/demo/DemoDataProvider';
 import { ProviderError } from '../../data/errors';
+import { FilterProvider } from '../../filters';
 import { RiskAlerts } from './RiskAlerts';
 
 function renderRisk(provider: DataProvider = createDemoDataProvider()) {
-  const router = createMemoryRouter([{ path: '/', element: <RiskAlerts /> }], {
-    initialEntries: ['/'],
-  });
+  const router = createMemoryRouter(
+    [
+      {
+        path: '/',
+        element: (
+          <FilterProvider>
+            <RiskAlerts />
+          </FilterProvider>
+        ),
+      },
+    ],
+    { initialEntries: ['/'] },
+  );
   return render(
     <DataProviderProvider provider={provider}>
       <RouterProvider router={router} />

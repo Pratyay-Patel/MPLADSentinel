@@ -128,11 +128,34 @@
   max-width: 72ch;
 }
 
+/* ---- regional insight (map + list) -------------------- */
+
+.dash-region {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(220px, 360px);
+  gap: var(--space-6);
+  align-items: center;
+  margin-top: var(--space-4);
+}
+
+.dash-region > * {
+  min-width: 0;
+}
+
+.dash-region__list {
+  align-self: start;
+}
+
 /* ---- responsive -------------------------------------- */
 
 @media (max-width: 900px) {
   .dash-two-col {
     grid-template-columns: 1fr;
+  }
+
+  .dash-region {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
   }
 }
 

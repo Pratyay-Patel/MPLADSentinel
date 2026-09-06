@@ -4,7 +4,13 @@ import { createDemoDataProvider } from '../demo/DemoDataProvider';
 import { demoProjects } from '../demo/fixtures';
 import type { DataProvider } from '../DataProvider';
 import { ProviderError } from '../errors';
-import { buildFilterOptions, createDashboardService, topStatesByWorkCount } from './dashboard';
+import {
+  buildFilterOptions,
+  createDashboardService,
+  regionStats,
+  topStatesByWorkCount,
+} from './dashboard';
+import type { Project, ProjectRisk } from '../types';
 
 describe('createDashboardService (demo provider)', () => {
   const service = createDashboardService(createDemoDataProvider());
@@ -75,5 +81,22 @@ describe('dashboard pure helpers', () => {
     const options = buildFilterOptions([...demoProjects]);
     expect(options.states).toEqual([...options.states].sort((a, b) => a.localeCompare(b)));
     expect(new Set(options.districts).size).toBe(options.districts.length);
+  });
+
+  it('regionStats groups by state, splits by risk level, sorts by work count', () => {
+    const project = (sourceWorkId: number, state: string | null): Project =>
+      ({ sourceWorkId, state } as Project);
+    const risk = (level: ProjectRisk['level']): ProjectRisk =>
+      ({ level, reasons: [] } as unknown as ProjectRisk);
+
+    const stats = regionStats(
+      [project(1, 'Bihar'), project(2, 'Bihar'), project(3, 'Kerala'), project(4, null)],
+      { 1: risk('HIGH'), 2: risk('LOW'), 3: risk('MEDIUM') },
+    );
+
+    expect(stats).toEqual([
+      { state: 'Bihar', works: 2, high: 1, medium: 0, low: 1, unknown: 0 },
+      { state: 'Kerala', works: 1, high: 0, medium: 1, low: 0, unknown: 0 },
+    ]);
   });
 });

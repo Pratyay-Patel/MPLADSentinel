@@ -34,20 +34,8 @@ export function DashboardFilters({
     onChange({ ...filters, [key]: value });
 
   return (
-    <div className="dash-filters" role="search" aria-label="Filter projects">
+    <div className="dash-filters" role="search" aria-label="Filter the exploration table">
       <div className="dash-filters__grid">
-        <Select
-          label="State"
-          value={filters.state}
-          options={toOptions(options.states, 'All states')}
-          onChange={(e) => set('state', e.target.value)}
-        />
-        <Select
-          label="District"
-          value={filters.district}
-          options={toOptions(options.districts, 'All districts')}
-          onChange={(e) => set('district', e.target.value)}
-        />
         <Select
           label="House"
           value={filters.house}
@@ -62,15 +50,6 @@ export function DashboardFilters({
           value={filters.category}
           options={toOptions(options.categories, 'All categories')}
           onChange={(e) => set('category', e.target.value)}
-        />
-        <Select
-          label="Year"
-          value={filters.year}
-          options={[
-            { value: '', label: 'Any year' },
-            ...options.years.map((y) => ({ value: String(y), label: String(y) })),
-          ]}
-          onChange={(e) => set('year', e.target.value)}
         />
         <SearchInput
           label="Search projects"
