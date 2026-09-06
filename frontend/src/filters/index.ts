@@ -1,6 +1,8 @@
 export {
   EMPTY_GLOBAL_FILTERS,
   applyGlobalFilters,
+  applyGlobalFiltersBy,
+  globalFilterOptions,
   globalFiltersActive,
   matchesGlobalFilters,
   globalFiltersFromParams,

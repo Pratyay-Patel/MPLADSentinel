@@ -173,18 +173,24 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
   - _"Similar works" list deferred — the detail service loads one work only;
     would need a DataProvider/service change. Not worth it for the demo._
 
-- [~] **P3.2 — Persistent global filter bar** (year/state/district/status) shared
+- [x] **P3.2 — Persistent global filter bar** (year/state/district/status) shared
   across dashboard/projects/risk, reading/writing URL query params.
-  - **A (done):** `src/filters/` — `globalFilters.ts` (pure filter + URL
-    round-trip), `FilterProvider` + `context.ts` (URL is source of truth,
-    re-asserted across navigation), `GlobalFilterBar`. Wired into `AppShell`
-    (wraps the routed `<Outlet/>`) and fully into the **Dashboard**: the whole
-    view (metrics, map, risk donut, attention list, exploration table)
-    recomputes via new `filterDashboardView()` in `dashboard.ts`. Dashboard's
-    own filter row trimmed to house/category/search (state/district/year now
-    global).
-  - **B (next):** render `GlobalFilterBar` on Projects + Risk & Alerts, drop
-    their now-duplicated state/district/lifecycle selects.
+  - **A:** `src/filters/` — `globalFilters.ts` (pure filter + URL round-trip),
+    `FilterProvider` + `context.ts` (URL is source of truth, re-asserted across
+    navigation), `GlobalFilterBar`. Wired into `AppShell` (wraps the routed
+    `<Outlet/>`) and fully into the **Dashboard**: the whole view (metrics, map,
+    risk donut, attention list, exploration table) recomputes via new
+    `filterDashboardView()` in `dashboard.ts`. Dashboard's own filter row
+    trimmed to house/category/search.
+  - **B:** `GlobalFilterBar` now also on **Project Register** and **Risk &
+    Alerts**; their duplicated state/district/lifecycle selects removed (Risk
+    keeps level/category/search, Projects keeps house/category/risk/search).
+    Risk's metric cards + donut + factor bars recompute over the global-filtered
+    rows. `applyGlobalFiltersBy` / `globalFilterOptions` helpers added. Filters
+    carry across all three screens and stay in the URL.
+    _Note: pre-existing brittle test `voiceCommands > matches multi-word state
+    names` fails on `+` vs space in the query string — functionally fine
+    (`URLSearchParams` decodes `+`), unrelated to this change._
 
 - [ ] **P3.3 — Reports: client-side CSV export** from demo data (no backend).
 

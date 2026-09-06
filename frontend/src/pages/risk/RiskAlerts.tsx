@@ -9,6 +9,12 @@ import {
   type RiskLevel,
   type RiskRow,
 } from '../../data';
+import {
+  applyGlobalFiltersBy,
+  GlobalFilterBar,
+  globalFilterOptions,
+  useGlobalFilters,
+} from '../../filters';
 import { formatCount, formatINRCompact, workTitle } from '../../format';
 import {
   BarList,
@@ -46,20 +52,19 @@ const LIFECYCLE_LABEL: Record<RiskRow['project']['lifecycleState'], string> = {
 
 interface RiskFilters {
   level: '' | RiskLevel;
-  state: string;
   category: string;
   search: string;
 }
 
-const EMPTY_FILTERS: RiskFilters = { level: '', state: '', category: '', search: '' };
+const EMPTY_FILTERS: RiskFilters = { level: '', category: '', search: '' };
 
-/** Seed the filters from `?level=` / `?state=` (used by the voice command bar). */
+/** Seed the risk-level filter from `?level=` (used by the voice command bar;
+ *  `?state=` is handled by the global filter bar). */
 function filtersFromParams(params: URLSearchParams): RiskFilters {
   const level = params.get('level')?.toUpperCase() ?? '';
   return {
     ...EMPTY_FILTERS,
     level: (LEVELS as string[]).includes(level) ? (level as RiskLevel) : '',
-    state: params.get('state') ?? '',
   };
 }
 
@@ -67,7 +72,6 @@ function filterRows(rows: RiskRow[], filters: RiskFilters): RiskRow[] {
   const search = filters.search.trim().toLowerCase();
   return rows.filter(({ project, risk }) => {
     if (filters.level && risk.level !== filters.level) return false;
-    if (filters.state && project.state !== filters.state) return false;
     if (filters.category && project.category !== filters.category) return false;
     if (search) {
       const haystack = [
@@ -210,14 +214,19 @@ export function RiskAlerts() {
 
 function RiskBody({ data }: { data: RiskListData }) {
   const [searchParams] = useSearchParams();
+  const { filters: globalFilters } = useGlobalFilters();
   const [filters, setFilters] = useState<RiskFilters>(() => filtersFromParams(searchParams));
-  const filtered = useMemo(() => filterRows(data.rows, filters), [data.rows, filters]);
 
-  const states = useMemo(
-    () =>
-      [...new Set(data.rows.map((r) => r.project.state).filter((s): s is string => !!s))].sort(),
+  const globalRows = useMemo(
+    () => applyGlobalFiltersBy(data.rows, (r) => r.project, globalFilters),
+    [data.rows, globalFilters],
+  );
+  const filtered = useMemo(() => filterRows(globalRows, filters), [globalRows, filters]);
+  const barOptions = useMemo(
+    () => globalFilterOptions(data.rows.map((r) => r.project)),
     [data.rows],
   );
+
   const categories = useMemo(
     () =>
       [...new Set(data.rows.map((r) => r.project.category).filter((c): c is string => !!c))].sort(),
@@ -227,26 +236,33 @@ function RiskBody({ data }: { data: RiskListData }) {
   const set = <K extends keyof RiskFilters>(key: K, value: RiskFilters[K]) =>
     setFilters((prev) => ({ ...prev, [key]: value }));
 
-  const active =
-    filters.level !== '' ||
-    filters.state !== '' ||
-    filters.category !== '' ||
-    filters.search.trim() !== '';
+  const active = filters.level !== '' || filters.category !== '' || filters.search.trim() !== '';
 
-  const risks = useMemo(() => data.rows.map((r) => r.risk), [data.rows]);
+  const countsByLevel = useMemo(() => {
+    const counts: Record<RiskLevel, number> = { HIGH: 0, MEDIUM: 0, LOW: 0, UNKNOWN: 0 };
+    for (const row of globalRows) counts[row.risk.level] += 1;
+    return counts;
+  }, [globalRows]);
+
+  const risks = useMemo(() => globalRows.map((r) => r.risk), [globalRows]);
   const factors = useMemo(() => summarizeRiskFactors(risks), [risks]);
-  const assessed = data.rows.length - data.countsByLevel.UNKNOWN;
+  const assessed = globalRows.length - countsByLevel.UNKNOWN;
   const slices = RISK_LEVEL_ORDER.map((level) => ({
     label: `${level} risk`,
-    value: data.countsByLevel[level],
+    value: countsByLevel[level],
     color: RISK_LEVEL_COLOR[level],
   })).filter((slice) => slice.value > 0);
 
   return (
     <>
+      <GlobalFilterBar
+        options={barOptions}
+        resultLabel={`${filtered.length} of ${data.rows.length} works match`}
+      />
+
       <div className="ui-metric-grid">
         {LEVELS.map((level) => (
-          <MetricCard key={level} label={`${level} risk`} value={data.countsByLevel[level]} />
+          <MetricCard key={level} label={`${level} risk`} value={countsByLevel[level]} />
         ))}
       </div>
 
@@ -279,7 +295,7 @@ function RiskBody({ data }: { data: RiskListData }) {
         </div>
       </Card>
 
-      <div className="risk-filters" role="search" aria-label="Filter risk list">
+      <div className="risk-filters" role="search" aria-label="More filters for the risk list">
         <div className="risk-filters__grid">
           <Select
             label="Risk level"
@@ -289,15 +305,6 @@ function RiskBody({ data }: { data: RiskListData }) {
               ...LEVELS.map((l) => ({ value: l, label: `${l} risk` })),
             ]}
             onChange={(e) => set('level', e.target.value as RiskFilters['level'])}
-          />
-          <Select
-            label="State"
-            value={filters.state}
-            options={[
-              { value: '', label: 'All states' },
-              ...states.map((s) => ({ value: s, label: s })),
-            ]}
-            onChange={(e) => set('state', e.target.value)}
           />
           <Select
             label="Category"

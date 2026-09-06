@@ -63,6 +63,38 @@ export function applyGlobalFilters<T extends GlobalFilterable>(
   return items.filter((item) => matchesGlobalFilters(item, f));
 }
 
+/** Same, for a list whose filterable project is reached via `select`. */
+export function applyGlobalFiltersBy<T>(
+  items: T[],
+  select: (item: T) => GlobalFilterable,
+  f: GlobalFilters,
+): T[] {
+  if (!globalFiltersActive(f)) return items;
+  return items.filter((item) => matchesGlobalFilters(select(item), f));
+}
+
+/** Distinct state / district / year values for the {@link GlobalFilterBar} options. */
+export function globalFilterOptions(items: GlobalFilterable[]): {
+  states: string[];
+  districts: string[];
+  years: number[];
+} {
+  const states = new Set<string>();
+  const districts = new Set<string>();
+  const years = new Set<number>();
+  for (const item of items) {
+    if (item.state) states.add(item.state);
+    if (item.district) districts.add(item.district);
+    if (item.recommendedYear != null) years.add(item.recommendedYear);
+    if (item.completionYear != null) years.add(item.completionYear);
+  }
+  return {
+    states: [...states].sort((a, b) => a.localeCompare(b)),
+    districts: [...districts].sort((a, b) => a.localeCompare(b)),
+    years: [...years].sort((a, b) => b - a),
+  };
+}
+
 // --- URL query-param round-tripping ---------------------------------
 
 const PARAM_KEYS = ['year', 'state', 'district', 'status'] as const;
