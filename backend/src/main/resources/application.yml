@@ -34,7 +34,7 @@ server:
 mplads:
   security:
     # Comma-separated list of browser origins allowed to call /api/** via CORS.
-    cors-allowed-origins: ${MPLADS_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+    cors-allowed-origins: ${MPLADS_CORS_ALLOWED_ORIGINS:http://localhost:5173,https://parthakadam.in,https://www.parthakadam.in}
   auth:
     # Round 1 authentication (decision D31): seeded demo accounts only.
     # Disable seeding where accounts are provisioned another way.
