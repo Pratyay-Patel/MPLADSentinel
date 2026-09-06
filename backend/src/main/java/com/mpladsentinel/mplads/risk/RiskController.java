@@ -36,6 +36,8 @@ public class RiskController {
         return riskEngine.assessAll();
     }
 
+
+
     @GetMapping("/{sourceWorkId}/risk")
     public ResponseEntity<RiskAssessment> forWork(@PathVariable long sourceWorkId) {
         return riskEngine.assess(sourceWorkId)

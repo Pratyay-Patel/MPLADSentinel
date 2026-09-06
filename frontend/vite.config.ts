@@ -11,7 +11,11 @@ export default defineConfig({
     // talks to the backend (or any external API) directly.
     proxy: {
       '/api': {
-        target: process.env.VITE_DEV_API_PROXY_TARGET ?? 'http://localhost:8081',
+        target: process.env.VITE_DEV_API_PROXY_TARGET ?? 'https://localhost:8081',
+        changeOrigin: true,
+      },
+      '/api_p': {
+        target: process.env.VITE_PROD_API_PROXY_TARGET ?? 'https://parthakadam.in',
         changeOrigin: true,
       },
     },
