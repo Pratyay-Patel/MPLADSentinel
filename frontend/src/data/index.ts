@@ -108,3 +108,10 @@ export {
   type RiskFactorCategory,
   type RiskFactorCount,
 } from './risk/riskFactors';
+export {
+  recommendedAction,
+  riskDimensions,
+  RISK_DIMENSIONS,
+  type RiskDimension,
+  type RecommendedAction,
+} from './risk/riskInsights';

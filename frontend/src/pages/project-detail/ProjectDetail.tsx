@@ -11,13 +11,13 @@ import {
   KeyValueList,
   LoadingState,
   PageHeader,
-  RiskLevelBadge,
   SectionHeader,
   StatusBadge,
 } from '../../ui';
 import { DetailTimeline } from './DetailTimeline';
 import { flagLabel, houseLabel, LIFECYCLE_LABEL, LIFECYCLE_TONE } from './labels';
 import { PaymentsSection } from './PaymentsSection';
+import { RiskInsights } from './RiskInsights';
 
 /**
  * Project Details (`/projects/:id`) — the full record for a single MPLADS work,
@@ -158,31 +158,7 @@ function ProjectDetailView({ data }: { data: ProjectDetailData }) {
         />
       </Card>
 
-      <Card>
-        <SectionHeader
-          title="Risk assessment"
-          description="Indicators computed from this work's financial and data-quality signals."
-          actions={<RiskLevelBadge level={risk.level} />}
-        />
-        {risk.level === 'UNKNOWN' ? (
-          <p className="detail-note" style={{ marginTop: 0 }}>
-            Not enough data to assess this work.
-          </p>
-        ) : risk.reasons.length === 0 ? (
-          <p className="detail-note" style={{ marginTop: 0 }}>
-            No current indicators for this work.
-          </p>
-        ) : (
-          <>
-            <KeyValueList items={[{ label: 'Risk score', value: `${risk.score} / 100` }]} />
-            <ul className="risk-reasons" style={{ marginTop: 'var(--space-3)' }}>
-              {risk.reasons.map((reason) => (
-                <li key={reason}>{reason}</li>
-              ))}
-            </ul>
-          </>
-        )}
-      </Card>
+      <RiskInsights risk={risk} />
 
       <PaymentsSection project={project} payments={payments} />
 

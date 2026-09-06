@@ -161,7 +161,7 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ### P3 — depth if time remains
 
-- [ ] **P3.1 — Richer Project Detail**
+- [x] **P3.1 — Richer Project Detail**
   - Recommended-next-action card from the top rule hit; a small multi-dimension
     bar strip derived from our **real** rule categories (payment / payout /
     dormancy / cohort / data-availability) — backed by actual logic, unlike the
@@ -170,6 +170,8 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
     `src/data/features/`.
   - **Acceptance:** values trace to real rule output; no fabricated metrics;
     UNKNOWN handled.
+  - _"Similar works" list deferred — the detail service loads one work only;
+    would need a DataProvider/service change. Not worth it for the demo._
 
 - [ ] **P3.2 — Persistent global filter bar** (year/state/district/status) shared
   across dashboard/projects/risk, reading/writing URL query params.
@@ -257,4 +259,14 @@ _(update as we build)_
   (nav, cards, chart labels, donut centre) translates to Hindi and reverts.
   **Caveat:** needs internet (loads `translate.google.com/...`); offline it does
   nothing (graceful). Machine translation — quality varies.
-- Next: P2.1 (voice command bar), P3 (project-detail depth), P4 (polish).
+- 2026-09-06 — **P3.1 done.** No dependency. New `src/data/risk/riskInsights.ts`
+  +test: `recommendedAction(risk)` (reviewer's first step, keyed to the top
+  reason's category) and `riskDimensions(risk)` (the six real rule dimensions as
+  a fixed flagged/clear checklist, each carrying the matching reason string).
+  Both read the shared `ProjectRisk` view model, so demo and API behave the
+  same. New `src/pages/project-detail/RiskInsights.tsx` replaces the inline risk
+  card — adds a "recommended next action" callout + the dimension checklist
+  above the raw reason list; UNKNOWN / no-indicator branches unchanged.
+  No fabricated per-dimension scores (the competitor's "/100" bars are faked).
+  Typecheck + lint clean; new unit tests + ProjectDetail tests green.
+- Next: P3.2 (persistent global filter bar), P3.3 (CSV export), P4 (polish).
