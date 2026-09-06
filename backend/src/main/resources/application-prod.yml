@@ -6,8 +6,6 @@
 spring:
   application:
     name: mpladsentinel-backend
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
   datasource:
     # Local dev default targets the docker-compose Postgres, which publishes on
     # host port 5544 (see docker-compose.yml). Override with MPLADS_DB_URL.
@@ -23,7 +21,7 @@ spring:
     # creates or alters tables.
     hibernate:
       ddl-auto: none
-    open-in-view: false
+    open-in-view: false~
     properties:
       hibernate.jdbc.time_zone: UTC
 
