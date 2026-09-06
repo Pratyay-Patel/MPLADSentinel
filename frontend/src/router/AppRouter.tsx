@@ -7,13 +7,14 @@ import { CitizenPortal } from '../pages/citizen/CitizenPortal';
 import { CitizenProjectView } from '../pages/citizen/CitizenProjectView';
 import { AuditPage } from '../pages/featurePages';
 import { Grievances } from '../pages/grievances/Grievances';
-import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { ProjectDetail } from '../pages/project-detail/ProjectDetail';
 import { ProjectRegister } from '../pages/projects/ProjectRegister';
 import { RiskAlerts } from '../pages/risk/RiskAlerts';
+import { CompareMps } from '../pages/compare/CompareMps';
+import { IndexRedirect } from './IndexRedirect';
 
 /**
  * Application route table. The Overview route renders the Government Intelligence
@@ -43,7 +44,7 @@ export const appRouter = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
-      { index: true, element: <HomePage /> },
+      { index: true, element: <IndexRedirect /> },
       {
         path: 'dashboard',
         element: (
@@ -73,6 +74,14 @@ export const appRouter = createBrowserRouter([
         element: (
           <RequireRole area="risk">
             <RiskAlerts />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'compare',
+        element: (
+          <RequireRole area="compare">
+            <CompareMps />
           </RequireRole>
         ),
       },

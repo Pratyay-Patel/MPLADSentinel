@@ -8,9 +8,48 @@
       name="description"
       content="MPLADSentinel — AI-powered MPLADS monitoring and analytics platform"
     />
+    <style>
+      /* Neutralise the Google Website Translator banner + body offset so it
+         does not push the fixed app header down. The switcher UI is our own. */
+      .goog-te-banner-frame,
+      .skiptranslate iframe {
+        display: none !important;
+      }
+      body {
+        top: 0 !important;
+        position: static !important;
+      }
+      #google_translate_element {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="google_translate_element" aria-hidden="true"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Loaded once; the callback runs when Google's script is ready. Our
+      // <LanguageSwitcher> drives the hidden .goog-te-combo it creates.
+      window.googleTranslateElementInit = function () {
+        if (!window.google || !window.google.translate) return;
+        new window.google.translate.TranslateElement(
+          {
+            pageLanguage: 'en',
+            includedLanguages: 'en,hi,bn,ta,te,kn,ml,mr,gu,pa,or,as',
+            autoDisplay: false,
+          },
+          'google_translate_element',
+        );
+      };
+    </script>
+    <script
+      src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+      defer
+    ></script>
   </body>
 </html>

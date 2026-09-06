@@ -5,17 +5,10 @@ import { applyFilters, EMPTY_FILTERS, hasActiveFilters } from './filtering';
 
 const all = [...demoProjects];
 
-describe('dashboard filtering', () => {
+describe('dashboard exploration-table filtering', () => {
   it('returns every project when no filter is active', () => {
     expect(applyFilters(all, EMPTY_FILTERS)).toHaveLength(all.length);
     expect(hasActiveFilters(EMPTY_FILTERS)).toBe(false);
-  });
-
-  it('narrows by state', () => {
-    const kerala = applyFilters(all, { ...EMPTY_FILTERS, state: 'Kerala' });
-    expect(kerala.length).toBeGreaterThan(0);
-    expect(kerala.every((p) => p.state === 'Kerala')).toBe(true);
-    expect(hasActiveFilters({ ...EMPTY_FILTERS, state: 'Kerala' })).toBe(true);
   });
 
   it('narrows by house and category together', () => {
@@ -27,12 +20,7 @@ describe('dashboard filtering', () => {
     expect(
       rows.every((p) => p.house === 'RAJYA_SABHA' && p.category === 'Repair and Renovation'),
     ).toBe(true);
-  });
-
-  it('matches a year against recommended OR completion year', () => {
-    const y2026 = applyFilters(all, { ...EMPTY_FILTERS, year: '2026' });
-    expect(y2026.length).toBeGreaterThan(0);
-    expect(y2026.every((p) => p.recommendedYear === 2026 || p.completionYear === 2026)).toBe(true);
+    expect(hasActiveFilters({ ...EMPTY_FILTERS, house: 'RAJYA_SABHA' })).toBe(true);
   });
 
   it('search matches description, MP and location text case-insensitively', () => {
@@ -45,7 +33,7 @@ describe('dashboard filtering', () => {
   });
 
   it('returns an empty list when filters exclude everything', () => {
-    const rows = applyFilters(all, { ...EMPTY_FILTERS, state: 'Kerala', district: 'Jaipur' });
+    const rows = applyFilters(all, { ...EMPTY_FILTERS, category: 'Repair and Renovation', search: 'zzzznope' });
     expect(rows).toHaveLength(0);
   });
 });

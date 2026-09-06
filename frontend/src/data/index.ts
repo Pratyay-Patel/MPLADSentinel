@@ -46,11 +46,15 @@ export {
   createDashboardService,
   buildFilterOptions,
   topStatesByWorkCount,
+  regionStats,
+  deriveDashboardGroupings,
+  filterDashboardView,
   type DashboardService,
   type DashboardData,
   type DashboardFilterOptions,
   type AttentionItem,
   type StateWorkCount,
+  type RegionStat,
 } from './features/dashboard';
 export { useDashboardService } from './features/useDashboardService';
 
@@ -68,6 +72,15 @@ export {
   type RiskRow,
 } from './features/risk';
 export { useRiskService } from './features/useRiskService';
+
+export {
+  createMpComparisonService,
+  aggregateMps,
+  type MpComparisonService,
+  type MpComparisonData,
+  type MpStat,
+} from './features/mpComparison';
+export { useMpComparisonService } from './features/useMpComparisonService';
 
 export {
   createProjectRegisterService,
@@ -99,3 +112,17 @@ export {
 export { useGrievancesService } from './features/useGrievancesService';
 
 export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';
+export {
+  classifyRiskReason,
+  summarizeRiskFactors,
+  RISK_FACTOR_CATEGORIES,
+  type RiskFactorCategory,
+  type RiskFactorCount,
+} from './risk/riskFactors';
+export {
+  recommendedAction,
+  riskDimensions,
+  RISK_DIMENSIONS,
+  type RiskDimension,
+  type RecommendedAction,
+} from './risk/riskInsights';

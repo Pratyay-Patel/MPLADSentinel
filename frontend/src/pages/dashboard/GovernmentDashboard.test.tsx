@@ -5,13 +5,16 @@ import { describe, expect, it, vi } from 'vitest';
 import { DataProviderProvider, type DataProvider, type ProjectSummary } from '../../data';
 import { createDemoDataProvider } from '../../data/demo/DemoDataProvider';
 import { ProviderError } from '../../data/errors';
+import { FilterProvider } from '../../filters';
 import { GovernmentDashboard } from './GovernmentDashboard';
 
 function renderDashboard(provider: DataProvider) {
   return render(
     <MemoryRouter>
       <DataProviderProvider provider={provider}>
-        <GovernmentDashboard />
+        <FilterProvider>
+          <GovernmentDashboard />
+        </FilterProvider>
       </DataProviderProvider>
     </MemoryRouter>,
   );
