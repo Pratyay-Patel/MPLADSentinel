@@ -39,7 +39,8 @@ services:
       MPLADS_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-mpladsentinel}
       MPLADS_DB_USERNAME: ${POSTGRES_USER:-mpladsentinel}
       MPLADS_DB_PASSWORD: ${POSTGRES_PASSWORD:-change-me-locally}
-
+      SPRING_PROFILES_ACTIVE: prod
+      MPLADS_CORS_ALLOWED_ORIGINS: https://mplad-sentinel-two.vercel.app
     ports:
       - "8081:8081"
 
