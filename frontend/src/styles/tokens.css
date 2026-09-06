@@ -103,6 +103,7 @@
 
   /* ---- layout ----------------------------------------------------- */
   --layout-sidebar-width: 232px;
+  --layout-sidebar-collapsed-width: 60px;
   --layout-header-height: 56px;
   --layout-content-max: 1200px;
   --layout-content-pad-x: var(--space-6);

@@ -13,6 +13,13 @@
   min-height: 100vh;
   /* the off-canvas drawer must never add page-level horizontal scroll */
   overflow-x: clip;
+  transition: grid-template-columns 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell {
+    transition: none;
+  }
 }
 
 /* ---- header ------------------------------------------------------- */
@@ -318,7 +325,8 @@
   outline-offset: 1px;
 }
 
-.app-menu-toggle {
+.app-menu-toggle,
+.app-collapse-toggle {
   display: none;
   align-items: center;
   justify-content: center;
@@ -329,6 +337,17 @@
   border-radius: var(--radius-md);
   color: inherit;
   cursor: pointer;
+}
+
+.app-collapse-toggle:hover {
+  background: var(--color-brand-800);
+}
+
+/* the collapse toggle is the desktop counterpart of the mobile menu button */
+@media (min-width: 1024px) {
+  .app-collapse-toggle {
+    display: inline-flex;
+  }
 }
 
 /* ---- sidebar ----------------------------------------------------- */
@@ -356,7 +375,9 @@
 }
 
 .app-nav__link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   padding: var(--space-2) var(--space-3);
   margin-bottom: 2px;
   border-radius: var(--radius-md);
@@ -377,6 +398,63 @@
   border-left-color: var(--color-brand-700);
   color: var(--color-brand-800);
   font-weight: var(--weight-semibold);
+}
+
+.app-nav__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.app-nav__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.app-nav__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- collapsed icon rail (desktop only) ------------------------- */
+
+@media (min-width: 1024px) {
+  .app-shell[data-collapsed] {
+    grid-template-columns: var(--layout-sidebar-collapsed-width) 1fr;
+  }
+
+  .app-sidebar[data-collapsed] {
+    padding-inline: var(--space-2);
+  }
+
+  .app-sidebar[data-collapsed] .app-nav__caption {
+    display: none;
+  }
+
+  .app-sidebar[data-collapsed] .app-nav + .app-nav {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: var(--border);
+  }
+
+  .app-sidebar[data-collapsed] .app-nav__link {
+    justify-content: center;
+    padding-inline: 0;
+    border-left-width: 0;
+  }
+
+  .app-sidebar[data-collapsed] .app-nav__link.active {
+    border-left-width: 0;
+  }
+
+  .app-sidebar[data-collapsed] .app-nav__label {
+    display: none;
+  }
 }
 
 /* ---- content --------------------------------------------------- */

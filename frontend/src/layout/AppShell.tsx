@@ -6,17 +6,39 @@ import { AppHeader } from './AppHeader';
 import { AppSidebar } from './AppSidebar';
 
 const SIDEBAR_ID = 'app-primary-nav';
+const COLLAPSE_KEY = 'mplads.navCollapsed';
+
+function readCollapsed(): boolean {
+  try {
+    return localStorage.getItem(COLLAPSE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Reusable application shell: sticky top header + left sidebar navigation +
  * scrollable content area (`<Outlet />`). Below 1024px the sidebar becomes an
- * off-canvas drawer toggled from the header.
+ * off-canvas drawer toggled from the header; at desktop widths it can collapse
+ * to an icon rail (persisted in localStorage).
  *
  * Structural only — no authorization, no role-specific rendering.
  */
 export function AppShell() {
   const [navOpen, setNavOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(readCollapsed);
   const location = useLocation();
+
+  const toggleCollapsed = () =>
+    setCollapsed((value) => {
+      const next = !value;
+      try {
+        localStorage.setItem(COLLAPSE_KEY, next ? '1' : '0');
+      } catch {
+        /* private mode / storage disabled — keep it in memory only */
+      }
+      return next;
+    });
 
   // On route change: close the mobile drawer and scroll the content back to top
   // (so a link / voice command doesn't land mid-page).
@@ -37,7 +59,7 @@ export function AppShell() {
   }, [navOpen]);
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-collapsed={collapsed || undefined}>
       <a href="#app-main-content" className="skip-link">
         Skip to main content
       </a>
@@ -46,9 +68,16 @@ export function AppShell() {
         navOpen={navOpen}
         onToggleNav={() => setNavOpen((open) => !open)}
         navId={SIDEBAR_ID}
+        collapsed={collapsed}
+        onToggleCollapsed={toggleCollapsed}
       />
 
-      <AppSidebar id={SIDEBAR_ID} open={navOpen} onNavigate={() => setNavOpen(false)} />
+      <AppSidebar
+        id={SIDEBAR_ID}
+        open={navOpen}
+        collapsed={collapsed}
+        onNavigate={() => setNavOpen(false)}
+      />
 
       <div
         className="app-scrim"

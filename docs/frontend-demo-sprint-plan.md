@@ -240,10 +240,14 @@ compares only real per-work aggregates.
   `--shadow-sm/md` (+ raise `--shadow-lg`) so cards read lifted; darken
   `--color-text` / `-secondary` / `-muted` (+ dark-theme) for more contrast,
   keeping WCAG AA.
-- [ ] **F5 — collapsible sidebar.** Desktop collapse toggle → ~56px icon rail
-  (icons per nav item + hover tooltip), state in `localStorage`. Mobile
-  off-canvas drawer unchanged. `AppShell` / `AppSidebar` / `AppHeader` /
-  `navItems` / `shell.css` + ~6 new icons.
+- [x] **F5 — collapsible sidebar.** Desktop collapse toggle in the header →
+  60px icon rail (an icon per nav item + native `title` tooltip), state in
+  `localStorage` (`mplads.navCollapsed`). Mobile off-canvas drawer unchanged
+  (`data-collapsed` only applies ≥1024px). `navItems.ts`→`.tsx` (each item
+  gains an `icon`); `AppShell` owns the state, `AppHeader` the toggle,
+  `AppSidebar` renders icon + label spans; `shell.css` `[data-collapsed]`
+  rules + `--layout-sidebar-collapsed-width`; 6 new icons in `icons.tsx`.
+  +test (toggle, `data-collapsed`, persistence).
 
 ### P4 — polish
 

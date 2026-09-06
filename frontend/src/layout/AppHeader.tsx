@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-import { CloseIcon, MenuIcon } from '../ui/icons';
+import { CloseIcon, MenuIcon, SidebarIcon } from '../ui/icons';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { UserMenu } from './UserMenu';
 import { VoiceCommand } from './VoiceCommand';
@@ -11,9 +11,18 @@ export interface AppHeaderProps {
   onToggleNav: () => void;
   /** id of the sidebar element the toggle controls. */
   navId: string;
+  /** Desktop icon-rail state + toggle. */
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
 }
 
-export function AppHeader({ navOpen, onToggleNav, navId }: AppHeaderProps) {
+export function AppHeader({
+  navOpen,
+  onToggleNav,
+  navId,
+  collapsed,
+  onToggleCollapsed,
+}: AppHeaderProps) {
   return (
     <header className="app-header">
       <button
@@ -25,6 +34,17 @@ export function AppHeader({ navOpen, onToggleNav, navId }: AppHeaderProps) {
         onClick={onToggleNav}
       >
         {navOpen ? <CloseIcon /> : <MenuIcon />}
+      </button>
+
+      <button
+        type="button"
+        className="app-collapse-toggle"
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-pressed={collapsed}
+        aria-controls={navId}
+        onClick={onToggleCollapsed}
+      >
+        <SidebarIcon />
       </button>
 
       <Link to="/" className="app-brand" style={{ color: 'inherit', textDecoration: 'none' }}>
