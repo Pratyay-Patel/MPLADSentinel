@@ -10,6 +10,15 @@ import {
   type RiskRow,
 } from '../../data';
 import {
+  downloadCsv,
+  ExportMenu,
+  filenameSlug,
+  scopeWorks,
+  toCsv,
+  workCsvColumns,
+  type ExportScope,
+} from '../../export';
+import {
   applyGlobalFiltersBy,
   GlobalFilterBar,
   globalFilterOptions,
@@ -238,6 +247,15 @@ function RiskBody({ data }: { data: RiskListData }) {
 
   const active = filters.level !== '' || filters.category !== '' || filters.search.trim() !== '';
 
+  const handleExport = (scope: ExportScope) => {
+    const csv = toCsv(scopeWorks(filtered, scope), workCsvColumns);
+    const parts = ['mpladsentinel', 'risk'];
+    if (globalFilters.state) parts.push(filenameSlug(globalFilters.state));
+    if (filters.level) parts.push(filters.level.toLowerCase());
+    if (scope !== 'all') parts.push(scope);
+    downloadCsv(`${parts.join('_')}.csv`, csv);
+  };
+
   const countsByLevel = useMemo(() => {
     const counts: Record<RiskLevel, number> = { HIGH: 0, MEDIUM: 0, LOW: 0, UNKNOWN: 0 };
     for (const row of globalRows) counts[row.risk.level] += 1;
@@ -326,14 +344,17 @@ function RiskBody({ data }: { data: RiskListData }) {
           <span className="text-muted">
             {filtered.length} {filtered.length === 1 ? 'work' : 'works'}
           </span>
-          <button
-            type="button"
-            className="ui-btn ui-btn--ghost ui-btn--sm"
-            disabled={!active}
-            onClick={() => setFilters(EMPTY_FILTERS)}
-          >
-            Clear filters
-          </button>
+          <div className="risk-filters__foot-actions">
+            <ExportMenu onExport={handleExport} count={filtered.length} />
+            <button
+              type="button"
+              className="ui-btn ui-btn--ghost ui-btn--sm"
+              disabled={!active}
+              onClick={() => setFilters(EMPTY_FILTERS)}
+            >
+              Clear filters
+            </button>
+          </div>
         </div>
       </div>
 

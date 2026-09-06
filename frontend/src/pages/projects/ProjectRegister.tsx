@@ -9,6 +9,15 @@ import {
   type RiskLevel,
 } from '../../data';
 import {
+  downloadCsv,
+  ExportMenu,
+  filenameSlug,
+  scopeWorks,
+  toCsv,
+  workCsvColumns,
+  type ExportScope,
+} from '../../export';
+import {
   applyGlobalFiltersBy,
   GlobalFilterBar,
   globalFilterOptions,
@@ -240,6 +249,14 @@ function RegisterBody({ data }: { data: ProjectRegisterData }) {
   const set = <K extends keyof RegisterFilters>(key: K, value: RegisterFilters[K]) =>
     setFilters((prev) => ({ ...prev, [key]: value }));
 
+  const handleExport = (scope: ExportScope) => {
+    const csv = toCsv(scopeWorks(filtered, scope), workCsvColumns);
+    const parts = ['mpladsentinel', 'works'];
+    if (globalFilters.state) parts.push(filenameSlug(globalFilters.state));
+    if (scope !== 'all') parts.push(scope);
+    downloadCsv(`${parts.join('_')}.csv`, csv);
+  };
+
   const { filterOptions } = data;
 
   return (
@@ -286,14 +303,17 @@ function RegisterBody({ data }: { data: ProjectRegisterData }) {
           <span className="text-muted">
             {filtered.length} of {data.rows.length} {data.rows.length === 1 ? 'work' : 'works'}
           </span>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={!isActive(filters)}
-            onClick={() => setFilters(EMPTY_FILTERS)}
-          >
-            Clear filters
-          </Button>
+          <div className="reg-filters__foot-actions">
+            <ExportMenu onExport={handleExport} count={filtered.length} />
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={!isActive(filters)}
+              onClick={() => setFilters(EMPTY_FILTERS)}
+            >
+              Clear filters
+            </Button>
+          </div>
         </div>
       </div>
 

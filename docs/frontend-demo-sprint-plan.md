@@ -192,7 +192,40 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
     names` fails on `+` vs space in the query string — functionally fine
     (`URLSearchParams` decodes `+`), unrelated to this change._
 
-- [ ] **P3.3 — Reports: client-side CSV export** from demo data (no backend).
+- [x] **P3.3 — Client-side CSV export** (was "Reports screen" — built as in-place
+  export menus instead, matching Empowered Indian's "Export" button).
+  `src/export/`: `csv.ts` (`toCsv` RFC-4180 quoting + `downloadCsv` Blob/BOM,
+  +test), `workExport.ts` (`workCsvColumns`, `scopeWorks`, +test),
+  `ExportMenu.tsx` (All / Completed only / Recommended only). Wired into the
+  **Project Register** and **Risk & Alerts** filter footers; exports exactly the
+  currently-filtered rows (global bar + local). Filename encodes the active
+  state / risk level / scope. No backend.
+
+---
+
+## Teammate round 2 — five follow-up features (in priority order)
+
+Empowered Indian reference checked live (2026-09-06). Their compare is anchored
+on per-MP **Allocated Amount** + **Fund Utilization %** — we have **no per-MP
+allocation** (`docs/data-source.md`), so ours must NOT show a "utilisation %"; it
+compares only real per-work aggregates.
+
+- [x] **F1 — CSV export.** Done as P3.3 above.
+- [ ] **F2 — Compare MPs.** New sidebar tab (`/compare`, `Area` `'compare'`,
+  authorities only). `data/features/mpComparison.ts` aggregates `listProjects` +
+  risk by `mpName` → works / recommended / completed / completion rate /
+  Σ estimated cost / Σ recorded payments / payments-vs-estimate ratio / risk
+  mix. Picker (max 4, `?mps=` in URL) → recharts bar chart + detailed
+  comparison table + honest "key insights". **No fabricated allocation / no
+  "fund utilisation %".**
+- [ ] **F3+F4 — visual polish (one commit).** `tokens.css`: deepen
+  `--shadow-sm/md` (+ raise `--shadow-lg`) so cards read lifted; darken
+  `--color-text` / `-secondary` / `-muted` (+ dark-theme) for more contrast,
+  keeping WCAG AA.
+- [ ] **F5 — collapsible sidebar.** Desktop collapse toggle → ~56px icon rail
+  (icons per nav item + hover tooltip), state in `localStorage`. Mobile
+  off-canvas drawer unchanged. `AppShell` / `AppSidebar` / `AppHeader` /
+  `navItems` / `shell.css` + ~6 new icons.
 
 ### P4 — polish
 

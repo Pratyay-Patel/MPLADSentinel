@@ -22,6 +22,13 @@
   justify-content: space-between;
   gap: var(--space-3);
   margin-top: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.risk-filters__foot-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .risk-cell {

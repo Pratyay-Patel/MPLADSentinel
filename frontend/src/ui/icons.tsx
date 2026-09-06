@@ -74,3 +74,17 @@ export const InboxIcon = (p: IconProps) => (
     <path d="M5 5h14l2 8v6H3v-6L5 5Z" />
   </Base>
 );
+
+export const DownloadIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M12 3v12" />
+    <path d="m7 10 5 5 5-5" />
+    <path d="M5 21h14" />
+  </Base>
+);
+
+export const ChevronDownIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="m6 9 6 6 6-6" />
+  </Base>
+);
