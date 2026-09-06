@@ -309,10 +309,9 @@ function Comparison({
         </div>
         <p className="mpc-note">
           Aggregated from each MP's recorded works. “Σ estimated cost” sums the recommended
-          estimates and “Σ recorded payments” the ingested vendor payments; their ratio is a
-          spend indicator, <strong>not</strong> an official utilisation-of-allocation figure — no
-          per-MP MPLADS allocation is available in the source. Risk levels are the rule-based
-          indicators, not proof of wrongdoing.
+          estimates; “Σ recorded payments” sums the vendor payments ingested so far (not every
+          work has payment data yet). Risk levels are rule-based indicators, not proof of
+          wrongdoing.
         </p>
       </Card>
 
