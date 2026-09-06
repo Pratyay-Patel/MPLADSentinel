@@ -1,7 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { useAsyncData, useDashboardService, type DashboardData } from '../../data';
+import {
+  filterDashboardView,
+  useAsyncData,
+  useDashboardService,
+  type DashboardData,
+} from '../../data';
+import { applyGlobalFilters, GlobalFilterBar, globalFiltersActive, useGlobalFilters } from '../../filters';
 import { Card, EmptyState, ErrorState, LoadingState, PageHeader } from '../../ui';
 import { applyFilters, EMPTY_FILTERS, type DashboardFiltersState } from './filtering';
 import { DashboardFilters } from './sections/DashboardFilters';
@@ -71,21 +77,46 @@ export function GovernmentDashboard() {
   );
 }
 
+const nfIN = new Intl.NumberFormat('en-IN');
+
 function DashboardBody({ data }: { data: DashboardData }) {
+  const { filters: globalFilters } = useGlobalFilters();
   const [filters, setFilters] = useState<DashboardFiltersState>(EMPTY_FILTERS);
-  const filtered = useMemo(() => applyFilters(data.projects, filters), [data.projects, filters]);
+
+  // The whole dashboard (metrics, map, risk donut, attention list) reflects the
+  // app-wide filter bar; the exploration table then applies its own extras.
+  const view = useMemo(
+    () =>
+      globalFiltersActive(globalFilters)
+        ? filterDashboardView(data, applyGlobalFilters(data.projects, globalFilters))
+        : data,
+    [data, globalFilters],
+  );
+  const explorationRows = useMemo(
+    () => applyFilters(view.projects, filters),
+    [view.projects, filters],
+  );
 
   return (
     <>
-      <NationalOverview data={data} />
+      <GlobalFilterBar
+        options={{
+          states: data.filterOptions.states,
+          districts: data.filterOptions.districts,
+          years: data.filterOptions.years,
+        }}
+        resultLabel={`${nfIN.format(view.totalWorks)} of ${nfIN.format(data.totalWorks)} works match`}
+      />
 
-      <RiskSignals data={data} />
+      <NationalOverview data={view} />
 
-      <ProjectsRequiringAttention items={data.attention} />
+      <RiskSignals data={view} />
+
+      <ProjectsRequiringAttention items={view.attention} />
 
       <div className="dash-two-col">
-        <FinancialIntelligence data={data} />
-        <WorkDistribution data={data} />
+        <FinancialIntelligence data={view} />
+        <WorkDistribution data={view} />
       </div>
 
       <section className="ui-stack" aria-labelledby="dash-explore-heading">
@@ -99,14 +130,14 @@ function DashboardBody({ data }: { data: DashboardData }) {
         </div>
         <DashboardFilters
           filters={filters}
-          options={data.filterOptions}
+          options={view.filterOptions}
           onChange={setFilters}
-          resultCount={filtered.length}
+          resultCount={explorationRows.length}
         />
-        <ProjectExploration rows={filtered} risksByWorkId={data.risksByWorkId} />
+        <ProjectExploration rows={explorationRows} risksByWorkId={view.risksByWorkId} />
       </section>
 
-      <RegionalInsight regions={data.regions} />
+      <RegionalInsight regions={view.regions} />
     </>
   );
 }

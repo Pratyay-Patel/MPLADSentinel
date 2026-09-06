@@ -47,6 +47,8 @@ export {
   buildFilterOptions,
   topStatesByWorkCount,
   regionStats,
+  deriveDashboardGroupings,
+  filterDashboardView,
   type DashboardService,
   type DashboardData,
   type DashboardFilterOptions,

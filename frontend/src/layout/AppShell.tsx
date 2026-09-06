@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 
+import { FilterProvider } from '../filters';
 import { AppHeader } from './AppHeader';
 import { AppSidebar } from './AppSidebar';
 
@@ -58,7 +59,9 @@ export function AppShell() {
 
       <main id="app-main-content" className="app-main" tabIndex={-1}>
         <div className="app-main__inner">
-          <Outlet />
+          <FilterProvider>
+            <Outlet />
+          </FilterProvider>
         </div>
       </main>
     </div>

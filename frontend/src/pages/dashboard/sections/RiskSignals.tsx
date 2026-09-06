@@ -1,19 +1,26 @@
 import { useMemo } from 'react';
 
-import { summarizeRiskFactors, type DashboardData } from '../../../data';
+import { summarizeRiskFactors, type DashboardData, type ProjectRisk } from '../../../data';
 import { BarList, Card, DonutChart, RISK_LEVEL_COLOR, RISK_LEVEL_ORDER, SectionHeader } from '../../../ui';
 import { formatCount } from '../../../format';
 
 /**
- * Risk signals — two aggregates over the whole dataset:
+ * Risk signals — two aggregates over the works currently shown:
  *  • how works split across the four assessed risk levels (donut), and
  *  • which rule-based factors are driving those flags (bar list).
  *
- * Both are computed from the risk view models already loaded for the dashboard;
- * no extra fetch. Rule-based indicators, not an ML score (decision D22).
+ * Both are computed from the risk view models already loaded for the dashboard
+ * (keyed off `data.projects`, so they follow the global filter bar); no extra
+ * fetch. Rule-based indicators, not an ML score (decision D22).
  */
 export function RiskSignals({ data }: { data: DashboardData }) {
-  const risks = useMemo(() => Object.values(data.risksByWorkId), [data.risksByWorkId]);
+  const risks = useMemo(
+    () =>
+      data.projects
+        .map((p) => data.risksByWorkId[p.sourceWorkId])
+        .filter((r): r is ProjectRisk => r != null),
+    [data.projects, data.risksByWorkId],
+  );
 
   const levelCounts = useMemo(() => {
     const counts: Record<string, number> = { HIGH: 0, MEDIUM: 0, LOW: 0, UNKNOWN: 0 };
