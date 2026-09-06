@@ -14,10 +14,6 @@ export default defineConfig({
         target: process.env.VITE_DEV_API_PROXY_TARGET ?? 'https://localhost:8081',
         changeOrigin: true,
       },
-      '/api_p': {
-        target: process.env.VITE_PROD_API_PROXY_TARGET ?? 'https://parthakadam.in',
-        changeOrigin: true,
-      },
     },
   },
   test: {
