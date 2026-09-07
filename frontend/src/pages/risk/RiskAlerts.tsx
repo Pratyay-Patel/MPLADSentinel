@@ -200,6 +200,7 @@ export function RiskAlerts() {
   return (
     <div className="ui-stack risk">
       <PageHeader
+        breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Risk & Alerts' }]}
         title="Risk & Alerts"
         description="Flagged works — HIGH or MEDIUM risk, most severe first — with the factors behind each. Computed from financial and data-quality signals; indicators for review, not proof of wrongdoing."
       />

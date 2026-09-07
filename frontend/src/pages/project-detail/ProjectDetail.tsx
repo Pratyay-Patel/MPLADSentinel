@@ -55,7 +55,11 @@ export function ProjectDetail() {
   return (
     <div className="ui-stack detail">
       <PageHeader
-        breadcrumbs={[{ label: 'Projects', to: '/projects' }, { label: title }]}
+        breadcrumbs={[
+          { label: 'Home', to: '/' },
+          { label: 'Projects', to: '/projects' },
+          { label: title },
+        ]}
         title={title}
         description={subtitle || undefined}
       />

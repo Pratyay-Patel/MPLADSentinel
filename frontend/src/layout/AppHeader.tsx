@@ -1,9 +1,36 @@
 import { Link } from 'react-router-dom';
 
+import { resolveDataSource } from '../data';
 import { CloseIcon, MenuIcon, SidebarIcon } from '../ui/icons';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { UserMenu } from './UserMenu';
 import { VoiceCommand } from './VoiceCommand';
+
+/**
+ * Scale of the ingested MPLADS dataset (Empowered Indian public API — see
+ * docs/data-source.md). Shown in the header so the small demo slice is not
+ * mistaken for the whole system. Update if the ingest total changes.
+ */
+const DATASET_SCALE = '6,044 works · 34 states/UTs';
+
+function DatasetStatus() {
+  const live = resolveDataSource() === 'api';
+  return (
+    <span
+      className="app-header__dataset"
+      data-live={live || undefined}
+      title={
+        live
+          ? 'Connected to the live MPLADS dataset via the portal API.'
+          : `Illustrative demo slice. The full ingested dataset covers ${DATASET_SCALE}.`
+      }
+    >
+      <span className="app-header__dataset-dot" aria-hidden />
+      {live ? 'Live data' : 'Demo data'}
+      <span className="app-header__dataset-scale">· full dataset {DATASET_SCALE}</span>
+    </span>
+  );
+}
 
 export interface AppHeaderProps {
   /** Whether the mobile nav drawer is open. */
@@ -51,6 +78,8 @@ export function AppHeader({
         <span className="app-brand__name">MPLADSentinel</span>
         <span className="app-brand__tagline">MPLADS monitoring &amp; transparency</span>
       </Link>
+
+      <DatasetStatus />
 
       <div className="app-header__spacer" />
 

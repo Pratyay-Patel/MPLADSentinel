@@ -198,6 +198,7 @@ export function ProjectRegister() {
   return (
     <div className="ui-stack reg">
       <PageHeader
+        breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Projects' }]}
         title="Project Register"
         description="Every MPLADS work, with status and risk indicators. Search and filter to narrow the list, then open a work for the full record."
       />

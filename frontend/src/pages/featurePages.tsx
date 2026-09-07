@@ -11,6 +11,7 @@ import { PlaceholderPage } from './PlaceholderPage';
 export function AuditPage() {
   return (
     <PlaceholderPage
+      breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Audit' }]}
       title="Audit"
       description="Chronological view of important project and verification events."
       note="Deferred to the backend-integration phase — depends on verification / ledger events."

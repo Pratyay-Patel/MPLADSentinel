@@ -42,6 +42,7 @@ export function CompareMps() {
   return (
     <div className="ui-stack mpc">
       <PageHeader
+        breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Compare MPs' }]}
         title="Compare MPs"
         description="Side-by-side activity and spending for up to four Members of Parliament, aggregated from their recorded works."
       />

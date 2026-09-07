@@ -386,16 +386,19 @@ Verify every `ResponsiveContainer` still has an explicit px `height={N}`.
   (`.risk-toggle__*`). Apply the same banner/switch styling vocabulary elsewhere if reused.
 - **Commit:** `style(frontend): KPI icons + deltas, stronger elevation, consistent section headers`
 
-### Block F — Shell / header chrome (0.75 h)
+### Block F — Shell / header chrome (0.75 h)  ✅ partial
 
-- `layout/AppHeader.tsx`: add a **dataset status pill** —
-  `Demo slice · full system tracks 6,044 works · 34 states/UTs` (honest; also the
-  credibility line vs their "sample demonstration data"). In API mode show live counts.
-- Add a **breadcrumb row** under `PageHeader` (`Home / {page}`) — one tiny shared component.
-- `layout/navItems.tsx`: keep items, add group captions, add a HIGH-count badge next to
-  `Risk & Alerts` (pass the number in from a context or a cheap hook).
-- Tests: `AppShell.test.tsx` nav assertions; `UserMenu.test.tsx` unaffected.
-- **Commit:** `feat(shell): dataset status pill, breadcrumbs, sidebar risk badge`
+- ✅ `layout/AppHeader.tsx`: **dataset status pill** — `● Demo data · full dataset 6,044
+  works · 34 states/UTs` (green dot + "Live data" in API mode). Reads `resolveDataSource()`
+  only — **no data fetch** in the shell (`AppShell.test.tsx` renders without a
+  `DataProviderProvider`). `DATASET_SCALE` is a hardcoded real figure (docs/data-source.md).
+- ✅ **Breadcrumbs** — `PageHeader` already renders a `breadcrumbs` prop; added
+  `Home / {page}` to the 7 top-level pages and prepended `Home` to the 2 detail pages that
+  already had crumbs. No new component needed.
+- ❌ *Skipped the sidebar HIGH-count badge* — needs a risk-count fetch wired into the shell
+  (AppShell has no page data hook / provider in tests). Disproportionate for a cut-list
+  block. Sidebar group captions (`MONITORING` / `PUBLIC`) already exist.
+- **Commit:** `feat(shell): dataset status pill + breadcrumbs`
 
 ### Block G — Fix the demo data volume (0.5 h) — *do this or the side-by-side hurts*
 

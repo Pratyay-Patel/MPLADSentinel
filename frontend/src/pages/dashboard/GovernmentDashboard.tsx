@@ -42,6 +42,7 @@ export function GovernmentDashboard() {
   return (
     <div className="ui-stack dash">
       <PageHeader
+        breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Overview' }]}
         title="Government Intelligence Dashboard"
         description="National monitoring and anomaly intelligence for MPLADS works."
       />
