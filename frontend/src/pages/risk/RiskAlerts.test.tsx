@@ -101,6 +101,28 @@ describe('RiskAlerts', () => {
     expect(screen.queryByText(/export csv/i)).not.toBeInTheDocument();
   });
 
+  it('scopes the list to a ?factor= deep link from the Overview anomaly cards', async () => {
+    const router = createMemoryRouter(
+      [{ path: '/', element: (<FilterProvider><RiskAlerts /></FilterProvider>) }],
+      { initialEntries: ['/?factor=dormant-no-payments'] },
+    );
+    render(
+      <DataProviderProvider provider={createDemoDataProvider()}>
+        <RouterProvider router={router} />
+      </DataProviderProvider>,
+    );
+
+    const table = await screen.findByRole('table', { name: 'Risk and alerts' });
+    const bodyRows = within(table).getAllByRole('row').slice(1);
+    expect(bodyRows.length).toBeGreaterThan(0);
+    expect(bodyRows.length).toBeLessThan(14);
+    // every shown work has a "dormant / no payment records" indicator
+    expect(bodyRows.every((r) => /no payment records/i.test(r.textContent ?? ''))).toBe(true);
+    // and the active-scope chip is shown with a way to clear it
+    expect(screen.getByText(/scoped to risk factor/i)).toBeInTheDocument();
+    expect(screen.getByText('Dormant, no payments')).toBeInTheDocument();
+  });
+
   it('shows a one-line review summary instead of repeating the Overview risk chart', async () => {
     const { container } = renderRisk();
     await screen.findByRole('table', { name: 'Risk and alerts' });

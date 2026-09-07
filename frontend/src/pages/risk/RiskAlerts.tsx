@@ -2,8 +2,11 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import {
+  classifyRiskReason,
+  riskFactorFromSlug,
   useAsyncData,
   useRiskService,
+  type RiskFactorCategory,
   type RiskListData,
   type RiskLevel,
   type RiskRow,
@@ -52,29 +55,43 @@ interface RiskFilters {
   /** When no specific `level` is picked, the list is the triage queue (HIGH + MEDIUM only)
    *  unless this is set, which widens it to every assessed level. */
   showAllLevels: boolean;
+  /** Set from `?factor=` (Overview anomaly cards) — keep only works whose rule-based
+   *  reasons classify to this factor. Spans all levels while active. */
+  factor: '' | RiskFactorCategory;
 }
 
-const EMPTY_FILTERS: RiskFilters = { level: '', category: '', search: '', showAllLevels: false };
+const EMPTY_FILTERS: RiskFilters = {
+  level: '',
+  category: '',
+  search: '',
+  showAllLevels: false,
+  factor: '',
+};
 
 const REVIEW_LEVELS: RiskLevel[] = ['HIGH', 'MEDIUM'];
 
-/** Seed the risk-level filter from `?level=` (used by the voice command bar;
- *  `?state=` is handled by the global filter bar). A valid `?level=` is an explicit
- *  choice and overrides the HIGH+MEDIUM default. */
+/** Seed filters from the URL: `?level=` (voice command bar) is an explicit level
+ *  choice that overrides the HIGH+MEDIUM default; `?factor=` (Overview anomaly
+ *  cards) scopes the list to one rule-based factor. `?state=` is the global bar. */
 function filtersFromParams(params: URLSearchParams): RiskFilters {
   const level = params.get('level')?.toUpperCase() ?? '';
+  const factorSlug = params.get('factor') ?? '';
   return {
     ...EMPTY_FILTERS,
     level: (LEVELS as string[]).includes(level) ? (level as RiskLevel) : '',
+    factor: riskFactorFromSlug(factorSlug) ?? '',
   };
 }
 
 function filterRows(rows: RiskRow[], filters: RiskFilters): RiskRow[] {
   const search = filters.search.trim().toLowerCase();
-  const flaggedOnly = !filters.level && !filters.showAllLevels;
+  const flaggedOnly = !filters.level && !filters.showAllLevels && !filters.factor;
   return rows.filter(({ project, risk }) => {
     if (filters.level && risk.level !== filters.level) return false;
     if (flaggedOnly && !REVIEW_LEVELS.includes(risk.level)) return false;
+    if (filters.factor && !risk.reasons.some((r) => classifyRiskReason(r) === filters.factor)) {
+      return false;
+    }
     if (filters.category && project.category !== filters.category) return false;
     if (search) {
       const haystack = [
@@ -245,7 +262,8 @@ function RiskBody({ data }: { data: RiskListData }) {
     filters.level !== '' ||
     filters.category !== '' ||
     filters.search.trim() !== '' ||
-    filters.showAllLevels;
+    filters.showAllLevels ||
+    filters.factor !== '';
 
   const countsByLevel = useMemo(() => {
     const counts: Record<RiskLevel, number> = { HIGH: 0, MEDIUM: 0, LOW: 0, UNKNOWN: 0 };
@@ -286,6 +304,21 @@ function RiskBody({ data }: { data: RiskListData }) {
           </p>
         </div>
       </div>
+
+      {filters.factor && (
+        <div className="risk-factor-chip">
+          <span>
+            Scoped to risk factor: <strong>{filters.factor}</strong>
+          </span>
+          <button
+            type="button"
+            className="risk-factor-chip__clear"
+            onClick={() => set('factor', '')}
+          >
+            Clear <span aria-hidden>✕</span>
+          </button>
+        </div>
+      )}
 
       <div className="risk-filters" role="search" aria-label="More filters for the risk list">
         <div className="risk-filters__grid">

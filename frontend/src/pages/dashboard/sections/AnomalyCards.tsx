@@ -1,0 +1,58 @@
+import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
+
+import {
+  RISK_FACTOR_DESCRIPTIONS,
+  RISK_FACTOR_SLUGS,
+  summarizeRiskFactors,
+  type DashboardData,
+  type ProjectRisk,
+} from '../../../data';
+import { Card, SectionHeader } from '../../../ui';
+import { formatCount } from '../../../format';
+
+const MAX_CARDS = 6;
+
+/**
+ * Named anomaly cards — the same `summarizeRiskFactors` counts the old bar list
+ * showed, re-skinned as scannable cards. Each links into the risk queue filtered
+ * to that factor (`/risk?factor=<slug>`). Counts are rule-based indicators for
+ * review, not confirmed findings (decision D22 / CLAUDE.md §17).
+ */
+export function AnomalyCards({ data }: { data: DashboardData }) {
+  const risks = useMemo(
+    () =>
+      data.projects
+        .map((p) => data.risksByWorkId[p.sourceWorkId])
+        .filter((r): r is ProjectRisk => r != null),
+    [data.projects, data.risksByWorkId],
+  );
+
+  const factors = useMemo(() => summarizeRiskFactors(risks).slice(0, MAX_CARDS), [risks]);
+
+  if (factors.length === 0) return null;
+
+  return (
+    <Card>
+      <SectionHeader
+        title="Risk factors detected"
+        description="How often each rule-based indicator is flagged across the works in view. Indicators for review, not confirmed findings."
+      />
+      <ul className="anomaly-cards">
+        {factors.map((factor) => (
+          <li key={factor.label} className="anomaly-card">
+            <span className="anomaly-card__count">{formatCount(factor.count)}</span>
+            <span className="anomaly-card__label">{factor.label}</span>
+            <span className="anomaly-card__desc">{RISK_FACTOR_DESCRIPTIONS[factor.label]}</span>
+            <Link
+              className="anomaly-card__link"
+              to={`/risk?factor=${RISK_FACTOR_SLUGS[factor.label]}`}
+            >
+              View cases <span aria-hidden>→</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}

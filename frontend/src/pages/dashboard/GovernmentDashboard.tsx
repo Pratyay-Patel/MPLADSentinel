@@ -8,6 +8,7 @@ import {
 } from '../../data';
 import { applyGlobalFilters, GlobalFilterBar, globalFiltersActive, useGlobalFilters } from '../../filters';
 import { Card, EmptyState, ErrorState, LoadingState, PageHeader } from '../../ui';
+import { AnomalyCards } from './sections/AnomalyCards';
 import { FinancialIntelligence } from './sections/FinancialIntelligence';
 import { NationalOverview } from './sections/NationalOverview';
 import { ProjectsRequiringAttention } from './sections/ProjectsRequiringAttention';
@@ -19,9 +20,10 @@ import { WorkDistribution } from './sections/WorkDistribution';
  * Government / MoSPI Intelligence Dashboard — the first product screen.
  *
  * Mosaic layout: national metrics -> regional map + risk-level donut ->
- * financial intelligence + work distribution -> Projects Requiring Attention
- * (hero teaser). The full project register lives on `/projects`; the risk queue
- * on `/risk` — the Overview only teases into them. Data comes exclusively
+ * financial intelligence + work distribution -> named anomaly cards -> Projects
+ * Requiring Attention (hero teaser). The full project register lives on
+ * `/projects`; the risk queue on `/risk` — the Overview only teases into them,
+ * anomaly cards deep-link to `/risk?factor=`. Data comes exclusively
  * through {@link useDashboardService} -> DataProvider; this component does not
  * know whether the provider is demo or API.
  */
@@ -119,6 +121,8 @@ function DashboardBody({ data }: { data: DashboardData }) {
           <WorkDistribution data={view} />
         </div>
       </div>
+
+      <AnomalyCards data={view} />
 
       <ProjectsRequiringAttention items={view.attention} />
     </>

@@ -112,6 +112,35 @@
   flex-wrap: wrap;
 }
 
+/* ---- active risk-factor scope chip (from Overview deep link) --- */
+
+.risk-factor-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  align-self: flex-start;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-brand-800);
+  background: var(--color-brand-050);
+  border: 1px solid var(--color-brand-100);
+  border-radius: var(--radius-pill);
+}
+
+.risk-factor-chip__clear {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  color: var(--color-link);
+  cursor: pointer;
+}
+
+.risk-factor-chip__clear:hover {
+  text-decoration: underline;
+}
+
 /* ---- "show all levels" switch -------------------------------- */
 
 .risk-toggle {

@@ -87,6 +87,23 @@ describe('GovernmentDashboard', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows named anomaly cards that deep-link into the risk queue', async () => {
+    renderDashboard(createDemoDataProvider());
+
+    expect(
+      await screen.findByRole('heading', { name: 'Risk factors detected' }),
+    ).toBeInTheDocument();
+
+    const cards = document.querySelectorAll('.anomaly-card');
+    expect(cards.length).toBeGreaterThan(0);
+
+    const viewLinks = screen.getAllByRole('link', { name: /View cases/ });
+    expect(viewLinks.length).toBe(cards.length);
+    for (const link of viewLinks) {
+      expect(link.getAttribute('href')).toMatch(/^\/risk\?factor=[a-z-]+$/);
+    }
+  });
+
   it('does not embed the full project register or a second filter block', async () => {
     renderDashboard(createDemoDataProvider());
 

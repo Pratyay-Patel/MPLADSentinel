@@ -115,7 +115,10 @@ export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } 
 export {
   classifyRiskReason,
   summarizeRiskFactors,
+  riskFactorFromSlug,
   RISK_FACTOR_CATEGORIES,
+  RISK_FACTOR_SLUGS,
+  RISK_FACTOR_DESCRIPTIONS,
   type RiskFactorCategory,
   type RiskFactorCount,
 } from './risk/riskFactors';

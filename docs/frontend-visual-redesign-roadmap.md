@@ -352,15 +352,17 @@ Verify every `ResponsiveContainer` still has an explicit px `height={N}`.
 - New `pages/dashboard/sections/AnomalyCards.tsx`: take `summarizeRiskFactors(risks)` (the
   data the old bar list used), render the top 4–6 as cards: big count, rule label, one-line
   description, `View cases →`.
-- Map each to a real rule id and route to `/risk?factor=<id>`:
-  `PAYMENT_OVERSPEND` "Payments exceed estimate", `FULL_PAYOUT_BEFORE_COMPLETION`
-  "Full payout before completion", `DORMANT_NO_PAYMENTS` "Dormant, no payments",
-  `SINGLE_INSTALLMENT_FULL` "Single-installment full payout",
-  `COST_COHORT_OUTLIER` "Cost outlier vs peers",
-  `PAYMENT_DATA_UNAVAILABLE` "Payment data unavailable".
-- `pages/risk/RiskAlerts.tsx`: add a `factor` filter — read `?factor=` and filter rows
-  whose `risk.reasons`/rule ids include it (wiring existing data; **not** a new metric).
-- Drop the old `RiskSignals` bar list (now represented as cards); keep its donut (Block C).
+- Route each card to `/risk?factor=<slug>`. **The codebase exposes no rule ids** — neither
+  the demo engine nor the backend returns them — so reuse the existing stable
+  `RiskFactorCategory` from `data/risk/riskFactors.ts` (`classifyRiskReason` keyword-buckets
+  the free-text reasons). Slugs added there: `cost-overspend`, `payout-before-completion`,
+  `single-installment-payout`, `dormant-no-payments`, `cost-outlier-vs-peers`,
+  `payment-data-unavailable`, `other-signal` (+ `riskFactorFromSlug`, `RISK_FACTOR_DESCRIPTIONS`).
+- `pages/risk/RiskAlerts.tsx`: add a `factor` filter — read `?factor=<slug>`, keep rows
+  where `risk.reasons.some(r => classifyRiskReason(r) === factor)` (wiring existing data;
+  **not** a new metric). A factor scope spans all levels (bypasses the HIGH+MEDIUM default)
+  and shows a dismissible "Scoped to risk factor: …" chip.
+- `RiskSignals` bar list already gone (Block C made the Overview donut-only); nothing to drop.
 - Tests: new `AnomalyCards` test (counts + links); `RiskAlerts.test.tsx` `?factor=` case.
 - **Commit:** `feat(dashboard): named anomaly cards linking into the risk queue`
 
