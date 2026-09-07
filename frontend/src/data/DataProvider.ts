@@ -103,9 +103,14 @@ export interface DataProvider {
   ): Promise<InspectionAssignment>;
 
   /**
-   * Field-evidence images for a work's Audit Trail. In `api` mode this is the
-   * backend's read-only Pinata lookup; the demo provider returns an unconfigured
-   * empty result.
+   * Field-evidence images for a work's Audit Trail. `limit` (the assignment's
+   * `requiredPhotos`) caps how many of the account's latest uploads to return;
+   * omit for the backend default. In `api` mode this is the backend's read-only
+   * Pinata lookup; the demo provider returns an unconfigured empty result.
    */
-  getAuditPhotos(sourceWorkId: number, signal?: AbortSignal): Promise<AuditEvidence>;
+  getAuditPhotos(
+    sourceWorkId: number,
+    limit?: number,
+    signal?: AbortSignal,
+  ): Promise<AuditEvidence>;
 }

@@ -196,6 +196,8 @@ export interface AssignmentInput {
   /** ISO date (day precision), or null. */
   dueDate: string | null;
   note: string | null;
+  /** Field-evidence photos this inspection calls for (1–20). */
+  requiredPhotos: number;
 }
 
 /**
@@ -213,6 +215,8 @@ export interface InspectionAssignment {
   status: AssignmentStatus;
   dueDate: string | null;
   note: string | null;
+  /** Field-evidence photos this inspection calls for (1–20). */
+  requiredPhotos: number;
   /** ISO timestamp. */
   assignedAt: string;
   /** ISO timestamp of the last status/detail change. */
@@ -224,6 +228,7 @@ export interface AssignmentPatch {
   status?: AssignmentStatus;
   dueDate?: string | null;
   note?: string | null;
+  requiredPhotos?: number;
 }
 
 /** One field-evidence image for the Audit Trail — an IPFS CID and a viewable gateway URL. */

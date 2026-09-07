@@ -9,5 +9,9 @@ import { apiClient } from './client';
  */
 export const getAuditPhotos = (
   sourceWorkId: number,
+  limit?: number,
   signal?: AbortSignal,
-): Promise<AuditEvidence> => apiClient.get(`/audit/${sourceWorkId}/photos`, { signal });
+): Promise<AuditEvidence> => {
+  const query = limit != null ? `?limit=${limit}` : '';
+  return apiClient.get(`/audit/${sourceWorkId}/photos${query}`, { signal });
+};

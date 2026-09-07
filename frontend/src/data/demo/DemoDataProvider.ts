@@ -46,6 +46,11 @@ function isoDateAhead(days: number): string {
   return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
 }
 
+/** Bound a requested photo count to the same 1–20 range the backend enforces. */
+function clampPhotos(value: number): number {
+  return Math.max(1, Math.min(20, Math.round(value) || 2));
+}
+
 function assignmentTransitionOk(from: AssignmentStatus, to: AssignmentStatus): boolean {
   if (from === to) return true;
   if (from === 'ASSIGNED') return to === 'IN_PROGRESS' || to === 'COMPLETED' || to === 'CANCELLED';
@@ -65,6 +70,7 @@ function seedAssignments(): InspectionAssignment[] {
     updatedDaysAgo: number,
     note: string | null,
     dueDate: string | null,
+    requiredPhotos: number,
   ): InspectionAssignment => {
     const project = demoProjects[projectIndex % demoProjects.length];
     const o = officer(code);
@@ -78,14 +84,15 @@ function seedAssignments(): InspectionAssignment[] {
       status,
       dueDate,
       note,
+      requiredPhotos,
       assignedAt: isoAgo(assignedDaysAgo),
       updatedAt: isoAgo(updatedDaysAgo),
     };
   };
   return [
-    mk(1, 0, 'OFF102', 'COMPLETED', 12, 4, 'Verify reported progress against the site.', null),
-    mk(2, 1, 'OFF101', 'IN_PROGRESS', 6, 2, 'Check materials on site.', isoDateAhead(4)),
-    mk(3, 2, 'OFF103', 'ASSIGNED', 2, 2, null, isoDateAhead(9)),
+    mk(1, 0, 'OFF102', 'COMPLETED', 12, 4, 'Verify reported progress against the site.', null, 3),
+    mk(2, 1, 'OFF101', 'IN_PROGRESS', 6, 2, 'Check materials on site.', isoDateAhead(4), 2),
+    mk(3, 2, 'OFF103', 'ASSIGNED', 2, 2, null, isoDateAhead(9), 4),
   ];
 }
 
@@ -290,6 +297,7 @@ export function createDemoDataProvider(): DataProvider {
         status: 'ASSIGNED',
         dueDate: input.dueDate,
         note: input.note,
+        requiredPhotos: clampPhotos(input.requiredPhotos),
         assignedAt: now,
         updatedAt: now,
       };
@@ -318,11 +326,14 @@ export function createDemoDataProvider(): DataProvider {
       if (patch.note !== undefined && patch.note !== null) {
         assignment.note = patch.note;
       }
+      if (patch.requiredPhotos !== undefined && patch.requiredPhotos !== null) {
+        assignment.requiredPhotos = clampPhotos(patch.requiredPhotos);
+      }
       assignment.updatedAt = new Date().toISOString();
       return { ...assignment };
     },
 
-    async getAuditPhotos(_sourceWorkId, signal) {
+    async getAuditPhotos(_sourceWorkId, _limit, signal) {
       ensureNotAborted(signal);
       // The demo provider has no Pinata credential; the real evidence lookup is
       // backend-only (`api` mode). `configured: false` makes the Audit page show

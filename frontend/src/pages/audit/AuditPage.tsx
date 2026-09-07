@@ -192,8 +192,8 @@ function AuditTimeline({ group, service }: { group: AuditWorkGroup; service: Aud
   const a = group.latest;
 
   const evidence = useAsyncData<AuditEvidence>(
-    (signal) => service.evidence(group.sourceWorkId, signal),
-    [service, group.sourceWorkId],
+    (signal) => service.evidence(group.sourceWorkId, a.requiredPhotos, signal),
+    [service, group.sourceWorkId, a.requiredPhotos],
   );
 
   return (
@@ -251,13 +251,16 @@ function AuditTimeline({ group, service }: { group: AuditWorkGroup; service: Aud
       )}
 
       <EventCard kind="evidence" date={null}>
-        <Evidence state={evidence} />
+        <p className="aud-card__meta">
+          This inspection calls for {a.requiredPhotos} photo{a.requiredPhotos === 1 ? '' : 's'}.
+        </p>
+        <Evidence state={evidence} expected={a.requiredPhotos} />
       </EventCard>
     </ol>
   );
 }
 
-function Evidence({ state }: { state: AsyncState<AuditEvidence> }) {
+function Evidence({ state, expected }: { state: AsyncState<AuditEvidence>; expected: number }) {
   const [zoom, setZoom] = useState<AuditEvidence['photos'][number] | null>(null);
 
   useEffect(() => {
@@ -291,6 +294,8 @@ function Evidence({ state }: { state: AsyncState<AuditEvidence> }) {
     return <p className="aud-card__meta">No evidence has been uploaded for this inspection yet.</p>;
   }
 
+  const shortfall = expected - photos.length;
+
   return (
     <>
       <div className="aud-evidence">
@@ -306,7 +311,12 @@ function Evidence({ state }: { state: AsyncState<AuditEvidence> }) {
           </button>
         ))}
       </div>
-      <p className="aud-evidence__ipfs">Stored on IPFS · retrieved via the portal, not the mobile app.</p>
+      <p className="aud-evidence__ipfs">
+        Showing {photos.length} of {expected} expected · stored on IPFS, retrieved via the portal.
+        {shortfall > 0
+          ? ` ${shortfall} more ${shortfall === 1 ? 'photo is' : 'photos are'} expected for this inspection.`
+          : ''}
+      </p>
 
       {zoom ? (
         <div

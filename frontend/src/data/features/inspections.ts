@@ -38,6 +38,17 @@ export function nextAssignmentStatuses(current: AssignmentStatus): AssignmentSta
   return [];
 }
 
+/** Field-evidence photo count bounds (mirrors the backend `required_photos` check). */
+export const PHOTO_COUNT_MIN = 1;
+export const PHOTO_COUNT_MAX = 20;
+export const DEFAULT_REQUIRED_PHOTOS = 2;
+
+/** Bound a photo count to [MIN, MAX]; non-numeric / empty → the default. */
+export function clampPhotoCount(value: number): number {
+  if (!Number.isFinite(value)) return DEFAULT_REQUIRED_PHOTOS;
+  return Math.max(PHOTO_COUNT_MIN, Math.min(PHOTO_COUNT_MAX, Math.round(value)));
+}
+
 export interface InspectionWorkOption {
   sourceWorkId: number;
   label: string;

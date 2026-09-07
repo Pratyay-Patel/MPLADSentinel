@@ -58,6 +58,7 @@ describe('InspectionsPage', () => {
     const firstWork = Array.from(workSelect.options).find((o) => o.value !== '');
     fireEvent.change(workSelect, { target: { value: firstWork!.value } });
     fireEvent.change(screen.getByLabelText('Field officer'), { target: { value: 'OFF105' } });
+    fireEvent.change(screen.getByLabelText('Photos required'), { target: { value: '7' } });
 
     fireEvent.click(screen.getByRole('button', { name: 'Assign inspection' }));
 
@@ -65,5 +66,7 @@ describe('InspectionsPage', () => {
     await waitFor(() =>
       expect(within(assignmentsTable()).getAllByText('OFF105').length).toBeGreaterThan(0),
     );
+    // the chosen photo count shows on the new row (no seeded row uses 7)
+    expect(within(assignmentsTable()).getByDisplayValue('7')).toBeInTheDocument();
   });
 });

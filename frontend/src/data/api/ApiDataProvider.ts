@@ -216,9 +216,9 @@ export function createApiDataProvider(): DataProvider {
       }
     },
 
-    async getAuditPhotos(sourceWorkId, signal) {
+    async getAuditPhotos(sourceWorkId, limit, signal) {
       try {
-        return await getAuditPhotos(sourceWorkId, signal);
+        return await getAuditPhotos(sourceWorkId, limit, signal);
       } catch (error) {
         throw toProviderError('getAuditPhotos', error);
       }

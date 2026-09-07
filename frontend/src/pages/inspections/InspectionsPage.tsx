@@ -5,7 +5,11 @@ import { assignsInspections, useCurrentRole } from '../../auth';
 import {
   ASSIGNMENT_STATUS_LABEL,
   ASSIGNMENT_STATUSES,
+  clampPhotoCount,
+  DEFAULT_REQUIRED_PHOTOS,
   nextAssignmentStatuses,
+  PHOTO_COUNT_MAX,
+  PHOTO_COUNT_MIN,
   useAsyncData,
   useInspectionsService,
   type AssignmentStatus,
@@ -108,9 +112,16 @@ interface AssignForm {
   officerCode: string;
   dueDate: string;
   note: string;
+  requiredPhotos: string;
 }
 
-const EMPTY_FORM: AssignForm = { sourceWorkId: '', officerCode: '', dueDate: '', note: '' };
+const EMPTY_FORM: AssignForm = {
+  sourceWorkId: '',
+  officerCode: '',
+  dueDate: '',
+  note: '',
+  requiredPhotos: String(DEFAULT_REQUIRED_PHOTOS),
+};
 
 function InspectionsBody({
   data,
@@ -140,6 +151,22 @@ function InspectionsBody({
       const saved = await service.updateAssignment(assignment.id, { status });
       setOverrides((prev) => ({ ...prev, [saved.id]: saved }));
       setNotice(`Assignment ${saved.id} → ${ASSIGNMENT_STATUS_LABEL[saved.status]}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update the assignment.');
+    }
+  }
+
+  async function setPhotos(assignment: InspectionAssignment, requiredPhotos: number) {
+    setError(null);
+    setNotice(null);
+    try {
+      const saved = await service.updateAssignment(assignment.id, { requiredPhotos });
+      setOverrides((prev) => ({ ...prev, [saved.id]: saved }));
+      setNotice(
+        `Assignment ${saved.id} now requires ${saved.requiredPhotos} photo${
+          saved.requiredPhotos === 1 ? '' : 's'
+        }.`,
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not update the assignment.');
     }
@@ -193,6 +220,30 @@ function InspectionsBody({
       },
     },
     { key: 'due', header: 'Due', render: (a) => (a.dueDate ? formatDate(a.dueDate) : '—') },
+    {
+      key: 'photos',
+      header: 'Photos',
+      align: 'right',
+      render: (a) =>
+        canAssign ? (
+          <Input
+            key={a.requiredPhotos}
+            label={`Photos required for ${a.id}`}
+            hideLabel
+            type="number"
+            min={PHOTO_COUNT_MIN}
+            max={PHOTO_COUNT_MAX}
+            defaultValue={a.requiredPhotos}
+            className="insp-photos-input"
+            onBlur={(e) => {
+              const next = clampPhotoCount(Number(e.target.value));
+              if (next !== a.requiredPhotos) setPhotos(a, next);
+            }}
+          />
+        ) : (
+          a.requiredPhotos
+        ),
+    },
     { key: 'requested', header: 'Requested on', render: (a) => formatDate(a.assignedAt) },
     {
       key: 'trail',
@@ -320,6 +371,7 @@ function AssignCard({
         officerCode: form.officerCode,
         dueDate: form.dueDate || null,
         note: form.note.trim() || null,
+        requiredPhotos: clampPhotoCount(Number(form.requiredPhotos)),
       });
       setForm(EMPTY_FORM);
       setSearch('');
@@ -381,6 +433,15 @@ function AssignCard({
             type="date"
             value={form.dueDate}
             onChange={(e) => set('dueDate', e.target.value)}
+          />
+          <Input
+            label="Photos required"
+            type="number"
+            min={PHOTO_COUNT_MIN}
+            max={PHOTO_COUNT_MAX}
+            value={form.requiredPhotos}
+            hint="How many field-evidence photos the Audit Trail should show (1–20)."
+            onChange={(e) => set('requiredPhotos', e.target.value)}
           />
         </div>
 

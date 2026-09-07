@@ -5,6 +5,7 @@ import { createDemoDataProvider } from '../demo/DemoDataProvider';
 import { ProviderError } from '../errors';
 import {
   ASSIGNMENT_STATUS_LABEL,
+  clampPhotoCount,
   createInspectionsService,
   nextAssignmentStatuses,
 } from './inspections';
@@ -37,14 +38,33 @@ describe('createInspectionsService', () => {
       officerCode: 'OFF104',
       dueDate: null,
       note: 'Check materials on site.',
+      requiredPhotos: 5,
     });
 
     expect(saved.status).toBe('ASSIGNED');
     expect(saved.officerCode).toBe('OFF104');
     expect(saved.sourceWorkId).toBe(target.sourceWorkId);
+    expect(saved.requiredPhotos).toBe(5);
 
     const { assignments } = await service.load();
     expect(assignments.some((a) => a.id === saved.id)).toBe(true);
+  });
+
+  it('clamps an out-of-range photo count and lets it be edited afterwards', async () => {
+    const service = createInspectionsService(createDemoDataProvider());
+    const { works } = await service.load();
+
+    const saved = await service.assign({
+      sourceWorkId: works[7].sourceWorkId,
+      officerCode: 'OFF102',
+      dueDate: null,
+      note: null,
+      requiredPhotos: 99,
+    });
+    expect(saved.requiredPhotos).toBe(20); // clamped to the 1–20 range
+
+    const edited = await service.updateAssignment(saved.id, { requiredPhotos: 6 });
+    expect(edited.requiredPhotos).toBe(6);
   });
 
   it('rejects an unknown officer', async () => {
@@ -56,6 +76,7 @@ describe('createInspectionsService', () => {
         officerCode: 'OFF999',
         dueDate: null,
         note: null,
+        requiredPhotos: 2,
       }),
     ).rejects.toThrow(/Unknown field officer/i);
   });
@@ -68,6 +89,7 @@ describe('createInspectionsService', () => {
       officerCode: 'OFF105',
       dueDate: null,
       note: null,
+      requiredPhotos: 2,
     });
 
     const inProgress = await service.updateAssignment(created.id, { status: 'IN_PROGRESS' });
@@ -100,5 +122,15 @@ describe('nextAssignmentStatuses', () => {
   it('has a label for every status', () => {
     expect(ASSIGNMENT_STATUS_LABEL.ASSIGNED).toBe('Requested');
     expect(ASSIGNMENT_STATUS_LABEL.IN_PROGRESS).toBe('In progress');
+  });
+});
+
+describe('clampPhotoCount', () => {
+  it('bounds to 1–20 and defaults non-numbers to 2', () => {
+    expect(clampPhotoCount(0)).toBe(1);
+    expect(clampPhotoCount(21)).toBe(20);
+    expect(clampPhotoCount(7)).toBe(7);
+    expect(clampPhotoCount(3.6)).toBe(4);
+    expect(clampPhotoCount(Number.NaN)).toBe(2);
   });
 });

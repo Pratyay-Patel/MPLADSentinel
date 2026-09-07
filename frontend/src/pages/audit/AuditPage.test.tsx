@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { SessionProvider, type Role } from '../../auth';
 import { DataProviderProvider, type DataProvider } from '../../data';
@@ -70,6 +70,22 @@ describe('AuditPage', () => {
     ).toBeInTheDocument();
   });
 
+  it('asks the backend for the assignment\'s requiredPhotos as the limit', async () => {
+    const base = createDemoDataProvider();
+    const completed = (await base.listAssignments()).find((a) => a.status === 'COMPLETED')!;
+    const spy = vi.fn().mockResolvedValue({ configured: true, photos: [] });
+    const provider: DataProvider = { ...base, getAuditPhotos: spy };
+
+    renderAt(`/audit?work=${completed.sourceWorkId}`, provider);
+
+    await screen.findByRole('heading', { name: 'Field evidence' });
+    expect(spy).toHaveBeenCalledWith(completed.sourceWorkId, completed.requiredPhotos, expect.anything());
+    expect(completed.requiredPhotos).toBeGreaterThan(0);
+    expect(
+      screen.getByText(new RegExp(`calls for ${completed.requiredPhotos} photo`)),
+    ).toBeInTheDocument();
+  });
+
   it('renders real photos with a lightbox trigger when the backend returns evidence', async () => {
     const provider: DataProvider = {
       ...createDemoDataProvider(),
@@ -86,6 +102,6 @@ describe('AuditPage', () => {
     await screen.findByRole('heading', { name: 'Field evidence' });
     const images = await screen.findAllByRole('img', { name: /site-\d\.jpg/ });
     expect(images).toHaveLength(2);
-    expect(screen.getByText(/Stored on IPFS/)).toBeInTheDocument();
+    expect(screen.getByText(/stored on IPFS/i)).toBeInTheDocument();
   });
 });

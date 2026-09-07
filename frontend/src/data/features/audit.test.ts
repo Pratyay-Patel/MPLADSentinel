@@ -20,15 +20,15 @@ describe('createAuditService', () => {
     expect(works.some((w) => w.latest.status === 'COMPLETED')).toBe(true);
   });
 
-  it('forwards evidence lookups to the provider', async () => {
+  it('forwards evidence lookups (with the photo limit) to the provider', async () => {
     const spy = vi
       .fn()
       .mockResolvedValue({ photos: [{ cid: 'bafyX', name: 'a.jpg', url: 'g/bafyX' }], configured: true });
     const provider: DataProvider = { ...createDemoDataProvider(), getAuditPhotos: spy };
 
-    const result = await createAuditService(provider).evidence(4213908);
+    const result = await createAuditService(provider).evidence(4213908, 5);
 
-    expect(spy).toHaveBeenCalledWith(4213908, undefined);
+    expect(spy).toHaveBeenCalledWith(4213908, 5, undefined);
     expect(result.photos).toHaveLength(1);
   });
 

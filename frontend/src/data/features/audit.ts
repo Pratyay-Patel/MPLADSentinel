@@ -48,7 +48,8 @@ export interface AuditData {
 
 export interface AuditService {
   load(signal?: AbortSignal): Promise<AuditData>;
-  evidence(sourceWorkId: number, signal?: AbortSignal): Promise<AuditEvidence>;
+  /** `limit` = the assignment's `requiredPhotos`; omit for the backend default. */
+  evidence(sourceWorkId: number, limit?: number, signal?: AbortSignal): Promise<AuditEvidence>;
 }
 
 export function createAuditService(provider: DataProvider): AuditService {
@@ -80,6 +81,7 @@ export function createAuditService(provider: DataProvider): AuditService {
 
       return { works };
     },
-    evidence: (sourceWorkId, signal) => provider.getAuditPhotos(sourceWorkId, signal),
+    evidence: (sourceWorkId, limit, signal) =>
+      provider.getAuditPhotos(sourceWorkId, limit, signal),
   };
 }
