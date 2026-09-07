@@ -8,13 +8,22 @@ export interface MetricCardProps {
   hint?: ReactNode;
   /** Optional trailing slot, e.g. a StatusBadge. */
   aside?: ReactNode;
+  /** Optional decorative leading icon (line icon from `ui/icons`). */
+  icon?: ReactNode;
 }
 
 /** A single KPI tile. Presentation only — the caller supplies formatted values. */
-export function MetricCard({ label, value, hint, aside }: MetricCardProps) {
+export function MetricCard({ label, value, hint, aside, icon }: MetricCardProps) {
   return (
     <div className="ui-metric">
-      <div className="ui-metric__label">{label}</div>
+      <div className="ui-metric__head">
+        {icon && (
+          <span className="ui-metric__icon" aria-hidden>
+            {icon}
+          </span>
+        )}
+        <div className="ui-metric__label">{label}</div>
+      </div>
       <div className="ui-metric__value">{value}</div>
       {(hint || aside) && (
         <div className="ui-metric__hint">

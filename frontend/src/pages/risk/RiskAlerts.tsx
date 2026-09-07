@@ -2,41 +2,30 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import {
-  summarizeRiskFactors,
+  classifyRiskReason,
+  riskFactorFromSlug,
   useAsyncData,
   useRiskService,
+  type RiskFactorCategory,
   type RiskListData,
   type RiskLevel,
   type RiskRow,
 } from '../../data';
-import {
-  downloadCsv,
-  ExportMenu,
-  filenameSlug,
-  scopeWorks,
-  toCsv,
-  workCsvColumns,
-  type ExportScope,
-} from '../../export';
 import {
   applyGlobalFiltersBy,
   GlobalFilterBar,
   globalFilterOptions,
   useGlobalFilters,
 } from '../../filters';
-import { formatCount, formatINRCompact, workTitle } from '../../format';
+import { formatINRCompact, workTitle } from '../../format';
 import {
-  BarList,
   Card,
   DataTable,
-  DonutChart,
   EmptyState,
   ErrorState,
   LoadingState,
   MetricCard,
   PageHeader,
-  RISK_LEVEL_COLOR,
-  RISK_LEVEL_ORDER,
   RiskLevelBadge,
   SearchInput,
   Select,
@@ -63,24 +52,46 @@ interface RiskFilters {
   level: '' | RiskLevel;
   category: string;
   search: string;
+  /** When no specific `level` is picked, the list is the triage queue (HIGH + MEDIUM only)
+   *  unless this is set, which widens it to every assessed level. */
+  showAllLevels: boolean;
+  /** Set from `?factor=` (Overview anomaly cards) — keep only works whose model
+   *  reasons classify to this factor. Spans all levels while active. */
+  factor: '' | RiskFactorCategory;
 }
 
-const EMPTY_FILTERS: RiskFilters = { level: '', category: '', search: '' };
+const EMPTY_FILTERS: RiskFilters = {
+  level: '',
+  category: '',
+  search: '',
+  showAllLevels: false,
+  factor: '',
+};
 
-/** Seed the risk-level filter from `?level=` (used by the voice command bar;
- *  `?state=` is handled by the global filter bar). */
+const REVIEW_LEVELS: RiskLevel[] = ['HIGH', 'MEDIUM'];
+
+/** Seed filters from the URL: `?level=` (voice command bar) is an explicit level
+ *  choice that overrides the HIGH+MEDIUM default; `?factor=` (Overview anomaly
+ *  cards) scopes the list to one risk factor. `?state=` is the global bar. */
 function filtersFromParams(params: URLSearchParams): RiskFilters {
   const level = params.get('level')?.toUpperCase() ?? '';
+  const factorSlug = params.get('factor') ?? '';
   return {
     ...EMPTY_FILTERS,
     level: (LEVELS as string[]).includes(level) ? (level as RiskLevel) : '',
+    factor: riskFactorFromSlug(factorSlug) ?? '',
   };
 }
 
 function filterRows(rows: RiskRow[], filters: RiskFilters): RiskRow[] {
   const search = filters.search.trim().toLowerCase();
+  const flaggedOnly = !filters.level && !filters.showAllLevels && !filters.factor;
   return rows.filter(({ project, risk }) => {
     if (filters.level && risk.level !== filters.level) return false;
+    if (flaggedOnly && !REVIEW_LEVELS.includes(risk.level)) return false;
+    if (filters.factor && !risk.reasons.some((r) => classifyRiskReason(r) === filters.factor)) {
+      return false;
+    }
     if (filters.category && project.category !== filters.category) return false;
     if (search) {
       const haystack = [
@@ -170,11 +181,13 @@ const columns: Column<RiskRow>[] = [
 ];
 
 /**
- * Risk & Alerts (`/risk`) — every work with a risk level, most severe first,
- * with the actual rule-based indicators for each. Rules are computed from
- * financial and data-quality signals over the available work data
- * (`src/data/risk/rules.ts`) — not an ML model; the Round-1 risk engine runs
- * server-side. Data comes via `useRiskService()` → DataProvider.
+ * Risk & Alerts (`/risk`) — the triage queue. By default it lists only the works
+ * flagged HIGH or MEDIUM risk, most severe first, with the factors behind each
+ * score; a toggle widens it to every assessed level, and a specific `?level=`
+ * deep-link (or the level select) overrides the default. Scores come from the
+ * weighted statistical risk model over financial and data-quality signals
+ * (`src/data/risk/rules.ts` in demo; the Round-1 engine runs server-side). Data
+ * comes via `useRiskService()` → DataProvider.
  */
 export function RiskAlerts() {
   const service = useRiskService();
@@ -187,8 +200,9 @@ export function RiskAlerts() {
   return (
     <div className="ui-stack risk">
       <PageHeader
+        breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Risk & Alerts' }]}
         title="Risk & Alerts"
-        description="Risk indicators across every work, most severe first, with the factors behind each. Computed from financial and data-quality signals."
+        description="Flagged works — HIGH or MEDIUM risk, most severe first — with the factors behind each score. Scored by a weighted statistical risk model over financial and data-quality signals; indicators for review, not proof of wrongdoing."
       />
 
       {state.status === 'loading' && (
@@ -245,16 +259,12 @@ function RiskBody({ data }: { data: RiskListData }) {
   const set = <K extends keyof RiskFilters>(key: K, value: RiskFilters[K]) =>
     setFilters((prev) => ({ ...prev, [key]: value }));
 
-  const active = filters.level !== '' || filters.category !== '' || filters.search.trim() !== '';
-
-  const handleExport = (scope: ExportScope) => {
-    const csv = toCsv(scopeWorks(filtered, scope), workCsvColumns);
-    const parts = ['mpladsentinel', 'risk'];
-    if (globalFilters.state) parts.push(filenameSlug(globalFilters.state));
-    if (filters.level) parts.push(filters.level.toLowerCase());
-    if (scope !== 'all') parts.push(scope);
-    downloadCsv(`${parts.join('_')}.csv`, csv);
-  };
+  const active =
+    filters.level !== '' ||
+    filters.category !== '' ||
+    filters.search.trim() !== '' ||
+    filters.showAllLevels ||
+    filters.factor !== '';
 
   const countsByLevel = useMemo(() => {
     const counts: Record<RiskLevel, number> = { HIGH: 0, MEDIUM: 0, LOW: 0, UNKNOWN: 0 };
@@ -262,14 +272,7 @@ function RiskBody({ data }: { data: RiskListData }) {
     return counts;
   }, [globalRows]);
 
-  const risks = useMemo(() => globalRows.map((r) => r.risk), [globalRows]);
-  const factors = useMemo(() => summarizeRiskFactors(risks), [risks]);
-  const assessed = globalRows.length - countsByLevel.UNKNOWN;
-  const slices = RISK_LEVEL_ORDER.map((level) => ({
-    label: `${level} risk`,
-    value: countsByLevel[level],
-    color: RISK_LEVEL_COLOR[level],
-  })).filter((slice) => slice.value > 0);
+  const flaggedForReview = countsByLevel.HIGH + countsByLevel.MEDIUM;
 
   return (
     <>
@@ -284,34 +287,39 @@ function RiskBody({ data }: { data: RiskListData }) {
         ))}
       </div>
 
-      <Card>
-        <div className="risk-signals">
-          <div className="risk-signals__donut">
-            <DonutChart
-              slices={slices}
-              centerValue={formatCount(assessed)}
-              centerCaption="works assessed"
-              ariaLabel="Works by assessed risk level"
-            />
-          </div>
-          <div className="risk-signals__factors">
-            <h2 className="risk-signals__subtitle">Most common risk factors</h2>
-            {factors.length === 0 ? (
-              <p className="risk-signals__note">No risk factors flagged in the current dataset.</p>
-            ) : (
-              <BarList
-                caption="How often each risk factor is flagged across all works"
-                items={factors.map((factor) => ({
-                  label: factor.label,
-                  value: factor.count,
-                  valueLabel: formatCount(factor.count),
-                  tone: 'warning',
-                }))}
-              />
-            )}
-          </div>
+      <div className="risk-summary">
+        <div className="risk-summary__count">
+          <span className="risk-summary__count-value">
+            {flaggedForReview.toLocaleString('en-IN')}
+          </span>
+          <span className="risk-summary__count-label">flagged for review</span>
         </div>
-      </Card>
+        <div className="risk-summary__text">
+          <p className="risk-summary__lead">
+            Works flagged for review — <strong>HIGH or MEDIUM risk</strong>, most severe first —
+            shown by default, out of {globalRows.length.toLocaleString('en-IN')} assessed.
+          </p>
+          <p className="risk-summary__hint">
+            Turn on <span className="risk-summary__hint-em">Show all risk levels</span> to include
+            LOW and UNKNOWN. Every work carries its full factor breakdown.
+          </p>
+        </div>
+      </div>
+
+      {filters.factor && (
+        <div className="risk-factor-chip">
+          <span>
+            Scoped to risk factor: <strong>{filters.factor}</strong>
+          </span>
+          <button
+            type="button"
+            className="risk-factor-chip__clear"
+            onClick={() => set('factor', '')}
+          >
+            Clear <span aria-hidden>✕</span>
+          </button>
+        </div>
+      )}
 
       <div className="risk-filters" role="search" aria-label="More filters for the risk list">
         <div className="risk-filters__grid">
@@ -341,20 +349,34 @@ function RiskBody({ data }: { data: RiskListData }) {
           />
         </div>
         <div className="risk-filters__foot">
-          <span className="text-muted">
-            {filtered.length} {filtered.length === 1 ? 'work' : 'works'}
-          </span>
-          <div className="risk-filters__foot-actions">
-            <ExportMenu onExport={handleExport} count={filtered.length} />
-            <button
-              type="button"
-              className="ui-btn ui-btn--ghost ui-btn--sm"
-              disabled={!active}
-              onClick={() => setFilters(EMPTY_FILTERS)}
-            >
-              Clear filters
-            </button>
+          <div className="risk-filters__foot-status">
+            <span className="text-muted">
+              {filtered.length} {filtered.length === 1 ? 'work' : 'works'}
+            </span>
+            {!filters.level && (
+              <label className="risk-toggle">
+                <input
+                  type="checkbox"
+                  checked={filters.showAllLevels}
+                  onChange={(e) => set('showAllLevels', e.target.checked)}
+                />
+                <span className="risk-toggle__track" aria-hidden="true">
+                  <span className="risk-toggle__thumb" />
+                </span>
+                <span className="risk-toggle__text">
+                  Show all risk levels <span className="risk-toggle__sub">(incl. LOW &amp; UNKNOWN)</span>
+                </span>
+              </label>
+            )}
           </div>
+          <button
+            type="button"
+            className="ui-btn ui-btn--ghost ui-btn--sm"
+            disabled={!active}
+            onClick={() => setFilters(EMPTY_FILTERS)}
+          >
+            Clear filters
+          </button>
         </div>
       </div>
 

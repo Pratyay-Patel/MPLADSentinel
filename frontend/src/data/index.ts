@@ -13,12 +13,19 @@
  */
 
 export type {
+  AssignmentInput,
+  AssignmentPatch,
+  AssignmentStatus,
+  AuditEvidence,
+  AuditPhoto,
   BackendHealth,
   DataSource,
+  FieldOfficer,
   Grievance,
   GrievanceInput,
   GrievanceStatus,
   GrievanceStatusPatch,
+  InspectionAssignment,
   LifecycleState,
   Money,
   PaymentDataState,
@@ -57,6 +64,29 @@ export {
   type RegionStat,
 } from './features/dashboard';
 export { useDashboardService } from './features/useDashboardService';
+
+export {
+  createAnalyticsService,
+  UTILISATION_BANDS,
+  type AnalyticsService,
+  type AnalyticsData,
+  type StateUtilisation,
+  type MpUtilisation,
+  type UtilisationBucket,
+  type UtilisationBand,
+} from './features/analytics';
+export { useAnalyticsService } from './features/useAnalyticsService';
+
+export {
+  createAssistantService,
+  type AssistantService,
+  type AssistantData,
+  type AssistantWork,
+  type AssistantMp,
+  type AssistantState,
+  type AssistantCategory,
+} from './features/assistant';
+export { useAssistantService } from './features/useAssistantService';
 
 export {
   createProjectDetailService,
@@ -111,18 +141,50 @@ export {
 } from './features/grievances';
 export { useGrievancesService } from './features/useGrievancesService';
 
+export {
+  createInspectionsService,
+  ASSIGNMENT_STATUSES,
+  ASSIGNMENT_STATUS_LABEL,
+  nextAssignmentStatuses,
+  clampPhotoCount,
+  PHOTO_COUNT_MIN,
+  PHOTO_COUNT_MAX,
+  DEFAULT_REQUIRED_PHOTOS,
+  type InspectionsService,
+  type InspectionsData,
+  type InspectionWorkOption,
+} from './features/inspections';
+export { useInspectionsService } from './features/useInspectionsService';
+
+export {
+  createAuditService,
+  DEMO_INSPECTION_FINDINGS,
+  DEMO_OVERALL_CONDITION,
+  DEMO_INSPECTION_REMARKS,
+  type AuditService,
+  type AuditData,
+  type AuditWorkGroup,
+  type InspectionFinding,
+} from './features/audit';
+export { useAuditService } from './features/useAuditService';
+
 export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';
 export {
   classifyRiskReason,
   summarizeRiskFactors,
+  riskFactorFromSlug,
   RISK_FACTOR_CATEGORIES,
+  RISK_FACTOR_SLUGS,
+  RISK_FACTOR_DESCRIPTIONS,
   type RiskFactorCategory,
   type RiskFactorCount,
 } from './risk/riskFactors';
 export {
   recommendedAction,
   riskDimensions,
+  featureContributions,
   RISK_DIMENSIONS,
   type RiskDimension,
   type RecommendedAction,
+  type FactorContribution,
 } from './risk/riskInsights';

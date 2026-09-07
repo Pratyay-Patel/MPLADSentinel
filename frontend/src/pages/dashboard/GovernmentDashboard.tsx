@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 
 import {
   filterDashboardView,
@@ -9,11 +8,9 @@ import {
 } from '../../data';
 import { applyGlobalFilters, GlobalFilterBar, globalFiltersActive, useGlobalFilters } from '../../filters';
 import { Card, EmptyState, ErrorState, LoadingState, PageHeader } from '../../ui';
-import { applyFilters, EMPTY_FILTERS, type DashboardFiltersState } from './filtering';
-import { DashboardFilters } from './sections/DashboardFilters';
+import { AnomalyCards } from './sections/AnomalyCards';
 import { FinancialIntelligence } from './sections/FinancialIntelligence';
 import { NationalOverview } from './sections/NationalOverview';
-import { ProjectExploration } from './sections/ProjectExploration';
 import { ProjectsRequiringAttention } from './sections/ProjectsRequiringAttention';
 import { RegionalInsight } from './sections/RegionalInsight';
 import { RiskSignals } from './sections/RiskSignals';
@@ -22,11 +19,13 @@ import { WorkDistribution } from './sections/WorkDistribution';
 /**
  * Government / MoSPI Intelligence Dashboard — the first product screen.
  *
- * Intelligence-first hierarchy: national metrics -> Projects Requiring Attention
- * (hero) -> financial intelligence -> work distribution -> filters + project
- * exploration -> regional insight. Data comes exclusively through
- * {@link useDashboardService} -> DataProvider; this component does not know
- * whether the provider is demo or API.
+ * Mosaic layout: national metrics -> regional map + risk-level donut ->
+ * financial intelligence + work distribution -> named anomaly cards -> Projects
+ * Requiring Attention (hero teaser). The full project register lives on
+ * `/projects`; the risk queue on `/risk` — the Overview only teases into them,
+ * anomaly cards deep-link to `/risk?factor=`. Data comes exclusively
+ * through {@link useDashboardService} -> DataProvider; this component does not
+ * know whether the provider is demo or API.
  */
 export function GovernmentDashboard() {
   const dashboardService = useDashboardService();
@@ -43,6 +42,7 @@ export function GovernmentDashboard() {
   return (
     <div className="ui-stack dash">
       <PageHeader
+        breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Overview' }]}
         title="Government Intelligence Dashboard"
         description="National monitoring and anomaly intelligence for MPLADS works."
       />
@@ -81,20 +81,15 @@ const nfIN = new Intl.NumberFormat('en-IN');
 
 function DashboardBody({ data }: { data: DashboardData }) {
   const { filters: globalFilters } = useGlobalFilters();
-  const [filters, setFilters] = useState<DashboardFiltersState>(EMPTY_FILTERS);
 
   // The whole dashboard (metrics, map, risk donut, attention list) reflects the
-  // app-wide filter bar; the exploration table then applies its own extras.
+  // app-wide filter bar.
   const view = useMemo(
     () =>
       globalFiltersActive(globalFilters)
         ? filterDashboardView(data, applyGlobalFilters(data.projects, globalFilters))
         : data,
     [data, globalFilters],
-  );
-  const explorationRows = useMemo(
-    () => applyFilters(view.projects, filters),
-    [view.projects, filters],
   );
 
   return (
@@ -110,34 +105,27 @@ function DashboardBody({ data }: { data: DashboardData }) {
 
       <NationalOverview data={view} />
 
-      <RiskSignals data={view} />
-
-      <ProjectsRequiringAttention items={view.attention} />
-
-      <div className="dash-two-col">
-        <FinancialIntelligence data={view} />
-        <WorkDistribution data={view} />
+      <div className="dash-grid">
+        <div className="dash-grid__col dash-grid__col--8">
+          <RegionalInsight regions={view.regions} />
+        </div>
+        <div className="dash-grid__col dash-grid__col--4">
+          <RiskSignals data={view} showFactors={false} />
+        </div>
       </div>
 
-      <section className="ui-stack" aria-labelledby="dash-explore-heading">
-        <div className="dash-explore-head">
-          <h2 id="dash-explore-heading" className="dash-section-title">
-            Project exploration
-          </h2>
-          <Link className="ui-btn ui-btn--ghost ui-btn--sm" to="/projects">
-            Open full register <span aria-hidden>→</span>
-          </Link>
+      <div className="dash-grid">
+        <div className="dash-grid__col dash-grid__col--6">
+          <FinancialIntelligence data={view} />
         </div>
-        <DashboardFilters
-          filters={filters}
-          options={view.filterOptions}
-          onChange={setFilters}
-          resultCount={explorationRows.length}
-        />
-        <ProjectExploration rows={explorationRows} risksByWorkId={view.risksByWorkId} />
-      </section>
+        <div className="dash-grid__col dash-grid__col--6">
+          <WorkDistribution data={view} />
+        </div>
+      </div>
 
-      <RegionalInsight regions={view.regions} />
+      <AnomalyCards data={view} />
+
+      <ProjectsRequiringAttention items={view.attention} />
     </>
   );
 }

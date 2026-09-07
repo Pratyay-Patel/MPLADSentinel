@@ -32,6 +32,10 @@ const NAV_LABELS = [
   'Overview',
   'Projects',
   'Risk & Alerts',
+  'Compare MPs',
+  'Inspections',
+  'Analytics',
+  'Assistant',
   'Audit',
   'Citizen Portal',
   'Grievances',
@@ -61,6 +65,7 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Grievances' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Overview' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Risk & Alerts' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Inspections' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Audit' })).not.toBeInTheDocument();
   });
 

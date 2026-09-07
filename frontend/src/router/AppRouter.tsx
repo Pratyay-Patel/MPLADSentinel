@@ -2,11 +2,14 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import { RequireAuth, RequireRole } from '../auth';
 import { AppShell } from '../layout/AppShell';
+import { AnalyticsPage } from '../pages/analytics/AnalyticsPage';
+import { AssistantPage } from '../pages/assistant/AssistantPage';
 import { GovernmentDashboard } from '../pages/dashboard/GovernmentDashboard';
 import { CitizenPortal } from '../pages/citizen/CitizenPortal';
 import { CitizenProjectView } from '../pages/citizen/CitizenProjectView';
-import { AuditPage } from '../pages/featurePages';
+import { AuditPage } from '../pages/audit/AuditPage';
 import { Grievances } from '../pages/grievances/Grievances';
+import { InspectionsPage } from '../pages/inspections/InspectionsPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
@@ -82,6 +85,30 @@ export const appRouter = createBrowserRouter([
         element: (
           <RequireRole area="compare">
             <CompareMps />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'analytics',
+        element: (
+          <RequireRole area="analytics">
+            <AnalyticsPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'assistant',
+        element: (
+          <RequireRole area="assistant">
+            <AssistantPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'inspections',
+        element: (
+          <RequireRole area="inspections">
+            <InspectionsPage />
           </RequireRole>
         ),
       },

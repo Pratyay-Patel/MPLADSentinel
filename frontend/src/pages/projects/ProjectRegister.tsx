@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import {
   useAsyncData,
@@ -71,6 +72,18 @@ const EMPTY_FILTERS: RegisterFilters = {
   risk: '',
   search: '',
 };
+
+const RISK_LEVELS: RiskLevel[] = ['HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'];
+
+/** Seed the local risk-level filter from `?level=` (set by the voice command bar
+ *  when it targets the register; `?state=` is handled by the global filter bar). */
+function filtersFromParams(params: URLSearchParams): RegisterFilters {
+  const level = params.get('level')?.toUpperCase() ?? '';
+  return {
+    ...EMPTY_FILTERS,
+    risk: (RISK_LEVELS as string[]).includes(level) ? (level as RiskLevel) : '',
+  };
+}
 
 function isActive(filters: RegisterFilters): boolean {
   return (
@@ -173,7 +186,11 @@ const columns: Column<RegisterRow>[] = [
     header: 'Action',
     align: 'right',
     render: ({ project }) => (
-      <ViewProjectLink id={project.sourceWorkId} label={workTitle(project.workDescription, project.sourceWorkId)} />
+      <ViewProjectLink
+        id={project.sourceWorkId}
+        label={workTitle(project.workDescription, project.sourceWorkId)}
+        variant="record"
+      />
     ),
   },
 ];
@@ -198,6 +215,7 @@ export function ProjectRegister() {
   return (
     <div className="ui-stack reg">
       <PageHeader
+        breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Projects' }]}
         title="Project Register"
         description="Every MPLADS work, with status and risk indicators. Search and filter to narrow the list, then open a work for the full record."
       />
@@ -233,8 +251,9 @@ export function ProjectRegister() {
 }
 
 function RegisterBody({ data }: { data: ProjectRegisterData }) {
+  const [searchParams] = useSearchParams();
   const { filters: globalFilters } = useGlobalFilters();
-  const [filters, setFilters] = useState<RegisterFilters>(EMPTY_FILTERS);
+  const [filters, setFilters] = useState<RegisterFilters>(() => filtersFromParams(searchParams));
 
   const globalRows = useMemo(
     () => applyGlobalFiltersBy(data.rows, (r) => r.project, globalFilters),

@@ -11,10 +11,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Creates the Round 1 demo login accounts at application startup — one per web
- * role (decision D31). Idempotent: a missing account is created; an existing one
- * keeps its credentials but has its display name refreshed to the current label,
- * so this is safe to run on every boot.
+ * Creates the Round 1 demo login accounts at application startup — one per
+ * authority / citizen web role (decision D31). Idempotent: a missing account is
+ * created; an existing one keeps its credentials but has its display name
+ * refreshed to the current label, so this is safe to run on every boot.
+ *
+ * <p>{@link WebRole#FIELD_OFFICER} is deliberately not seeded here — field
+ * officers are a set of individually-coded accounts provisioned by
+ * {@code inspection.FieldOfficerSeeder} (D34).
  *
  * <p>Runs only when {@code mplads.auth.seeding-enabled} is {@code true} (the
  * default). Production-like environments that provision their own accounts, and

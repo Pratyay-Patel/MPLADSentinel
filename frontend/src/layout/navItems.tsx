@@ -13,10 +13,13 @@ import type { Area } from '../auth';
 import {
   AlertTriangleIcon,
   BarsIcon,
+  ChatIcon,
+  ClipboardListIcon,
   InboxIcon,
   LayoutGridIcon,
   ListIcon,
   ShieldIcon,
+  TrendingUpIcon,
   UsersIcon,
 } from '../ui/icons';
 
@@ -45,7 +48,15 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Projects', to: '/projects', area: 'projects', icon: <ListIcon /> },
       { label: 'Risk & Alerts', to: '/risk', area: 'risk', icon: <AlertTriangleIcon /> },
       { label: 'Compare MPs', to: '/compare', area: 'compare', icon: <BarsIcon /> },
+      { label: 'Inspections', to: '/inspections', area: 'inspections', icon: <ClipboardListIcon /> },
       { label: 'Audit', to: '/audit', area: 'audit', icon: <ShieldIcon /> },
+    ],
+  },
+  {
+    caption: 'Intelligence',
+    items: [
+      { label: 'Analytics', to: '/analytics', area: 'analytics', icon: <TrendingUpIcon /> },
+      { label: 'Assistant', to: '/assistant', area: 'assistant', icon: <ChatIcon /> },
     ],
   },
   {

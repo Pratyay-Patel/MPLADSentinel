@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { actionsGrievances, AREA_ROLES, canAccess, reviewsGrievances } from './access';
+import {
+  actionsGrievances,
+  AREA_ROLES,
+  assignsInspections,
+  canAccess,
+  reviewsGrievances,
+} from './access';
 import { ROLES } from './roles';
 
 describe('canAccess', () => {
@@ -15,6 +21,7 @@ describe('canAccess', () => {
     expect(canAccess('CITIZEN', 'overview')).toBe(false);
     expect(canAccess('CITIZEN', 'projects')).toBe(false);
     expect(canAccess('CITIZEN', 'risk')).toBe(false);
+    expect(canAccess('CITIZEN', 'inspections')).toBe(false);
     expect(canAccess('CITIZEN', 'audit')).toBe(false);
   });
 
@@ -23,6 +30,7 @@ describe('canAccess', () => {
       expect(canAccess(role, 'overview')).toBe(true);
       expect(canAccess(role, 'projects')).toBe(true);
       expect(canAccess(role, 'risk')).toBe(true);
+      expect(canAccess(role, 'inspections')).toBe(true);
       expect(canAccess(role, 'audit')).toBe(true);
     }
   });
@@ -50,6 +58,17 @@ describe('grievance role split', () => {
     }
     for (const role of ['AUDITOR', 'MP', 'CITIZEN'] as const) {
       expect(actionsGrievances(role)).toBe(false);
+    }
+  });
+});
+
+describe('assignsInspections', () => {
+  it('lets only MoSPI / State / District assign and advance inspections', () => {
+    for (const role of ['MOSPI', 'STATE', 'DISTRICT'] as const) {
+      expect(assignsInspections(role)).toBe(true);
+    }
+    for (const role of ['AUDITOR', 'MP', 'CITIZEN'] as const) {
+      expect(assignsInspections(role)).toBe(false);
     }
   });
 });

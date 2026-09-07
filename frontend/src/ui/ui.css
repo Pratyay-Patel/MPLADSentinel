@@ -73,9 +73,9 @@
 
 .ui-card {
   background: var(--color-surface);
-  border: var(--border);
+  border: var(--border-strong);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 
 .ui-card--pad {
@@ -221,9 +221,27 @@
   gap: var(--space-2);
   padding: var(--space-4) var(--space-5);
   background: var(--color-surface);
-  border: var(--border);
+  border: var(--border-strong);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
+}
+
+.ui-metric__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ui-metric__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: var(--radius-md);
+  color: var(--color-brand-700);
+  background: var(--color-brand-050);
 }
 
 .ui-metric__label {
@@ -695,6 +713,16 @@ textarea.ui-control {
 
 .risk-signals > * {
   min-width: 0;
+}
+
+/* donut on its own (Overview mosaic) — single centred column */
+.risk-signals--donut-only {
+  grid-template-columns: 1fr;
+}
+
+.risk-signals--donut-only .risk-signals__donut {
+  max-width: 300px;
+  margin-inline: auto;
 }
 
 .risk-signals__subtitle {

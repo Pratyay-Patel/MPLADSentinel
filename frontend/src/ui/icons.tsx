@@ -89,6 +89,45 @@ export const ChevronDownIcon = (p: IconProps) => (
   </Base>
 );
 
+export const CircleCheckIcon = (p: IconProps) => (
+  <Base {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="m8.5 12 2.5 2.5 4.5-5" />
+  </Base>
+);
+
+export const RupeeIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M7 5h10" />
+    <path d="M7 9h10" />
+    <path d="M7 13h4c2.5 0 4-1.8 4-4" />
+    <path d="m8 13 6 6" />
+  </Base>
+);
+
+export const ClipboardListIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="6" y="4" width="12" height="17" rx="2" />
+    <path d="M9 4V3h6v1" />
+    <path d="M9.5 10h5" />
+    <path d="M9.5 14h5" />
+  </Base>
+);
+
+export const TrendingUpIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3 17l6-6 4 4 8-8" />
+    <path d="M15 7h6v6" />
+  </Base>
+);
+
+export const ChatIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12Z" />
+    <path d="M8.5 11h.01M12 11h.01M15.5 11h.01" />
+  </Base>
+);
+
 // --- primary navigation icons -------------------------------------------------
 
 export const LayoutGridIcon = (p: IconProps) => (
