@@ -1,9 +1,14 @@
 # Inspections & Audit Trail — build spec (demo)
 
-**Status:** In progress. Feature branch: `feature/inspections-audit` (recommended;
-owner creates). Parent contract: `docs/portal-app-integration-plan.md` — this
-document is the *portal-only, buildable-now* slice of it, plus a **read-only
-Pinata/IPFS demo**.
+**Status:** Built (phases 1–6). Decision recorded as **D34**. Parent contract:
+`docs/portal-app-integration-plan.md` — this document is the *portal-only,
+buildable-now* slice of it, plus a **read-only Pinata/IPFS demo**.
+
+**Verified:** backend persistence + RBAC + status lifecycle by
+`InspectionAssignmentControllerTest` (real Postgres); `/inspections` and
+`/audit` flows manually in the browser against the live backend.
+**Not yet verified:** the Pinata call against a real account — pending a
+`PINATA_JWT` in `backend/.env` (git-ignored; never committed).
 
 **What this delivers**
 
@@ -186,18 +191,25 @@ was recorded / uploaded*, not proof of site condition.
    `inspection` package: `InspectionAssignment` + `AssignmentStatus` +
    repository, seeder tests. (Also repaired the pre-existing broken
    `AuthUserSeederTest`.)
-2. **Backend — assignment + officer APIs.** DTOs,
+2. **Backend — assignment + officer APIs.** ✅ DTOs,
    `InspectionAssignmentService`, `InspectionAssignmentController`,
-   `FieldOfficerController`, `SecurityConfig` matchers, targeted tests.
-3. **Backend — Pinata evidence.** `PinataProperties` + `PinataClient`,
-   `AuditController` `GET /api/audit/{workId}/photos`, `SecurityConfig` +
-   `.env.example` `PINATA_JWT`, graceful-unconfigured path, targeted tests.
-4. **Frontend — seam + Inspections page.** types, DataProvider methods
-   (demo + api), `src/api/*`, `data/features/inspections.ts`, `/inspections`
-   route + nav + `Area` + access, page + css, targeted tests.
-5. **Frontend — Audit Trail page.** `data/features/audit.ts`, timeline +
-   evidence components + css, `formatDateOnly`, replace the placeholder,
-   targeted tests.
-6. **Docs.** `decisions.md` **D34** (field-officer accounts & inspection
-   assignment; verification trail from PostgreSQL; Pinata read-only demo; Fabric
-   additive), `round1-scope.md` P1.3 note, statuses here.
+   `FieldOfficerController`, `SecurityConfig` matchers,
+   `InspectionAssignmentControllerTest`.
+3. **Backend — Pinata evidence.** ✅ `PinataProperties` + `PinataClient` +
+   `PinataConfig`, `AuditEvidenceService`, `AuditController`
+   `GET /api/audit/{workId}/photos`, `SecurityConfig` + `application.yml` +
+   `.env.example` `PINATA_JWT`, graceful-unconfigured path,
+   `PinataClientTest` + `AuditEvidenceServiceTest`.
+4. **Frontend — seam + Inspections page.** ✅ types, DataProvider methods
+   (demo + api), `src/api/assignments.ts`, `data/features/inspections.ts`,
+   `/inspections` route + nav + `Area` + `assignsInspections`, page + css,
+   `inspections` service + page tests.
+5. **Frontend — Audit Trail page.** ✅ `data/features/audit.ts` +
+   `src/api/audit.ts`, colour-coded timeline + lightbox evidence + css
+   (date-only via `formatDate`), replaces the deleted `featurePages.tsx`
+   placeholder, `audit` service + page tests.
+6. **Docs.** ✅ `decisions.md` **D34**, `round1-scope.md` P1.1 / P1.3 notes,
+   statuses here.
+
+**Remaining:** supply `PINATA_JWT` → `backend/.env` and confirm the two live
+photos + lightbox render in the Audit Trail evidence section.
