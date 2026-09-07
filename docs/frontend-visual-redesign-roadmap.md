@@ -436,3 +436,131 @@ section tests.
 - `/projects`: unchanged (it is correctly the one full table).
 - Header has a status pill + breadcrumbs; sidebar has captions + a risk badge.
 - Demo shows realistic scale (API mode or the pill).
+
+---
+
+## 9. Round 2 — feature expansion (second competitor review + owner requests)
+
+Reviewed a second SIH-26102 entry, **Nirikshak AI** (`bharatnowsolutions.com`) on
+2026-09-07 across all 8 of its role workspaces. New features go on **their own nav tabs**,
+not bolted onto existing pages — keeps each page single-purpose and makes the product
+read as broader.
+
+### 9.1 What Nirikshak AI has that we don't
+
+| Their feature | Our status | Data-feasible for us | Verdict |
+|---|---|---|---|
+| 8 purpose-built persona workspaces (each its own dashboard + tabs) | 6 roles, same screens behind RBAC | Yes, frontend only | Later — persona landing views |
+| **State fund-utilisation watchlist** (State · Works · Util % · Completion % · Status) | Only "top states by work count" + map | **Yes** — Σ cost, Σ payments, completed/total per state | **Take → Analytics tab** |
+| **Fund-utilisation % as a headline KPI** everywhere | Buried as a footnote in Financial Intelligence | **Yes** — payments ÷ sanctioned | **Take → Analytics tab** |
+| **Utilisation pattern buckets** (High/Good/Moderate/Low utiliser shares) | No | **Yes** — per-MP utilisation % | **Take → Analytics tab** |
+| **Single-MP scorecard** (works, util %, completion, sectoral split) | Compare-MPs (up to 4 side by side) only | **Yes** — same data as Compare-MPs | Take — extend `/compare` |
+| **Grounded assistant / chatbot** | Voice command bar (navigation only) | Yes — extractive over local data | **Take → Assistant tab** |
+| **"How the score was computed" explainability** (feature contributions) | Per-rule breakdown on project detail | **Yes** — from the real scorer output | **Take → project detail** |
+| Vendor / agency concentration signal (one agency winning a disproportionate share) | No | Maybe — we have `vendorName` (nullable, sparse) | Check `vendorName` fill rate first |
+| Per-work case / inquiry workflow (INV-2026-…), inspector roster + assignment | No | Needs backend state + the Flutter app | Defer — ties to the app-portal decision |
+| Field verification console (assigned sites, checklist, geotag photos, certificates) | Planned via Flutter + IPFS + Fabric (architecture §6) | Backend + mobile | Already in our architecture, deferred |
+| "Export Official PDF" on every view | CSV export on `/projects` | Yes — jsPDF | Nice-to-have, medium effort |
+
+**Do NOT copy** (would force fabrication — CLAUDE.md §8):
+- Their ML-model telemetry table (5 models, AUC-ROC, weights) — we have no such models.
+- "Confidence: 99%" chips on every metric — we have no calibrated confidence.
+- "↑ 4%" trend arrows on KPIs — no time-series/snapshot data, so any delta is invented
+  (same reason the delta slot was left out of Block E).
+- Fake headline scale (their 218,913 works) — our Block-F pill carries the real figure.
+
+### 9.2 Risk methodology framing — "ML-ready architecture"
+
+**Current state (fact):** `src/data/risk/rules.ts` (demo) and the Spring engine (decision
+D22) are a **weighted statistical scoring model** over verified MPLADS fields — 6 features,
+fixed weights, 0–100 score, HIGH/MEDIUM/LOW/UNKNOWN bands. This is the correct Round-1
+choice (`round1-scope.md`) and stays as the **baseline / calibration layer**.
+
+Owner decision for Round 2: *represent + roadmap the ML story; no model training this
+sprint.* Concretely:
+
+1. **Terminology pass** across UI copy and component docs: "rule-based" → "**statistical
+   risk model**" / "**risk scoring engine**". This is accurate — a weighted threshold model
+   is a statistical model. Keep **"indicators for review, not proof of wrongdoing"**
+   verbatim (CLAUDE.md §17 — a risk score is never presented as proof; non-negotiable).
+2. **Explainability panel** on project detail — a ranked **feature-contribution view**:
+   each feature's signed push on the score, rendered SHAP-style, computed from the real
+   scorer output. Genuine per-work explainability, not a mock.
+3. **"AI / ML architecture" section** in `docs/web-portal-overview` and the pitch: the
+   planned ensemble (financial-anomaly detector, cost-quantile deviation,
+   description-similarity for duplicate / split works, dormancy survival model), **SHAP for
+   global + local explanations**, and the current scorer as the labelled **baseline** the
+   ensemble is trained and validated against.
+
+**Not doing:** UI or docs that state trained ML models / SHAP are *currently* running risk
+detection. They are not (no model this sprint) and `rules.ts` is inspectable — an
+"architecture + roadmap + real explainability UI" story is both honest and the stronger
+pitch. If a real model is later stood up in the Python AI service, this section becomes
+present-tense at that point.
+
+### 9.3 New nav tab — Analytics (`/analytics`)
+
+Lives in a new **INTELLIGENCE** sidebar group (with the Assistant) — a third group also
+makes the rail read as a broader product. Area `analytics`, authorities only. A dedicated
+page (don't overload the Overview).
+Charts with `recharts` (already a dependency); follow the `dataviz` skill for palette /
+form.
+
+- **KPI strip** — Total works analysed · Total sanctioned (Σ `estimatedCost`) · Recorded
+  payments (Σ `recordedPayments`) · **Utilisation rate** (payments ÷ sanctioned, over
+  works with payment data only — caption the caveat) · Completed vs in-progress.
+- **States by fund utilisation** — horizontal bar, top ~12 states: utilisation %, with
+  allocated / spent as secondary series. Per-state Σ cost & Σ payments.
+- **Utilisation pattern buckets** — bar: share of MPs in High (≥85%) / Good (70–84%) /
+  Moderate (50–69%) / Low (<50%) utilisation bands, from per-MP utilisation %.
+- **Data-derived observations** (computed, NOT editorial) — e.g. "N states below 50%
+  utilisation", "Top performer: X (Y%)", "Z% of works have no payment record — unknown,
+  not zero". Never fabricate UC / policy-intervention claims like the competitor's cards do.
+
+### 9.4 New nav tab — Assistant (`/assistant`)
+
+Grounded Q&A chatbot. In the **INTELLIGENCE** sidebar group; area `assistant`, authorities
+only for now (a citizen-facing version can come later).
+
+- **Grounded / extractive only.** Answers are composed from (a) our precomputed aggregates
+  (state / MP / category rollups, risk counts, the works index) and (b) a fixed methodology
+  knowledge base (how the score works, what each factor means, MPLADS guideline basics). It
+  does **not** free-generate claims about a specific work being fraudulent, or any figure it
+  cannot cite.
+- Canned starter prompts: "How is the risk score computed?", "Which states have the lowest
+  fund utilisation?", "Show high-risk works in <state>", "What does 'dormant, no payments'
+  mean?"
+- Every answer that names works / states ends with a deep link into the matching view.
+- Round-2 build: intent match + templated answers over local data, **no LLM call**. A real
+  LLM behind the Python AI service is P2.
+
+**Assistant vs. the existing voice command bar — kept separate, no overlap:**
+
+| | Voice command bar (keep as-is) | Assistant (new) |
+|---|---|---|
+| Job | navigation shortcut | Q&A + explanation |
+| Input | speech | typed (voice can feed it later) |
+| Output | route change | grounded text answer + link |
+| Rule | never composes a prose answer | always answers (may also deep-link) |
+
+Longer term the voice button becomes an input mode for the Assistant. Not this round.
+
+### 9.5 Build order (one commit per step, owner commits)
+
+1. **Nav scaffolding** — `Analytics` + `Assistant` routes, sidebar items, stub pages,
+   `RequireRole` wrappers, `AppShell.test.tsx` nav list update.
+2. **Analytics page** — KPI strip → states-by-utilisation chart → pattern buckets →
+   observations. New `data/features/analytics.ts` aggregator + demo/api parity.
+3. **Risk terminology pass** — copy changes across `RiskAlerts.tsx`, `RiskSignals.tsx`,
+   `AnomalyCards.tsx`, component JSDoc; keep the "not proof" line.
+4. **Explainability panel** — feature-contribution view on project detail from the scorer
+   output.
+5. **Assistant** — knowledge base + intent matcher + chat UI + starter prompts.
+6. *(optional)* single-MP scorecard on `/compare`; vendor-concentration check.
+
+### 9.6 `docs/web-portal-overview` / pitch updates
+
+- Add the "AI / ML architecture" section (§9.2 item 3).
+- Add Analytics + Assistant to the feature list.
+- Keep the risk section describing the **statistical scoring model + planned ensemble**,
+  never "ML models run our detection today".

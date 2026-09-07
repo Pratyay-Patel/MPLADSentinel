@@ -114,6 +114,20 @@ export const ClipboardListIcon = (p: IconProps) => (
   </Base>
 );
 
+export const TrendingUpIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3 17l6-6 4 4 8-8" />
+    <path d="M15 7h6v6" />
+  </Base>
+);
+
+export const ChatIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12Z" />
+    <path d="M8.5 11h.01M12 11h.01M15.5 11h.01" />
+  </Base>
+);
+
 // --- primary navigation icons -------------------------------------------------
 
 export const LayoutGridIcon = (p: IconProps) => (
