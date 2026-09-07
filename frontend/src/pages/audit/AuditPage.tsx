@@ -58,6 +58,20 @@ export function AuditPage() {
     { isEmpty: (data) => data.works.length === 0 },
   );
 
+  // Re-load when the tab regains focus, so a photo-count change made on
+  // /inspections (another tab, or without navigating back here) is picked up.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') setReloadKey((key) => key + 1);
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
+
   return (
     <div className="ui-stack aud">
       <PageHeader

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -84,6 +84,19 @@ describe('AuditPage', () => {
     expect(
       screen.getByText(new RegExp(`calls for ${completed.requiredPhotos} photo`)),
     ).toBeInTheDocument();
+  });
+
+  it('re-loads when the tab regains focus', async () => {
+    const provider = createDemoDataProvider();
+    const spy = vi.spyOn(provider, 'listAssignments');
+    renderAt('/audit', provider);
+
+    await screen.findByRole('heading', { name: 'Audit Trail' });
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(1));
+
+    fireEvent(window, new Event('focus'));
+
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
   });
 
   it('renders real photos with a lightbox trigger when the backend returns evidence', async () => {
