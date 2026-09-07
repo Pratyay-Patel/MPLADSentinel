@@ -2,6 +2,7 @@ import type { PublicProject } from './publicProject';
 import type {
   AssignmentInput,
   AssignmentPatch,
+  AuditEvidence,
   BackendHealth,
   DataSource,
   FieldOfficer,
@@ -100,4 +101,11 @@ export interface DataProvider {
     patch: AssignmentPatch,
     signal?: AbortSignal,
   ): Promise<InspectionAssignment>;
+
+  /**
+   * Field-evidence images for a work's Audit Trail. In `api` mode this is the
+   * backend's read-only Pinata lookup; the demo provider returns an unconfigured
+   * empty result.
+   */
+  getAuditPhotos(sourceWorkId: number, signal?: AbortSignal): Promise<AuditEvidence>;
 }

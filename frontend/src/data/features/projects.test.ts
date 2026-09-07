@@ -45,6 +45,7 @@ describe('ProjectsService', () => {
       listAssignments: vi.fn().mockResolvedValue([]),
       createAssignment: vi.fn(),
       updateAssignment: vi.fn(),
+      getAuditPhotos: vi.fn().mockResolvedValue({ photos: [], configured: false }),
     };
     const service = createProjectsService(stub);
 

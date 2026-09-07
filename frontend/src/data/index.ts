@@ -16,6 +16,8 @@ export type {
   AssignmentInput,
   AssignmentPatch,
   AssignmentStatus,
+  AuditEvidence,
+  AuditPhoto,
   BackendHealth,
   DataSource,
   FieldOfficer,
@@ -149,6 +151,18 @@ export {
   type InspectionWorkOption,
 } from './features/inspections';
 export { useInspectionsService } from './features/useInspectionsService';
+
+export {
+  createAuditService,
+  DEMO_INSPECTION_FINDINGS,
+  DEMO_OVERALL_CONDITION,
+  DEMO_INSPECTION_REMARKS,
+  type AuditService,
+  type AuditData,
+  type AuditWorkGroup,
+  type InspectionFinding,
+} from './features/audit';
+export { useAuditService } from './features/useAuditService';
 
 export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';
 export {

@@ -321,5 +321,13 @@ export function createDemoDataProvider(): DataProvider {
       assignment.updatedAt = new Date().toISOString();
       return { ...assignment };
     },
+
+    async getAuditPhotos(_sourceWorkId, signal) {
+      ensureNotAborted(signal);
+      // The demo provider has no Pinata credential; the real evidence lookup is
+      // backend-only (`api` mode). `configured: false` makes the Audit page show
+      // a "not connected" note rather than an error.
+      return { photos: [], configured: false };
+    },
   };
 }

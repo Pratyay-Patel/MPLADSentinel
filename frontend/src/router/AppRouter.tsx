@@ -7,7 +7,7 @@ import { AssistantPage } from '../pages/assistant/AssistantPage';
 import { GovernmentDashboard } from '../pages/dashboard/GovernmentDashboard';
 import { CitizenPortal } from '../pages/citizen/CitizenPortal';
 import { CitizenProjectView } from '../pages/citizen/CitizenProjectView';
-import { AuditPage } from '../pages/featurePages';
+import { AuditPage } from '../pages/audit/AuditPage';
 import { Grievances } from '../pages/grievances/Grievances';
 import { InspectionsPage } from '../pages/inspections/InspectionsPage';
 import { LoginPage } from '../pages/LoginPage';

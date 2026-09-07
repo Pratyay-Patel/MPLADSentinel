@@ -135,6 +135,7 @@ describe('GovernmentDashboard', () => {
       listAssignments: vi.fn().mockResolvedValue([]),
       createAssignment: vi.fn(),
       updateAssignment: vi.fn(),
+      getAuditPhotos: vi.fn().mockResolvedValue({ photos: [], configured: false }),
     };
     renderDashboard(emptyProvider);
     expect(await screen.findByText('No work data available')).toBeInTheDocument();
@@ -159,6 +160,7 @@ describe('GovernmentDashboard', () => {
       listAssignments: vi.fn().mockResolvedValue([]),
       createAssignment: vi.fn(),
       updateAssignment: vi.fn(),
+      getAuditPhotos: vi.fn().mockResolvedValue({ photos: [], configured: false }),
     };
     renderDashboard(failingProvider);
 

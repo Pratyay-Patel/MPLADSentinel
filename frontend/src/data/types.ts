@@ -225,3 +225,20 @@ export interface AssignmentPatch {
   dueDate?: string | null;
   note?: string | null;
 }
+
+/** One field-evidence image for the Audit Trail — an IPFS CID and a viewable gateway URL. */
+export interface AuditPhoto {
+  cid: string;
+  name: string | null;
+  url: string;
+}
+
+/**
+ * Field-evidence images for a work's Audit Trail (`GET /api/audit/{id}/photos`).
+ * `configured` is `false` when the backend has no Pinata credential set — the
+ * page then shows a "not connected" note instead of an error.
+ */
+export interface AuditEvidence {
+  photos: AuditPhoto[];
+  configured: boolean;
+}

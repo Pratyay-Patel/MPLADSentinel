@@ -4,6 +4,7 @@ import {
   patchAssignment,
   postAssignment,
 } from '../../api/assignments';
+import { getAuditPhotos } from '../../api/audit';
 import { ApiError } from '../../api/client';
 import { getGrievances, patchGrievanceStatus, postGrievance } from '../../api/grievances';
 import { getHealth } from '../../api/health';
@@ -212,6 +213,14 @@ export function createApiDataProvider(): DataProvider {
         return await patchAssignment(id, patch, signal);
       } catch (error) {
         throw toProviderError('updateAssignment', error);
+      }
+    },
+
+    async getAuditPhotos(sourceWorkId, signal) {
+      try {
+        return await getAuditPhotos(sourceWorkId, signal);
+      } catch (error) {
+        throw toProviderError('getAuditPhotos', error);
       }
     },
   };
