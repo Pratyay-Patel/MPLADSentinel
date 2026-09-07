@@ -173,7 +173,11 @@ const columns: Column<RegisterRow>[] = [
     header: 'Action',
     align: 'right',
     render: ({ project }) => (
-      <ViewProjectLink id={project.sourceWorkId} label={workTitle(project.workDescription, project.sourceWorkId)} />
+      <ViewProjectLink
+        id={project.sourceWorkId}
+        label={workTitle(project.workDescription, project.sourceWorkId)}
+        variant="record"
+      />
     ),
   },
 ];
