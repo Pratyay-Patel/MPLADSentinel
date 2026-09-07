@@ -697,6 +697,16 @@ textarea.ui-control {
   min-width: 0;
 }
 
+/* donut on its own (Overview mosaic) — single centred column */
+.risk-signals--donut-only {
+  grid-template-columns: 1fr;
+}
+
+.risk-signals--donut-only .risk-signals__donut {
+  max-width: 300px;
+  margin-inline: auto;
+}
+
 .risk-signals__subtitle {
   margin: 0 0 var(--space-3);
   font-size: var(--text-sm);

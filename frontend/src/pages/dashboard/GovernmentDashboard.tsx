@@ -18,10 +18,10 @@ import { WorkDistribution } from './sections/WorkDistribution';
 /**
  * Government / MoSPI Intelligence Dashboard — the first product screen.
  *
- * Intelligence-first hierarchy: national metrics -> risk signals -> Projects
- * Requiring Attention (hero) -> financial intelligence -> work distribution ->
- * regional insight. The full project register lives on `/projects`; the risk
- * queue on `/risk` — the Overview only teases into them. Data comes exclusively
+ * Mosaic layout: national metrics -> regional map + risk-level donut ->
+ * financial intelligence + work distribution -> Projects Requiring Attention
+ * (hero teaser). The full project register lives on `/projects`; the risk queue
+ * on `/risk` — the Overview only teases into them. Data comes exclusively
  * through {@link useDashboardService} -> DataProvider; this component does not
  * know whether the provider is demo or API.
  */
@@ -102,16 +102,25 @@ function DashboardBody({ data }: { data: DashboardData }) {
 
       <NationalOverview data={view} />
 
-      <RiskSignals data={view} />
-
-      <ProjectsRequiringAttention items={view.attention} />
-
-      <div className="dash-two-col">
-        <FinancialIntelligence data={view} />
-        <WorkDistribution data={view} />
+      <div className="dash-grid">
+        <div className="dash-grid__col dash-grid__col--8">
+          <RegionalInsight regions={view.regions} />
+        </div>
+        <div className="dash-grid__col dash-grid__col--4">
+          <RiskSignals data={view} showFactors={false} />
+        </div>
       </div>
 
-      <RegionalInsight regions={view.regions} />
+      <div className="dash-grid">
+        <div className="dash-grid__col dash-grid__col--6">
+          <FinancialIntelligence data={view} />
+        </div>
+        <div className="dash-grid__col dash-grid__col--6">
+          <WorkDistribution data={view} />
+        </div>
+      </div>
+
+      <ProjectsRequiringAttention items={view.attention} />
     </>
   );
 }

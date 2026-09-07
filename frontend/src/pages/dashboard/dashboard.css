@@ -84,36 +84,38 @@
   color: var(--color-text-muted);
 }
 
-/* ---- two-up analytical row --------------------------------- */
+/* ---- 12-column mosaic grid --------------------------------- */
 
-.dash-two-col {
+.dash-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(12, 1fr);
   gap: var(--space-4);
-  align-items: start;
+  align-items: stretch;
 }
 
-/* ---- filters --------------------------------------------- */
-
-.dash-filters {
-  background: var(--color-surface);
-  border: var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-}
-
-.dash-filters__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: var(--space-3);
-}
-
-.dash-filters__foot {
+/* each column wrapper stretches to the row height and lets its single
+   card / section child fill that height, so paired panels read as equal. */
+.dash-grid__col {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dash-grid__col > * {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dash-grid__col--4 {
+  grid-column: span 4;
+}
+
+.dash-grid__col--6 {
+  grid-column: span 6;
+}
+
+.dash-grid__col--8 {
+  grid-column: span 8;
 }
 
 /* ---- notes / disclaimer -------------------------------- */
@@ -145,11 +147,15 @@
 
 /* ---- responsive -------------------------------------- */
 
-@media (max-width: 900px) {
-  .dash-two-col {
-    grid-template-columns: 1fr;
+@media (max-width: 960px) {
+  .dash-grid__col--4,
+  .dash-grid__col--6,
+  .dash-grid__col--8 {
+    grid-column: 1 / -1;
   }
+}
 
+@media (max-width: 900px) {
   .dash-region {
     grid-template-columns: 1fr;
     gap: var(--space-5);
