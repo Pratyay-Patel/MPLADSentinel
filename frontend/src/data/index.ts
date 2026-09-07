@@ -59,6 +59,18 @@ export {
 export { useDashboardService } from './features/useDashboardService';
 
 export {
+  createAnalyticsService,
+  UTILISATION_BANDS,
+  type AnalyticsService,
+  type AnalyticsData,
+  type StateUtilisation,
+  type MpUtilisation,
+  type UtilisationBucket,
+  type UtilisationBand,
+} from './features/analytics';
+export { useAnalyticsService } from './features/useAnalyticsService';
+
+export {
   createProjectDetailService,
   type ProjectDetailService,
   type ProjectDetailData,

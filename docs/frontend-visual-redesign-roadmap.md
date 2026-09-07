@@ -509,13 +509,25 @@ form.
 - **KPI strip** — Total works analysed · Total sanctioned (Σ `estimatedCost`) · Recorded
   payments (Σ `recordedPayments`) · **Utilisation rate** (payments ÷ sanctioned, over
   works with payment data only — caption the caveat) · Completed vs in-progress.
-- **States by fund utilisation** — horizontal bar, top ~12 states: utilisation %, with
-  allocated / spent as secondary series. Per-state Σ cost & Σ payments.
+- **States & UTs by fund utilisation** — horizontal bar, **every** state/UT (not just a
+  top-N), sorted by utilisation %, in a **fixed-height vertically-scrollable frame**
+  (`.an-scroll`, inner chart height grows with row count). A **band filter** (All / High /
+  Good / Moderate / Low) narrows it; count shown as "N of M". Money detail in the tooltip.
 - **Utilisation pattern buckets** — bar: share of MPs in High (≥85%) / Good (70–84%) /
   Moderate (50–69%) / Low (<50%) utilisation bands, from per-MP utilisation %.
+- **MP fund-utilisation leaderboard** — the per-MP detail behind the bucket chart (buckets
+  alone aren't actionable without names): every MP with a scored work, sorted by
+  utilisation, filterable by band; MP · works · sanctioned · recorded payments · util % ·
+  band badge. Compare-MPs stays comparison-only; this is the browsable list.
 - **Data-derived observations** (computed, NOT editorial) — e.g. "N states below 50%
   utilisation", "Top performer: X (Y%)", "Z% of works have no payment record — unknown,
   not zero". Never fabricate UC / policy-intervention claims like the competitor's cards do.
+- **Colour:** bars coloured by utilisation band — green High / blue Good / amber Moderate /
+  red Low (CVD-validated via the dataviz script), with a legend + direct % labels. Not one
+  monotone hue.
+- **Ratio population:** utilisation is summed only over works where *both* the estimate and
+  a recorded payment are known, so numerator and denominator cover the same works (avoids
+  the >900% artefacts a mismatched population produces).
 
 ### 9.4 New nav tab — Assistant (`/assistant`)
 
