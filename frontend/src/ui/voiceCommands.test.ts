@@ -18,12 +18,36 @@ describe('parseCommand', () => {
     expect(result.state).toBe('Maharashtra');
   });
 
+  it('applies state + risk filters to the project register when it is the target', () => {
+    expect(parseCommand('open the projects register for Maharashtra').to).toBe(
+      '/projects?state=Maharashtra',
+    );
+    expect(parseCommand('show high risk projects in Kerala').to).toBe(
+      '/projects?level=HIGH&state=Kerala',
+    );
+  });
+
+  it('applies a state filter to the dashboard (which has no risk-level filter)', () => {
+    expect(parseCommand('dashboard for Bihar').to).toBe('/dashboard?state=Bihar');
+    expect(parseCommand('show me the overview for Kerala').to).toBe('/dashboard?state=Kerala');
+  });
+
+  it('picks up a four-digit year', () => {
+    expect(parseCommand('projects in Kerala in 2025').to).toBe('/projects?state=Kerala&year=2025');
+  });
+
+  it('routes the new intelligence screens', () => {
+    expect(parseCommand('open analytics').to).toBe('/analytics');
+    expect(parseCommand('ask the assistant').to).toBe('/assistant');
+    expect(parseCommand('compare MPs').to).toBe('/compare');
+  });
+
   it('defaults a bare "high risk" to the risk screen', () => {
     expect(parseCommand('high risk').to).toBe('/risk?level=HIGH');
   });
 
-  it('matches multi-word state names', () => {
-    expect(parseCommand('works in uttar pradesh').to).toBe('/risk?state=Uttar Pradesh');
+  it('matches multi-word state names (URL-encoded)', () => {
+    expect(parseCommand('works in uttar pradesh').to).toBe('/risk?state=Uttar+Pradesh');
   });
 
   it('reports when nothing is understood', () => {
