@@ -379,6 +379,9 @@ Verify every `ResponsiveContainer` still has an explicit px `height={N}`.
   selects do. Fix in the shared CSS: on `.risk-filters__grid` / `.reg-filters` grid set
   `align-items: end` (bottom-align the controls) **or** give `SearchInput` a rendered label
   matching `Select` ("Search"). Verify both pages line up at 1280 and 1440.
+- *(done early, in Block B follow-up)* `/risk` review summary is now an amber callout banner
+  with a count chip (`.risk-summary__*`), and the "show all levels" checkbox is a pill switch
+  (`.risk-toggle__*`). Apply the same banner/switch styling vocabulary elsewhere if reused.
 - **Commit:** `style(frontend): KPI icons + deltas, stronger elevation, consistent section headers`
 
 ### Block F — Shell / header chrome (0.75 h)
