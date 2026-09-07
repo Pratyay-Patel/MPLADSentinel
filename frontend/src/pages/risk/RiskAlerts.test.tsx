@@ -57,6 +57,16 @@ describe('RiskAlerts', () => {
     ).toBeGreaterThan(0);
   });
 
+  it('shows a one-line review summary instead of repeating the Overview risk chart', async () => {
+    const { container } = renderRisk();
+    await screen.findByRole('table', { name: 'Risk and alerts' });
+
+    expect(screen.getByText(/flagged for\s+review \(HIGH or MEDIUM risk\)/i)).toBeInTheDocument();
+    // the duplicated donut + "Most common risk factors" card is gone from /risk
+    expect(container.querySelector('.risk-signals')).toBeNull();
+    expect(screen.queryByText('Most common risk factors')).not.toBeInTheDocument();
+  });
+
   it('filters the table by risk level', async () => {
     const { container } = renderRisk();
     await screen.findByRole('table', { name: 'Risk and alerts' });

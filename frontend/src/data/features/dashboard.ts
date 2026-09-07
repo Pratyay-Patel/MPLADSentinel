@@ -50,7 +50,7 @@ export interface DashboardData {
   /** Which provider produced this (so the UI can show a "demo data" marker). */
   source: DataSource;
   summary: ProjectSummary;
-  /** All projects, for the exploration table + client-side filtering. */
+  /** All projects in scope — drives the metrics, map, risk signals and attention list. */
   projects: Project[];
   /** Risk view model per `sourceWorkId` (always populated; `UNKNOWN` when absent). */
   risksByWorkId: Record<number, ProjectRisk>;

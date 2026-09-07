@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import {
-  summarizeRiskFactors,
   useAsyncData,
   useRiskService,
   type RiskListData,
@@ -24,19 +23,15 @@ import {
   globalFilterOptions,
   useGlobalFilters,
 } from '../../filters';
-import { formatCount, formatINRCompact, workTitle } from '../../format';
+import { formatINRCompact, workTitle } from '../../format';
 import {
-  BarList,
   Card,
   DataTable,
-  DonutChart,
   EmptyState,
   ErrorState,
   LoadingState,
   MetricCard,
   PageHeader,
-  RISK_LEVEL_COLOR,
-  RISK_LEVEL_ORDER,
   RiskLevelBadge,
   SearchInput,
   Select,
@@ -262,14 +257,7 @@ function RiskBody({ data }: { data: RiskListData }) {
     return counts;
   }, [globalRows]);
 
-  const risks = useMemo(() => globalRows.map((r) => r.risk), [globalRows]);
-  const factors = useMemo(() => summarizeRiskFactors(risks), [risks]);
-  const assessed = globalRows.length - countsByLevel.UNKNOWN;
-  const slices = RISK_LEVEL_ORDER.map((level) => ({
-    label: `${level} risk`,
-    value: countsByLevel[level],
-    color: RISK_LEVEL_COLOR[level],
-  })).filter((slice) => slice.value > 0);
+  const flaggedForReview = countsByLevel.HIGH + countsByLevel.MEDIUM;
 
   return (
     <>
@@ -284,34 +272,11 @@ function RiskBody({ data }: { data: RiskListData }) {
         ))}
       </div>
 
-      <Card>
-        <div className="risk-signals">
-          <div className="risk-signals__donut">
-            <DonutChart
-              slices={slices}
-              centerValue={formatCount(assessed)}
-              centerCaption="works assessed"
-              ariaLabel="Works by assessed risk level"
-            />
-          </div>
-          <div className="risk-signals__factors">
-            <h2 className="risk-signals__subtitle">Most common risk factors</h2>
-            {factors.length === 0 ? (
-              <p className="risk-signals__note">No risk factors flagged in the current dataset.</p>
-            ) : (
-              <BarList
-                caption="How often each risk factor is flagged across all works"
-                items={factors.map((factor) => ({
-                  label: factor.label,
-                  value: factor.count,
-                  valueLabel: formatCount(factor.count),
-                  tone: 'warning',
-                }))}
-              />
-            )}
-          </div>
-        </div>
-      </Card>
+      <p className="risk-summary">
+        <strong>{flaggedForReview}</strong> of {globalRows.length} assessed works are flagged for
+        review (HIGH or MEDIUM risk). The full factor breakdown is on each work; the Overview shows
+        which factors are most common.
+      </p>
 
       <div className="risk-filters" role="search" aria-label="More filters for the risk list">
         <div className="risk-filters__grid">

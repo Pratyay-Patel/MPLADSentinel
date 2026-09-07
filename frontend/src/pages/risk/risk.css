@@ -3,6 +3,18 @@
  * primitives (MetricCard, Select, SearchInput, DataTable, RiskLevelBadge).
  */
 
+.risk-summary {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  max-width: 80ch;
+}
+
+.risk-summary strong {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
 .risk-filters {
   background: var(--color-surface);
   border: var(--border);

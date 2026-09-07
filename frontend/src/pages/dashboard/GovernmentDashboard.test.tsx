@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -76,7 +76,7 @@ describe('GovernmentDashboard', () => {
 
     expect(screen.getByRole('heading', { name: 'Work distribution' })).toBeInTheDocument();
     expect(
-      screen.getByText(/two source listings, not a measured project lifecycle/i),
+      screen.getByText(/a work can appear at both stages, so the two counts may overlap/i),
     ).toBeInTheDocument();
   });
 
@@ -87,23 +87,16 @@ describe('GovernmentDashboard', () => {
     ).toBeInTheDocument();
   });
 
-  it('filters the project exploration table by state', async () => {
+  it('does not embed the full project register or a second filter block', async () => {
     renderDashboard(createDemoDataProvider());
 
-    // wait for load
-    await screen.findByRole('heading', { name: 'Project exploration' });
-    const exploration = screen.getByRole('table', { name: 'Project exploration' });
-    const before = within(exploration).getAllByRole('row').length;
+    await screen.findByRole('heading', { name: 'Projects requiring attention' });
 
-    fireEvent.change(screen.getByLabelText('State'), { target: { value: 'Kerala' } });
-
-    await waitFor(() => {
-      expect(screen.getByText(/projects match/)).toHaveTextContent('2 projects match');
-    });
-    const after = within(exploration).getAllByRole('row').length;
-    expect(after).toBeLessThan(before);
-    expect(within(exploration).queryByText(/protection wall/i)).not.toBeInTheDocument(); // Rajasthan work
-    expect(within(exploration).getByText(/solar street lighting/i)).toBeInTheDocument(); // Kerala work
+    expect(screen.queryByRole('heading', { name: 'Project exploration' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('table', { name: 'Project exploration' })).not.toBeInTheDocument();
+    // teaser links into the dedicated screens instead
+    expect(screen.getByRole('link', { name: /Open full register/ })).toHaveAttribute('href', '/projects');
+    expect(screen.getByRole('link', { name: /Open risk queue/ })).toHaveAttribute('href', '/risk');
   });
 
   it('shows the empty state when the provider returns no works', async () => {
