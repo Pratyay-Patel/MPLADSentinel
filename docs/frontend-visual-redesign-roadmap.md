@@ -366,21 +366,21 @@ Verify every `ResponsiveContainer` still has an explicit px `height={N}`.
 - Tests: new `AnomalyCards` test (counts + links); `RiskAlerts.test.tsx` `?factor=` case.
 - **Commit:** `feat(dashboard): named anomaly cards linking into the risk queue`
 
-### Block E — Visual polish pass (1.0 h) — *tokens / CSS, no structure*
+### Block E — Visual polish pass (1.0 h) — *tokens / CSS, no structure*  ✅ done
 
-- `MetricCard`: add an optional `icon` and `delta` slot; give the 4 Overview KPIs an icon
-  (icon set exists in `src/ui/icons.tsx`) and use `hint` for a definition/delta line.
-- `styles/tokens.css`: bump card shadow one step, slightly stronger `--color-border`;
-  add a 3px brand top-border to section cards (matches the existing `.dash-attention`
-  treatment — apply consistently).
-- Apply `SectionHeader` (icon + title + right-aligned action) to every dashboard section
-  card that currently uses a bare `<h2>`.
-- Empty states: one-line "why empty + the action".
-- **Fix the filter-row alignment on `/risk` and `/projects`.** The `SearchInput` sits
-  visibly lower than the two `Select`s to its left because it has no label row while the
-  selects do. Fix in the shared CSS: on `.risk-filters__grid` / `.reg-filters` grid set
-  `align-items: end` (bottom-align the controls) **or** give `SearchInput` a rendered label
-  matching `Select` ("Search"). Verify both pages line up at 1280 and 1440.
+- ✅ `MetricCard`: optional `icon` slot; the 4 Overview KPIs get brand-tinted icon chips
+  (`LayoutGrid / ClipboardList / CircleCheck / Rupee` — the last three added to `ui/icons.tsx`).
+  **No `delta` slot** — there is no historical/time-series data, so a delta would be an
+  invented value (CLAUDE.md §8). `hint` keeps the existing one-line definition.
+- ✅ Elevation: `.ui-card` and `.ui-metric` now use `--border-strong` + `--shadow-md` (one
+  step up). *Skipped* the per-card 3px brand top-border — too heavy applied across a full
+  page of cards; the `.dash-attention` hero keeps its accent as the single emphasis.
+- ✅ `SectionHeader` applied to `NationalOverview` (was the last bare `<h2>`); dead
+  `.dash-section-title` removed.
+- ✅ Filter-row alignment: `align-items: end` on `.risk-filters__grid` and
+  `.reg-filters__grid` — search input now shares the selects' baseline on `/risk` and
+  `/projects`.
+- *Deferred:* empty-state copy rewrites (low impact).
 - *(done early, in Block B follow-up)* `/risk` review summary is now an amber callout banner
   with a count chip (`.risk-summary__*`), and the "show all levels" checkbox is a pill switch
   (`.risk-toggle__*`). Apply the same banner/switch styling vocabulary elsewhere if reused.

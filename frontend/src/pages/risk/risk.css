@@ -94,6 +94,9 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--space-3);
+  /* bottom-align: the search field has a visually-hidden label, the selects
+     don't — without this the controls sit at different heights. */
+  align-items: end;
 }
 
 .risk-filters__foot {

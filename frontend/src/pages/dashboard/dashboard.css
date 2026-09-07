@@ -4,13 +4,6 @@
  * Attention" emphasis treatment.
  */
 
-.dash-section-title {
-  font-size: var(--text-lg);
-  font-weight: var(--weight-semibold);
-  color: var(--color-text);
-  margin-bottom: var(--space-3);
-}
-
 /* ---- Projects Requiring Attention: the hero section ------------- */
 
 .dash-attention {
