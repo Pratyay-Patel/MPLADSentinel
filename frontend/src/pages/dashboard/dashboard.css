@@ -4,25 +4,6 @@
  * Attention" emphasis treatment.
  */
 
-.dash-section-title {
-  font-size: var(--text-lg);
-  font-weight: var(--weight-semibold);
-  color: var(--color-text);
-  margin-bottom: var(--space-3);
-}
-
-.dash-explore-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.dash-explore-head .dash-section-title {
-  margin-bottom: 0;
-}
-
 /* ---- Projects Requiring Attention: the hero section ------------- */
 
 .dash-attention {
@@ -49,6 +30,15 @@
   max-width: 72ch;
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
+}
+
+.dash-attention__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
 }
 
 /* ---- table cell helpers -------------------------------------- */
@@ -87,36 +77,92 @@
   color: var(--color-text-muted);
 }
 
-/* ---- two-up analytical row --------------------------------- */
+/* ---- 12-column mosaic grid --------------------------------- */
 
-.dash-two-col {
+.dash-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(12, 1fr);
   gap: var(--space-4);
-  align-items: start;
+  align-items: stretch;
 }
 
-/* ---- filters --------------------------------------------- */
-
-.dash-filters {
-  background: var(--color-surface);
-  border: var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-}
-
-.dash-filters__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: var(--space-3);
-}
-
-.dash-filters__foot {
+/* each column wrapper stretches to the row height and lets its single
+   card / section child fill that height, so paired panels read as equal. */
+.dash-grid__col {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dash-grid__col > * {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dash-grid__col--4 {
+  grid-column: span 4;
+}
+
+.dash-grid__col--6 {
+  grid-column: span 6;
+}
+
+.dash-grid__col--8 {
+  grid-column: span 8;
+}
+
+/* ---- named anomaly cards --------------------------------- */
+
+.anomaly-cards {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--space-3);
-  margin-top: var(--space-3);
+}
+
+.anomaly-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.anomaly-card__count {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.anomaly-card__label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.anomaly-card__desc {
+  flex: 1;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: var(--leading-normal);
+}
+
+.anomaly-card__link {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+.anomaly-card__link:hover {
+  text-decoration: underline;
 }
 
 /* ---- notes / disclaimer -------------------------------- */
@@ -128,11 +174,38 @@
   max-width: 72ch;
 }
 
+/* ---- regional insight (map + list) -------------------- */
+
+.dash-region {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(220px, 360px);
+  gap: var(--space-6);
+  align-items: center;
+  margin-top: var(--space-4);
+}
+
+.dash-region > * {
+  min-width: 0;
+}
+
+.dash-region__list {
+  align-self: start;
+}
+
 /* ---- responsive -------------------------------------- */
 
+@media (max-width: 960px) {
+  .dash-grid__col--4,
+  .dash-grid__col--6,
+  .dash-grid__col--8 {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 900px) {
-  .dash-two-col {
+  .dash-region {
     grid-template-columns: 1fr;
+    gap: var(--space-5);
   }
 }
 

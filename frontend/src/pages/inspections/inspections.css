@@ -1,0 +1,55 @@
+/* Inspections (`/inspections`) — assign a field officer to inspect a work,
+   then track the assignment. Layout only; colours come from tokens. */
+
+.insp-form__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4, 1rem);
+}
+
+.insp-form__row {
+  margin-top: var(--space-3, 0.75rem);
+}
+
+.insp-form__actions {
+  margin-top: var(--space-4, 1rem);
+}
+
+.insp-form__ok {
+  margin: var(--space-3, 0.75rem) 0 0;
+  color: var(--tone-success-fg, #1a7f4b);
+  font-weight: 600;
+}
+
+.insp-form__hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+}
+
+.insp-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-4, 1rem);
+  margin-bottom: var(--space-3, 0.75rem);
+}
+
+.insp-filters__count {
+  padding-bottom: 0.4rem;
+}
+
+.insp-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.insp-cell__sub {
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #667085);
+}
+
+.insp-photos-input {
+  width: 4.5rem;
+  text-align: right;
+}

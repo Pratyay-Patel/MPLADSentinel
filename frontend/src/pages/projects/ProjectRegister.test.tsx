@@ -5,12 +5,23 @@ import { describe, expect, it, vi } from 'vitest';
 import { DataProviderProvider, type DataProvider } from '../../data';
 import { createDemoDataProvider } from '../../data/demo/DemoDataProvider';
 import { ProviderError } from '../../data/errors';
+import { FilterProvider } from '../../filters';
 import { ProjectRegister } from './ProjectRegister';
 
 function renderRegister(provider: DataProvider = createDemoDataProvider()) {
-  const router = createMemoryRouter([{ path: '/', element: <ProjectRegister /> }], {
-    initialEntries: ['/'],
-  });
+  const router = createMemoryRouter(
+    [
+      {
+        path: '/',
+        element: (
+          <FilterProvider>
+            <ProjectRegister />
+          </FilterProvider>
+        ),
+      },
+    ],
+    { initialEntries: ['/'] },
+  );
   return render(
     <DataProviderProvider provider={provider}>
       <RouterProvider router={router} />
@@ -49,14 +60,15 @@ describe('ProjectRegister', () => {
     expect(within(table).queryByText('HIGH RISK')).not.toBeInTheDocument();
   });
 
-  it('filters by state and clears filters', async () => {
+  it('filters by state via the global filter bar and clears it', async () => {
     renderRegister();
     await screen.findByRole('table', { name: 'Project register' });
 
-    fireEvent.change(screen.getByLabelText('State'), { target: { value: 'Kerala' } });
+    const globalBar = screen.getByRole('search', { name: 'Filter all views' });
+    fireEvent.change(within(globalBar).getByLabelText('State'), { target: { value: 'Kerala' } });
     await waitFor(() => expect(tableRows()).toHaveLength(2));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    fireEvent.click(within(globalBar).getByRole('button', { name: 'Clear filters' }));
     await waitFor(() => expect(tableRows()).toHaveLength(14));
   });
 

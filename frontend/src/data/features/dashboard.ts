@@ -27,6 +27,16 @@ export interface StateWorkCount {
   works: number;
 }
 
+/** Per-state roll-up for the map: work count and risk-level split. */
+export interface RegionStat {
+  state: string;
+  works: number;
+  high: number;
+  medium: number;
+  low: number;
+  unknown: number;
+}
+
 /** Distinct values available for each dashboard filter, derived from the dataset. */
 export interface DashboardFilterOptions {
   states: string[];
@@ -40,7 +50,7 @@ export interface DashboardData {
   /** Which provider produced this (so the UI can show a "demo data" marker). */
   source: DataSource;
   summary: ProjectSummary;
-  /** All projects, for the exploration table + client-side filtering. */
+  /** All projects in scope — drives the metrics, map, risk signals and attention list. */
   projects: Project[];
   /** Risk view model per `sourceWorkId` (always populated; `UNKNOWN` when absent). */
   risksByWorkId: Record<number, ProjectRisk>;
@@ -54,6 +64,8 @@ export interface DashboardData {
   // --- intelligence groupings ---
   attention: AttentionItem[];
   topStates: StateWorkCount[];
+  /** Every state in the dataset, with its risk-level split (for the map). */
+  regions: RegionStat[];
   filterOptions: DashboardFilterOptions;
 }
 
@@ -74,18 +86,7 @@ export function createDashboardService(provider: DataProvider): DashboardService
         provider.getProjectSummary(signal),
       ]);
 
-      const attention = projects
-        .filter((p) => ATTENTION_LEVELS.includes(risksByWorkId[p.sourceWorkId].level))
-        .sort((a, b) => {
-          const ra = risksByWorkId[a.sourceWorkId];
-          const rb = risksByWorkId[b.sourceWorkId];
-          if (RISK_ORDER[ra.level] !== RISK_ORDER[rb.level]) {
-            return RISK_ORDER[ra.level] - RISK_ORDER[rb.level];
-          }
-          return (rb.score ?? 0) - (ra.score ?? 0);
-        })
-        .slice(0, ATTENTION_LIMIT)
-        .map((project) => ({ project, risk: risksByWorkId[project.sourceWorkId] }));
+      const { attention, topStates, regions } = deriveDashboardGroupings(projects, risksByWorkId);
 
       return {
         source: provider.source,
@@ -97,11 +98,102 @@ export function createDashboardService(provider: DataProvider): DashboardService
         completedWorks: projects.filter((p) => p.seenInCompleted).length,
         recordedPayments: summary.totalRecordedPayments,
         attention,
-        topStates: topStatesByWorkCount(projects, TOP_STATES_LIMIT),
+        topStates,
+        regions,
         filterOptions: buildFilterOptions(projects),
       };
     },
   };
+}
+
+/** The intelligence groupings, shared by the initial load and the client-side filter recompute. */
+export function deriveDashboardGroupings(
+  projects: Project[],
+  risksByWorkId: Record<number, ProjectRisk>,
+): Pick<DashboardData, 'attention' | 'topStates' | 'regions'> {
+  const attention = projects
+    .filter((p) => ATTENTION_LEVELS.includes(risksByWorkId[p.sourceWorkId]?.level))
+    .sort((a, b) => {
+      const ra = risksByWorkId[a.sourceWorkId];
+      const rb = risksByWorkId[b.sourceWorkId];
+      if (RISK_ORDER[ra.level] !== RISK_ORDER[rb.level]) {
+        return RISK_ORDER[ra.level] - RISK_ORDER[rb.level];
+      }
+      return (rb.score ?? 0) - (ra.score ?? 0);
+    })
+    .slice(0, ATTENTION_LIMIT)
+    .map((project) => ({ project, risk: risksByWorkId[project.sourceWorkId] }));
+
+  return {
+    attention,
+    topStates: topStatesByWorkCount(projects, TOP_STATES_LIMIT),
+    regions: regionStats(projects, risksByWorkId),
+  };
+}
+
+function sumMoney(values: (Money | null)[], currency: string): Money {
+  const amount = values.reduce((total, m) => total + (m?.amount ?? 0), 0);
+  return { amount, currency };
+}
+
+/**
+ * Recompute the dashboard view model for a client-side-filtered subset of works.
+ * `filterOptions` keeps the full-dataset option lists (so a selection never
+ * removes its own choice); the money totals are summed over the shown works.
+ */
+export function filterDashboardView(base: DashboardData, projects: Project[]): DashboardData {
+  const { risksByWorkId } = base;
+  const totalEstimatedCost = sumMoney(
+    projects.map((p) => p.estimatedCost),
+    base.summary.totalEstimatedCost.currency,
+  );
+  const totalRecordedPayments = sumMoney(
+    projects.map((p) => p.recordedPayments),
+    base.summary.totalRecordedPayments.currency,
+  );
+
+  return {
+    ...base,
+    summary: { ...base.summary, totalEstimatedCost, totalRecordedPayments },
+    projects,
+    totalWorks: projects.length,
+    recommendedWorks: projects.filter((p) => p.seenInRecommended).length,
+    completedWorks: projects.filter((p) => p.seenInCompleted).length,
+    recordedPayments: totalRecordedPayments,
+    ...deriveDashboardGroupings(projects, risksByWorkId),
+  };
+}
+
+/** Group works by state and tally the risk-level split. Sorted by work count desc. */
+export function regionStats(
+  projects: Project[],
+  risksByWorkId: Record<number, ProjectRisk>,
+): RegionStat[] {
+  const byState = new Map<string, RegionStat>();
+  for (const project of projects) {
+    const state = project.state?.trim();
+    if (!state) continue;
+    let stat = byState.get(state);
+    if (!stat) {
+      stat = { state, works: 0, high: 0, medium: 0, low: 0, unknown: 0 };
+      byState.set(state, stat);
+    }
+    stat.works += 1;
+    switch (risksByWorkId[project.sourceWorkId]?.level) {
+      case 'HIGH':
+        stat.high += 1;
+        break;
+      case 'MEDIUM':
+        stat.medium += 1;
+        break;
+      case 'LOW':
+        stat.low += 1;
+        break;
+      default:
+        stat.unknown += 1;
+    }
+  }
+  return [...byState.values()].sort((a, b) => b.works - a.works || a.state.localeCompare(b.state));
 }
 
 export function topStatesByWorkCount(projects: Project[], limit: number): StateWorkCount[] {

@@ -7,9 +7,13 @@ import { createDemoDataProvider } from '../../data/demo/DemoDataProvider';
 import { ProviderError } from '../../data/errors';
 import { ProjectDetail } from './ProjectDetail';
 
-function renderAt(id: string, provider: DataProvider = createDemoDataProvider()) {
+function renderAt(
+  id: string,
+  provider: DataProvider = createDemoDataProvider(),
+  search = '',
+) {
   const router = createMemoryRouter([{ path: '/projects/:id', element: <ProjectDetail /> }], {
-    initialEntries: [`/projects/${id}`],
+    initialEntries: [`/projects/${id}${search}`],
   });
   return render(
     <DataProviderProvider provider={provider}>
@@ -40,6 +44,24 @@ describe('ProjectDetail', () => {
     expect(screen.getByText(/no current indicators for this work/i)).toBeInTheDocument();
 
     expect(screen.getByText('MPLADS works data')).toBeInTheDocument();
+  });
+
+  it('hides the risk-assessment section when opened from the register (?section=record)', async () => {
+    renderAt('900000002', createDemoDataProvider(), '?section=record'); // a HIGH-risk work
+
+    await screen.findByRole('heading', { level: 1, name: /Multipurpose community centre/i });
+
+    expect(screen.queryByRole('heading', { name: 'Risk assessment' })).not.toBeInTheDocument();
+    // the rest of the record is still there
+    expect(screen.getByRole('heading', { name: 'Financials' })).toBeInTheDocument();
+    expect(screen.getByText('MPLADS works data')).toBeInTheDocument();
+  });
+
+  it('keeps the risk-assessment section for a normal (non-register) visit', async () => {
+    renderAt('900000002');
+    expect(
+      await screen.findByRole('heading', { name: 'Risk assessment' }),
+    ).toBeInTheDocument();
   });
 
   it('shows the missing-records note for a FETCHED_ABSENT work and no installments table', async () => {

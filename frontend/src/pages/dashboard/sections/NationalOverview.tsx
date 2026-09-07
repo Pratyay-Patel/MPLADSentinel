@@ -1,5 +1,11 @@
 import type { DashboardData } from '../../../data';
-import { MetricCard } from '../../../ui';
+import { MetricCard, SectionHeader } from '../../../ui';
+import {
+  CircleCheckIcon,
+  ClipboardListIcon,
+  LayoutGridIcon,
+  RupeeIcon,
+} from '../../../ui/icons';
 import { formatCount, formatINRCompact } from '../../../format';
 
 /**
@@ -9,27 +15,29 @@ import { formatCount, formatINRCompact } from '../../../format';
  */
 export function NationalOverview({ data }: { data: DashboardData }) {
   return (
-    <section aria-labelledby="dash-overview-heading">
-      <h2 id="dash-overview-heading" className="dash-section-title">
-        National overview
-      </h2>
+    <section aria-label="National overview">
+      <SectionHeader title="National overview" />
       <div className="ui-metric-grid">
         <MetricCard
+          icon={<LayoutGridIcon />}
           label="Total works"
           value={formatCount(data.totalWorks)}
           hint="MPLADS works tracked"
         />
         <MetricCard
+          icon={<ClipboardListIcon />}
           label="Recommended works"
           value={formatCount(data.recommendedWorks)}
           hint="Works at the recommended stage"
         />
         <MetricCard
+          icon={<CircleCheckIcon />}
           label="Completed works"
           value={formatCount(data.completedWorks)}
           hint="Works at the completed stage"
         />
         <MetricCard
+          icon={<RupeeIcon />}
           label="Recorded payments"
           value={formatINRCompact(data.recordedPayments)}
           hint="Total recorded vendor payments"

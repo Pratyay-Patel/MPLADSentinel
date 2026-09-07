@@ -73,9 +73,9 @@
 
 .ui-card {
   background: var(--color-surface);
-  border: var(--border);
+  border: var(--border-strong);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 
 .ui-card--pad {
@@ -221,9 +221,27 @@
   gap: var(--space-2);
   padding: var(--space-4) var(--space-5);
   background: var(--color-surface);
-  border: var(--border);
+  border: var(--border-strong);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
+}
+
+.ui-metric__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ui-metric__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: var(--radius-md);
+  color: var(--color-brand-700);
+  background: var(--color-brand-050);
 }
 
 .ui-metric__label {
@@ -604,4 +622,218 @@ textarea.ui-control {
     grid-template-columns: 1fr;
     gap: var(--space-1);
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* DonutChart                                                                 */
+/* -------------------------------------------------------------------------- */
+
+.donut {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.donut__chart {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.donut__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.donut__center-value {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text);
+  line-height: 1.1;
+}
+
+.donut__center-caption {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.donut__legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.donut__legend-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.donut__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.donut__legend-label {
+  color: var(--color-text);
+}
+
+.donut__legend-value {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-medium);
+}
+
+.donut__legend-pct {
+  color: var(--color-text-secondary);
+  font-weight: var(--weight-regular);
+}
+
+/* Donut + factor-bar layout — used on the dashboard and the Risk & Alerts page */
+.risk-signals {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) 1fr;
+  gap: var(--space-6);
+  align-items: start;
+  margin-top: var(--space-4);
+}
+
+.risk-signals > * {
+  min-width: 0;
+}
+
+/* donut on its own (Overview mosaic) — single centred column */
+.risk-signals--donut-only {
+  grid-template-columns: 1fr;
+}
+
+.risk-signals--donut-only .risk-signals__donut {
+  max-width: 300px;
+  margin-inline: auto;
+}
+
+.risk-signals__subtitle {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.risk-signals__note {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  max-width: 60ch;
+}
+
+@media (max-width: 900px) {
+  .risk-signals {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* IndiaBubbleMap                                                             */
+/* -------------------------------------------------------------------------- */
+
+.india-map {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  margin-inline: auto;
+}
+
+.india-map__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.india-map__land {
+  fill: var(--color-brand-050);
+  stroke: var(--color-brand-100);
+  stroke-width: 0.6;
+  stroke-linejoin: round;
+}
+
+.india-map__bubble {
+  fill: var(--color-brand-500);
+  fill-opacity: 0.55;
+  stroke: var(--color-brand-700);
+  stroke-width: 0.5;
+  transition:
+    fill-opacity 0.12s ease,
+    stroke-width 0.12s ease;
+  cursor: pointer;
+}
+
+.india-map__bubble:hover,
+.india-map__bubble:focus-visible {
+  fill-opacity: 0.85;
+  stroke-width: 1;
+  outline: none;
+}
+
+.india-map__bubble[data-selected] {
+  fill: var(--color-brand-700);
+  fill-opacity: 0.95;
+  stroke-width: 1.2;
+}
+
+.india-map__bubble[data-dim] {
+  fill-opacity: 0.25;
+}
+
+.india-map__tip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 10px));
+  pointer-events: none;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  white-space: nowrap;
+}
+
+.india-map__tip-name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.india-map__tip-total {
+  font-size: var(--text-xs);
+  color: var(--color-text);
+}
+
+.india-map__tip-mix {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.india-map__caption {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-align: center;
 }

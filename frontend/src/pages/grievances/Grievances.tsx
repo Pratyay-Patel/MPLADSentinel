@@ -127,6 +127,7 @@ export function Grievances() {
   return (
     <div className="ui-stack grv">
       <PageHeader
+        breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Grievances' }]}
         title="Grievances"
         description={
           isReviewer

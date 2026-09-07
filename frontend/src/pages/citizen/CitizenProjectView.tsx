@@ -67,7 +67,11 @@ export function CitizenProjectView() {
   return (
     <div className="ui-stack cit">
       <PageHeader
-        breadcrumbs={[{ label: 'Citizen Portal', to: '/citizen' }, { label: title }]}
+        breadcrumbs={[
+          { label: 'Home', to: '/' },
+          { label: 'Citizen Portal', to: '/citizen' },
+          { label: title },
+        ]}
         title={title}
         description={
           project

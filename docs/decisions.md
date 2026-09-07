@@ -548,3 +548,69 @@ nodes and took 9–12 s. `DataTable` gained client-side pagination (`pageSize=25
 and `loadProjectsWithRisk` now probes the risk endpoint once instead of firing
 one rejected call per work while it is unimplemented (pre-B3). Stopgap; B4b is
 the real fix.
+
+## D34 — Field-officer inspections & the Audit Trail (portal side)
+
+**Decision:**
+
+Deliver the portal-only slice of the field-verification workflow
+(`docs/portal-app-integration-plan.md`), plus a **read-only Pinata/IPFS demo**
+for evidence. Full spec: `docs/inspections-audit-feature.md`.
+
+- **Field-officer accounts.** A new `WebRole.FIELD_OFFICER`. Field officers are
+  `app_user` rows with a unique `officer_code` (e.g. `OFF102`) and a `phone`,
+  populated only for that role (Flyway **V8**, which also relaxes
+  `ck_app_user_role`). Authority-provisioned only — no self-registration.
+  `FieldOfficerSeeder` creates `OFF101`–`OFF105` at startup under the existing
+  `mplads.auth.*` seeding gate; `OFF102 / Rahul Sharma` matches
+  `docs/MOBILE_ARCHITECTURE.md`. `FIELD_OFFICER` has **no** authority-facing
+  endpoints and is denied every existing API in `SecurityConfig`.
+- **Assignments.** `inspection_assignment` (V8) links a `source_work_id` (not an
+  FK — the work may be un-ingested, same rule as `grievance.work_reference`) to
+  an officer, with `status ASSIGNED → IN_PROGRESS → COMPLETED` or `CANCELLED`
+  (`AssignmentStatus.canTransitionTo` enforces the lifecycle; a partial-unique
+  index allows one open assignment per work+officer). APIs: `GET /api/officers`;
+  `GET/POST/PATCH /api/assignments`. `POST`/`PATCH` → `MOSPI`/`STATE`/`DISTRICT`;
+  `GET` → any government role. New frontend `/inspections` tab (Monitoring
+  group, area `inspections`; assign + advance for those three roles, read-only
+  for Auditor/MP).
+- **Audit Trail.** The placeholder `/audit` page becomes a **work-level**
+  chronological timeline built from the assignment row (Requested → In progress
+  → Completed / Cancelled → Field evidence). Populated from PostgreSQL — **no
+  Hyperledger Fabric** (deferred; the `canonical_json`-hashing anchor step in the
+  parent plan is additive).
+- **Demo boundary (temporary).** The Flutter app is not connected yet, so the
+  *contents* of the "Inspection completed" event (questionnaire answers, overall
+  condition, remarks) are **hardcoded illustrative values**, shown for any
+  assignment whose status is `COMPLETED` and clearly labelled as not-yet-wired
+  (CLAUDE.md §8). The assignment events and their dates are real.
+- **Pinata / IPFS (real, read-only).** `GET /api/audit/{workId}/photos` calls the
+  Pinata Files API (`/v3/files/{network}?order=DESC&limit=2`) with a
+  backend-only `PINATA_JWT` (env; never in the frontend / Vercel / git /
+  source — CLAUDE.md §7) and returns `{ photos: [{cid,name,url}], configured }`
+  with gateway URLs. `configured:false` (no JWT) → empty list, the page renders
+  a "not connected" note rather than an error. Ordering is Pinata's upload time,
+  **not** EXIF. The Audit page shows the two images as thumbnails with a
+  lightbox.
+
+**Deferred (unchanged from the parent plan):** the Flutter `/api/mobile/**`
+channel and its JWT auth; `field_inspection` / `field_inspection_photo` tables
+and canonical-JSON ingest; matching photos to an inspection via CIDs in a
+payload; Fabric anchoring.
+
+**Implemented.** Backend: V8 migration, `WebRole.FIELD_OFFICER`, `AppUser`
+`officerCode`/`phone`, `FieldOfficerSeeder`, `inspection` package
+(`InspectionAssignment` + `AssignmentStatus` + repo + service + the two
+controllers), `audit` package (`PinataProperties`/`PinataClient`/`PinataConfig`,
+`AuditEvidenceService`, `AuditController`), `SecurityConfig` matchers,
+`mplads.pinata.*` config + `.env.example`. Frontend: `data/types` +
+`DataProvider` methods (`listFieldOfficers` / `listAssignments` /
+`createAssignment` / `updateAssignment` / `getAuditPhotos`) on both providers,
+`data/features/inspections.ts` + `audit.ts`, `/inspections` and rebuilt `/audit`
+pages, nav item + `access.ts` (`assignsInspections`). Tests: backend
+`InspectionAssignmentControllerTest` / `FieldOfficerSeederTest` /
+`PinataClientTest` / `AuditEvidenceServiceTest` (+ `FlywayMigrationTest`);
+frontend `inspections` / `audit` service + page tests. Also repaired a
+pre-existing `AuthUserSeederTest` failure touched by the `WebRole` change.
+**Not yet verified:** the Pinata call against a real account (awaiting a
+`PINATA_JWT`).

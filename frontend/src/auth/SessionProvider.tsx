@@ -8,6 +8,7 @@ import {
   type SessionUser,
 } from '../api/auth';
 import { SessionContext, type Session, type SessionStatus } from './context';
+import { clearDemoSession, demoAuthEnabled, demoLogin, readDemoSession } from './demoAuth';
 import type { Role } from './roles';
 
 interface SessionState {
@@ -25,6 +26,17 @@ function authenticatedAs(role: Role): SessionState {
   };
 }
 
+function initialState(initialRole?: Role): SessionState {
+  if (initialRole) {
+    return authenticatedAs(initialRole);
+  }
+  if (demoAuthEnabled()) {
+    const user = readDemoSession();
+    return user ? { status: 'authenticated', user } : ANONYMOUS;
+  }
+  return LOADING;
+}
+
 interface SessionProviderProps {
   children: ReactNode;
   /**
@@ -40,14 +52,17 @@ interface SessionProviderProps {
  * `GET /api/auth/me`; the result is `authenticated` or `anonymous`. `login`
  * and `logout` update the session in place. This performs no authorization —
  * that is Spring Security (D5).
+ *
+ * When {@link demoAuthEnabled} is set (the Vercel demo build) there is no
+ * backend: the session comes from a client-side persona choice instead, and
+ * registration is disabled.
  */
 export function SessionProvider({ children, initialRole }: SessionProviderProps) {
-  const [state, setState] = useState<SessionState>(() =>
-    initialRole ? authenticatedAs(initialRole) : LOADING,
-  );
+  const demo = demoAuthEnabled();
+  const [state, setState] = useState<SessionState>(() => initialState(initialRole));
 
   useEffect(() => {
-    if (initialRole) {
+    if (initialRole || demo) {
       return;
     }
     const controller = new AbortController();
@@ -61,28 +76,43 @@ export function SessionProvider({ children, initialRole }: SessionProviderProps)
         }
       });
     return () => controller.abort();
-  }, [initialRole]);
+  }, [initialRole, demo]);
 
-  const login = useCallback(async (username: string, password: string) => {
-    const user = await apiLogin(username, password);
-    setState({ status: 'authenticated', user });
-  }, []);
+  const login = useCallback(
+    async (username: string, password: string) => {
+      if (demo) {
+        setState({ status: 'authenticated', user: demoLogin(username) });
+        return;
+      }
+      const user = await apiLogin(username, password);
+      setState({ status: 'authenticated', user });
+    },
+    [demo],
+  );
 
   const register = useCallback(
     async (displayName: string, email: string, password: string) => {
+      if (demo) {
+        throw new Error('Account creation is disabled in the demo.');
+      }
       const user = await apiRegister(displayName, email, password);
       setState({ status: 'authenticated', user });
     },
-    [],
+    [demo],
   );
 
   const logout = useCallback(async () => {
+    if (demo) {
+      clearDemoSession();
+      setState(ANONYMOUS);
+      return;
+    }
     try {
       await apiLogout();
     } finally {
       setState(ANONYMOUS);
     }
-  }, []);
+  }, [demo]);
 
   const value = useMemo<Session>(
     () => ({

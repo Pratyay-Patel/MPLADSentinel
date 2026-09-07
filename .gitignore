@@ -47,3 +47,6 @@ pnpm-debug.log*
 *.pid.lock
 .cache/
 tmp/
+
+# Database snapshots — share out-of-band, never commit
+*.dump

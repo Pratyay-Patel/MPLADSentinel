@@ -1,6 +1,7 @@
 package com.mpladsentinel.mplads.repository;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +27,9 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
      * ordering keeps it deterministic if that ever stops holding.
      */
     Optional<Work> findFirstBySourceWorkIdOrderByIdAsc(Long sourceWorkId);
+
+    /** Batch lookup by source work id — used to attach work titles to a list of records. */
+    List<Work> findBySourceWorkIdIn(Collection<Long> sourceWorkIds);
 
     // --- read-model aggregates (works summary API) ------------------------
 

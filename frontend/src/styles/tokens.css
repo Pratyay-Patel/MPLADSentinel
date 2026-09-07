@@ -22,9 +22,9 @@
   --color-surface-sunken: #eef1f4;
   --color-border: #d9dee5;
   --color-border-strong: #c3cad4;
-  --color-text: #1f2733;
-  --color-text-secondary: #566072;
-  --color-text-muted: #79828f;
+  --color-text: #16202e;
+  --color-text-secondary: #434d5e;
+  --color-text-muted: #5f6772;
   --color-text-inverse: #ffffff;
 
   /* ---- semantic status (fg + bg + border for each) -------------------- */
@@ -96,12 +96,14 @@
   --border: var(--border-width) solid var(--color-border);
   --border-strong: var(--border-width) solid var(--color-border-strong);
 
-  /* ---- shadows (subtle only) --------------------------------------- */
-  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
-  --shadow-md: 0 2px 6px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.05);
+  /* ---- shadows (elevation — restrained, but cards read as lifted) --- */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 2px 6px rgba(16, 24, 40, 0.09);
+  --shadow-md: 0 2px 4px rgba(16, 24, 40, 0.08), 0 8px 20px rgba(16, 24, 40, 0.12);
+  --shadow-lg: 0 4px 8px rgba(16, 24, 40, 0.1), 0 16px 36px rgba(16, 24, 40, 0.16);
 
   /* ---- layout ----------------------------------------------------- */
   --layout-sidebar-width: 232px;
+  --layout-sidebar-collapsed-width: 60px;
   --layout-header-height: 56px;
   --layout-content-max: 1200px;
   --layout-content-pad-x: var(--space-6);

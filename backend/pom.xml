@@ -44,6 +44,15 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- Loads backend/.env into the Spring Environment at startup (local-dev
+             convenience; the file is git-ignored). In CI / containers the same
+             keys still work as plain OS environment variables. -->
+        <dependency>
+            <groupId>me.paulschwarz</groupId>
+            <artifactId>spring-dotenv</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+
         <!-- Database migrations -->
         <dependency>
             <groupId>org.flywaydb</groupId>

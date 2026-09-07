@@ -32,6 +32,10 @@ const NAV_LABELS = [
   'Overview',
   'Projects',
   'Risk & Alerts',
+  'Compare MPs',
+  'Inspections',
+  'Analytics',
+  'Assistant',
   'Audit',
   'Citizen Portal',
   'Grievances',
@@ -61,6 +65,7 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Grievances' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Overview' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Risk & Alerts' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Inspections' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Audit' })).not.toBeInTheDocument();
   });
 
@@ -87,5 +92,30 @@ describe('AppShell', () => {
     renderAt('/');
     expect(screen.getByText('MoSPI / Ministry')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+  });
+
+  it('collapses the sidebar to an icon rail and remembers it', () => {
+    localStorage.removeItem('mplads.navCollapsed');
+    const { unmount } = renderAt('/');
+
+    const collapse = screen.getByRole('button', { name: /collapse sidebar/i });
+    expect(collapse).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByLabelText('Section navigation')).not.toHaveAttribute('data-collapsed');
+
+    fireEvent.click(collapse);
+
+    expect(screen.getByRole('button', { name: /expand sidebar/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByLabelText('Section navigation')).toHaveAttribute('data-collapsed', 'true');
+    expect(localStorage.getItem('mplads.navCollapsed')).toBe('1');
+    // labels still present for a11y even when visually hidden
+    expect(screen.getByRole('link', { name: 'Projects' })).toBeInTheDocument();
+
+    unmount();
+    renderAt('/');
+    expect(screen.getByRole('button', { name: /expand sidebar/i })).toBeInTheDocument();
+    localStorage.removeItem('mplads.navCollapsed');
   });
 });

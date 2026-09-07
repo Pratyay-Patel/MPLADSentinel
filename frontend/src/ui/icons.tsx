@@ -74,3 +74,110 @@ export const InboxIcon = (p: IconProps) => (
     <path d="M5 5h14l2 8v6H3v-6L5 5Z" />
   </Base>
 );
+
+export const DownloadIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M12 3v12" />
+    <path d="m7 10 5 5 5-5" />
+    <path d="M5 21h14" />
+  </Base>
+);
+
+export const ChevronDownIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="m6 9 6 6 6-6" />
+  </Base>
+);
+
+export const CircleCheckIcon = (p: IconProps) => (
+  <Base {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="m8.5 12 2.5 2.5 4.5-5" />
+  </Base>
+);
+
+export const RupeeIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M7 5h10" />
+    <path d="M7 9h10" />
+    <path d="M7 13h4c2.5 0 4-1.8 4-4" />
+    <path d="m8 13 6 6" />
+  </Base>
+);
+
+export const ClipboardListIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="6" y="4" width="12" height="17" rx="2" />
+    <path d="M9 4V3h6v1" />
+    <path d="M9.5 10h5" />
+    <path d="M9.5 14h5" />
+  </Base>
+);
+
+export const TrendingUpIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3 17l6-6 4 4 8-8" />
+    <path d="M15 7h6v6" />
+  </Base>
+);
+
+export const ChatIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12Z" />
+    <path d="M8.5 11h.01M12 11h.01M15.5 11h.01" />
+  </Base>
+);
+
+// --- primary navigation icons -------------------------------------------------
+
+export const LayoutGridIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="3" y="3" width="8" height="8" rx="1" />
+    <rect x="13" y="3" width="8" height="8" rx="1" />
+    <rect x="3" y="13" width="8" height="8" rx="1" />
+    <rect x="13" y="13" width="8" height="8" rx="1" />
+  </Base>
+);
+
+export const ListIcon = (p: IconProps) => (
+  <Base {...p}>
+    <line x1="8" y1="6" x2="21" y2="6" />
+    <line x1="8" y1="12" x2="21" y2="12" />
+    <line x1="8" y1="18" x2="21" y2="18" />
+    <line x1="3.5" y1="6" x2="3.5" y2="6" />
+    <line x1="3.5" y1="12" x2="3.5" y2="12" />
+    <line x1="3.5" y1="18" x2="3.5" y2="18" />
+  </Base>
+);
+
+export const BarsIcon = (p: IconProps) => (
+  <Base {...p}>
+    <line x1="4" y1="20" x2="4" y2="12" />
+    <line x1="10" y1="20" x2="10" y2="4" />
+    <line x1="16" y1="20" x2="16" y2="9" />
+    <line x1="21" y1="20" x2="3" y2="20" />
+  </Base>
+);
+
+export const ShieldIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M12 3 5 6v5c0 4.4 3 7.7 7 9 4-1.3 7-4.6 7-9V6l-7-3Z" />
+    <path d="m9 12 2 2 4-4" />
+  </Base>
+);
+
+export const UsersIcon = (p: IconProps) => (
+  <Base {...p}>
+    <circle cx="9" cy="8" r="3.2" />
+    <path d="M3.5 20c0-3 2.5-5 5.5-5s5.5 2 5.5 5" />
+    <path d="M16 5.2a3 3 0 0 1 0 5.6" />
+    <path d="M17.5 20c0-2.4-1-4-2.5-4.6" />
+  </Base>
+);
+
+export const SidebarIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <line x1="9" y1="4" x2="9" y2="20" />
+  </Base>
+);

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import {
   useAsyncData,
@@ -8,6 +9,21 @@ import {
   type RegisterRow,
   type RiskLevel,
 } from '../../data';
+import {
+  downloadCsv,
+  ExportMenu,
+  filenameSlug,
+  scopeWorks,
+  toCsv,
+  workCsvColumns,
+  type ExportScope,
+} from '../../export';
+import {
+  applyGlobalFiltersBy,
+  GlobalFilterBar,
+  globalFilterOptions,
+  useGlobalFilters,
+} from '../../filters';
 import { formatINRCompact, workTitle } from '../../format';
 import {
   Button,
@@ -44,32 +60,35 @@ const LIFECYCLE_LABEL: Record<LifecycleState, string> = {
 };
 
 interface RegisterFilters {
-  state: string;
-  district: string;
   house: string;
   category: string;
-  lifecycle: '' | LifecycleState;
   risk: '' | RiskLevel;
   search: string;
 }
 
 const EMPTY_FILTERS: RegisterFilters = {
-  state: '',
-  district: '',
   house: '',
   category: '',
-  lifecycle: '',
   risk: '',
   search: '',
 };
 
+const RISK_LEVELS: RiskLevel[] = ['HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'];
+
+/** Seed the local risk-level filter from `?level=` (set by the voice command bar
+ *  when it targets the register; `?state=` is handled by the global filter bar). */
+function filtersFromParams(params: URLSearchParams): RegisterFilters {
+  const level = params.get('level')?.toUpperCase() ?? '';
+  return {
+    ...EMPTY_FILTERS,
+    risk: (RISK_LEVELS as string[]).includes(level) ? (level as RiskLevel) : '',
+  };
+}
+
 function isActive(filters: RegisterFilters): boolean {
   return (
-    filters.state !== '' ||
-    filters.district !== '' ||
     filters.house !== '' ||
     filters.category !== '' ||
-    filters.lifecycle !== '' ||
     filters.risk !== '' ||
     filters.search.trim() !== ''
   );
@@ -78,11 +97,8 @@ function isActive(filters: RegisterFilters): boolean {
 function filterRows(rows: RegisterRow[], filters: RegisterFilters): RegisterRow[] {
   const search = filters.search.trim().toLowerCase();
   return rows.filter(({ project, risk }) => {
-    if (filters.state && project.state !== filters.state) return false;
-    if (filters.district && project.district !== filters.district) return false;
     if (filters.house && project.house !== filters.house) return false;
     if (filters.category && project.category !== filters.category) return false;
-    if (filters.lifecycle && project.lifecycleState !== filters.lifecycle) return false;
     if (filters.risk && risk.level !== filters.risk) return false;
     if (search) {
       const haystack = [
@@ -170,7 +186,11 @@ const columns: Column<RegisterRow>[] = [
     header: 'Action',
     align: 'right',
     render: ({ project }) => (
-      <ViewProjectLink id={project.sourceWorkId} label={workTitle(project.workDescription, project.sourceWorkId)} />
+      <ViewProjectLink
+        id={project.sourceWorkId}
+        label={workTitle(project.workDescription, project.sourceWorkId)}
+        variant="record"
+      />
     ),
   },
 ];
@@ -195,6 +215,7 @@ export function ProjectRegister() {
   return (
     <div className="ui-stack reg">
       <PageHeader
+        breadcrumbs={[{ label: 'Home', to: '/' }, { label: 'Projects' }]}
         title="Project Register"
         description="Every MPLADS work, with status and risk indicators. Search and filter to narrow the list, then open a work for the full record."
       />
@@ -230,30 +251,42 @@ export function ProjectRegister() {
 }
 
 function RegisterBody({ data }: { data: ProjectRegisterData }) {
-  const [filters, setFilters] = useState<RegisterFilters>(EMPTY_FILTERS);
-  const filtered = useMemo(() => filterRows(data.rows, filters), [data.rows, filters]);
+  const [searchParams] = useSearchParams();
+  const { filters: globalFilters } = useGlobalFilters();
+  const [filters, setFilters] = useState<RegisterFilters>(() => filtersFromParams(searchParams));
+
+  const globalRows = useMemo(
+    () => applyGlobalFiltersBy(data.rows, (r) => r.project, globalFilters),
+    [data.rows, globalFilters],
+  );
+  const filtered = useMemo(() => filterRows(globalRows, filters), [globalRows, filters]);
+  const barOptions = useMemo(
+    () => globalFilterOptions(data.rows.map((r) => r.project)),
+    [data.rows],
+  );
 
   const set = <K extends keyof RegisterFilters>(key: K, value: RegisterFilters[K]) =>
     setFilters((prev) => ({ ...prev, [key]: value }));
+
+  const handleExport = (scope: ExportScope) => {
+    const csv = toCsv(scopeWorks(filtered, scope), workCsvColumns);
+    const parts = ['mpladsentinel', 'works'];
+    if (globalFilters.state) parts.push(filenameSlug(globalFilters.state));
+    if (scope !== 'all') parts.push(scope);
+    downloadCsv(`${parts.join('_')}.csv`, csv);
+  };
 
   const { filterOptions } = data;
 
   return (
     <>
-      <div className="reg-filters" role="search" aria-label="Filter the register">
+      <GlobalFilterBar
+        options={barOptions}
+        resultLabel={`${filtered.length} of ${data.rows.length} works match`}
+      />
+
+      <div className="reg-filters" role="search" aria-label="More filters for the register">
         <div className="reg-filters__grid">
-          <Select
-            label="State"
-            value={filters.state}
-            options={opts(filterOptions.states, 'All states')}
-            onChange={(e) => set('state', e.target.value)}
-          />
-          <Select
-            label="District"
-            value={filters.district}
-            options={opts(filterOptions.districts, 'All districts')}
-            onChange={(e) => set('district', e.target.value)}
-          />
           <Select
             label="House"
             value={filters.house}
@@ -268,18 +301,6 @@ function RegisterBody({ data }: { data: ProjectRegisterData }) {
             value={filters.category}
             options={opts(filterOptions.categories, 'All categories')}
             onChange={(e) => set('category', e.target.value)}
-          />
-          <Select
-            label="Status"
-            value={filters.lifecycle}
-            options={[
-              { value: '', label: 'Any status' },
-              ...filterOptions.lifecycleStates.map((s) => ({
-                value: s,
-                label: LIFECYCLE_LABEL[s],
-              })),
-            ]}
-            onChange={(e) => set('lifecycle', e.target.value as RegisterFilters['lifecycle'])}
           />
           <Select
             label="Risk level"
@@ -301,14 +322,17 @@ function RegisterBody({ data }: { data: ProjectRegisterData }) {
           <span className="text-muted">
             {filtered.length} of {data.rows.length} {data.rows.length === 1 ? 'work' : 'works'}
           </span>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={!isActive(filters)}
-            onClick={() => setFilters(EMPTY_FILTERS)}
-          >
-            Clear filters
-          </Button>
+          <div className="reg-filters__foot-actions">
+            <ExportMenu onExport={handleExport} count={filtered.length} />
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={!isActive(filters)}
+              onClick={() => setFilters(EMPTY_FILTERS)}
+            >
+              Clear filters
+            </Button>
+          </div>
         </div>
       </div>
 

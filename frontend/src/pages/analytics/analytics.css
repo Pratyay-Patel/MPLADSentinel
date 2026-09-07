@@ -1,0 +1,113 @@
+/**
+ * Fund & Utilisation Analytics (`/analytics`) — layout only. Charts are recharts
+ * (see charts.tsx); everything else reuses the shared primitives.
+ */
+
+.an-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.an-chart-foot {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.an-legend {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.an-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.an-legend__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.an-legend__range {
+  color: var(--color-text-muted);
+}
+
+.an-filter-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+/* Fixed-height, vertically scrollable chart frame. The recharts chart inside is
+   given an explicit height that grows with the row count; this caps what shows. */
+.an-scroll {
+  max-height: 360px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+  padding: var(--space-2) var(--space-2) var(--space-2) 0;
+}
+
+.an-mp-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.an-mp-cell__name {
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+
+.an-mp-cell__sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.an-observations {
+  margin: 0;
+  padding-left: var(--space-4);
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.an-note {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  max-width: 80ch;
+}
+
+.an-tip {
+  padding: var(--space-2) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: var(--leading-tight);
+}
+
+@media (max-width: 900px) {
+  .an-two-col {
+    grid-template-columns: 1fr;
+  }
+}

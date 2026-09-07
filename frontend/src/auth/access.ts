@@ -8,7 +8,17 @@ import { ROLES, type Role } from './roles';
  * Client-side only — a convenience for navigation and page rendering. Backend
  * authorization (Spring Security, D5) remains the authoritative check.
  */
-export type Area = 'overview' | 'projects' | 'risk' | 'audit' | 'citizen' | 'grievances';
+export type Area =
+  | 'overview'
+  | 'projects'
+  | 'risk'
+  | 'compare'
+  | 'analytics'
+  | 'assistant'
+  | 'inspections'
+  | 'audit'
+  | 'citizen'
+  | 'grievances';
 
 const ALL_ROLES: Role[] = [...ROLES];
 const AUTHORITIES: Role[] = ['MOSPI', 'STATE', 'DISTRICT', 'AUDITOR', 'MP'];
@@ -18,6 +28,10 @@ export const AREA_ROLES: Record<Area, Role[]> = {
   overview: AUTHORITIES,
   projects: AUTHORITIES,
   risk: AUTHORITIES,
+  compare: AUTHORITIES,
+  analytics: AUTHORITIES,
+  assistant: AUTHORITIES,
+  inspections: AUTHORITIES,
   audit: AUTHORITIES,
   citizen: ALL_ROLES,
   grievances: ALL_ROLES,
@@ -40,6 +54,15 @@ export function reviewsGrievances(role: Role): boolean {
 
 /** True when the role may advance a grievance's review status / add an action note. */
 export function actionsGrievances(role: Role): boolean {
+  return GRIEVANCE_ADMINS.includes(role);
+}
+
+/**
+ * True when the role may request an inspection and advance an assignment's
+ * status — MoSPI / State / District (same subset that administers grievances).
+ * Auditor / MP see the Inspections screen read-only.
+ */
+export function assignsInspections(role: Role): boolean {
   return GRIEVANCE_ADMINS.includes(role);
 }
 

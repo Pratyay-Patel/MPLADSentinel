@@ -123,17 +123,28 @@ These features are valuable for the demonstration but must not delay completion 
 
 Per §1.1, P1.1–P1.3 depend on backend services and verification/ledger events. They are **deferred to the backend-integration phase** and are not built as frontend-only screens during the current frontend sprint. P1.4 and P1.5 are frontend screens and are delivered on the `DataProvider` seam alongside P0.
 
-P1.1 — IPFS Evidence (deferred to backend-integration phase)
+P1.1 — IPFS Evidence *(partly delivered — decision D34)*
 Upload a sample project/field-verification evidence file through the appropriate flow.
 Store the resulting CID as a project/verification reference.
 Actual evidence remains stored in IPFS/Pinata.
+> Delivered as a **read-only** demo: the backend reads a `PINATA_JWT` (backend-only
+> secret) and `GET /api/audit/{workId}/photos` returns the account's latest 2
+> uploads as CIDs + gateway URLs, shown on the Audit Trail. The portal does not
+> upload or pin; the Flutter app still uploads directly to Pinata. Storing a CID
+> *against* a verification record (via a submitted inspection payload) remains
+> deferred with the `/api/mobile/**` channel.
 P1.2 — Basic Blockchain Audit Event (deferred to backend-integration phase)
 Integrate with the blockchain service if it is ready.
 Record one or more important audit events through Hyperledger Fabric.
 Do not attempt to implement the complete blockchain workflow for Round 1.
-P1.3 — Basic Audit Timeline (deferred to backend-integration phase)
+P1.3 — Basic Audit Timeline *(delivered — decision D34)*
 
-Display important project events in chronological order. Depends on verification/ledger events that do not exist until backend integration.
+Display important project events in chronological order.
+> Delivered as a **work-level** trail on `/audit`, built from
+> `inspection_assignment` rows in PostgreSQL (Requested → In progress →
+> Completed / Cancelled → Field evidence). No Hyperledger Fabric — anchoring is
+> additive and still deferred. The "Inspection completed" findings are hardcoded
+> illustrative values until the Flutter inspection payload reaches the portal.
 
 P1.4 — Basic Citizen Portal *(done — frontend + B2 public works API)*
 

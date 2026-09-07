@@ -8,6 +8,12 @@ interface ImportMetaEnv {
    * fixtures; "api" serves real data via the Spring Boot backend.
    */
   readonly VITE_DATA_SOURCE?: 'demo' | 'api';
+  /**
+   * "true" runs the frontend with no backend: the session is chosen from a
+   * persona picker and held client-side. Used only for the Vercel demo build.
+   * Absent (the default) uses the real backend auth path.
+   */
+  readonly VITE_DEMO_AUTH?: string;
 }
 
 interface ImportMeta {

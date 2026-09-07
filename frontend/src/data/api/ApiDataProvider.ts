@@ -1,3 +1,10 @@
+import {
+  getAssignments,
+  getFieldOfficers,
+  patchAssignment,
+  postAssignment,
+} from '../../api/assignments';
+import { getAuditPhotos } from '../../api/audit';
 import { ApiError } from '../../api/client';
 import { getGrievances, patchGrievanceStatus, postGrievance } from '../../api/grievances';
 import { getHealth } from '../../api/health';
@@ -174,6 +181,46 @@ export function createApiDataProvider(): DataProvider {
         return await patchGrievanceStatus(id, patch, signal);
       } catch (error) {
         throw toProviderError('updateGrievanceStatus', error);
+      }
+    },
+
+    async listFieldOfficers(signal) {
+      try {
+        return await getFieldOfficers(signal);
+      } catch (error) {
+        throw toProviderError('listFieldOfficers', error);
+      }
+    },
+
+    async listAssignments(signal) {
+      try {
+        return await getAssignments(signal);
+      } catch (error) {
+        throw toProviderError('listAssignments', error);
+      }
+    },
+
+    async createAssignment(input, signal) {
+      try {
+        return await postAssignment(input, signal);
+      } catch (error) {
+        throw toProviderError('createAssignment', error);
+      }
+    },
+
+    async updateAssignment(id, patch, signal) {
+      try {
+        return await patchAssignment(id, patch, signal);
+      } catch (error) {
+        throw toProviderError('updateAssignment', error);
+      }
+    },
+
+    async getAuditPhotos(sourceWorkId, limit, signal) {
+      try {
+        return await getAuditPhotos(sourceWorkId, limit, signal);
+      } catch (error) {
+        throw toProviderError('getAuditPhotos', error);
       }
     },
   };

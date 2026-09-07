@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 
 import { useAsyncData, useProjectDetailService, type ProjectDetailData } from '../../data';
 import { formatINRExact, tidyDescription, workTitle } from '../../format';
@@ -11,13 +11,13 @@ import {
   KeyValueList,
   LoadingState,
   PageHeader,
-  RiskLevelBadge,
   SectionHeader,
   StatusBadge,
 } from '../../ui';
 import { DetailTimeline } from './DetailTimeline';
 import { flagLabel, houseLabel, LIFECYCLE_LABEL, LIFECYCLE_TONE } from './labels';
 import { PaymentsSection } from './PaymentsSection';
+import { RiskInsights } from './RiskInsights';
 
 /**
  * Project Details (`/projects/:id`) — the full record for a single MPLADS work,
@@ -30,6 +30,11 @@ import { PaymentsSection } from './PaymentsSection';
  */
 export function ProjectDetail() {
   const params = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  // `?section=record` (set by the Project Register's "View" link) renders the
+  // plain record without the risk-assessment section — risk already has its own
+  // column there, and the deep-dive belongs to Risk & Alerts / the Overview.
+  const showRisk = searchParams.get('section') !== 'record';
   const workId = Number(params.id);
   const validId = Number.isFinite(workId) && workId > 0;
 
@@ -55,7 +60,11 @@ export function ProjectDetail() {
   return (
     <div className="ui-stack detail">
       <PageHeader
-        breadcrumbs={[{ label: 'Projects', to: '/projects' }, { label: title }]}
+        breadcrumbs={[
+          { label: 'Home', to: '/' },
+          { label: 'Projects', to: '/projects' },
+          { label: title },
+        ]}
         title={title}
         description={subtitle || undefined}
       />
@@ -94,12 +103,14 @@ export function ProjectDetail() {
         </Card>
       )}
 
-      {state.status === 'success' && state.data && <ProjectDetailView data={state.data} />}
+      {state.status === 'success' && state.data && (
+        <ProjectDetailView data={state.data} showRisk={showRisk} />
+      )}
     </div>
   );
 }
 
-function ProjectDetailView({ data }: { data: ProjectDetailData }) {
+function ProjectDetailView({ data, showRisk }: { data: ProjectDetailData; showRisk: boolean }) {
   const { project, payments, risk } = data;
 
   return (
@@ -158,31 +169,7 @@ function ProjectDetailView({ data }: { data: ProjectDetailData }) {
         />
       </Card>
 
-      <Card>
-        <SectionHeader
-          title="Risk assessment"
-          description="Indicators computed from this work's financial and data-quality signals."
-          actions={<RiskLevelBadge level={risk.level} />}
-        />
-        {risk.level === 'UNKNOWN' ? (
-          <p className="detail-note" style={{ marginTop: 0 }}>
-            Not enough data to assess this work.
-          </p>
-        ) : risk.reasons.length === 0 ? (
-          <p className="detail-note" style={{ marginTop: 0 }}>
-            No current indicators for this work.
-          </p>
-        ) : (
-          <>
-            <KeyValueList items={[{ label: 'Risk score', value: `${risk.score} / 100` }]} />
-            <ul className="risk-reasons" style={{ marginTop: 'var(--space-3)' }}>
-              {risk.reasons.map((reason) => (
-                <li key={reason}>{reason}</li>
-              ))}
-            </ul>
-          </>
-        )}
-      </Card>
+      {showRisk && <RiskInsights risk={risk} />}
 
       <PaymentsSection project={project} payments={payments} />
 

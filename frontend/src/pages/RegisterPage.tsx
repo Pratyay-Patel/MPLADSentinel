@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 
 import { ApiError } from '../api/client';
-import { landingPathFor, useSession } from '../auth';
+import { demoAuthEnabled, landingPathFor, useSession } from '../auth';
 import { Button, Card, Input } from '../ui';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -26,6 +26,26 @@ export function RegisterPage() {
 
   if (status === 'authenticated' && role) {
     return <Navigate to={landingPathFor(role)} replace />;
+  }
+
+  if (demoAuthEnabled()) {
+    return (
+      <main className="login-page">
+        <Card className="login-card">
+          <div className="login-card__head">
+            <span className="login-card__brand">MPLADSentinel</span>
+            <h1 className="login-card__title">Account creation is disabled here</h1>
+            <p className="login-card__subtitle">
+              This is an interactive demo on illustrative data. Choose a role — including
+              Citizen — from the sign-in screen to explore the portal.
+            </p>
+          </div>
+          <p className="login-card__alt">
+            <Link to="/login">Back to role picker</Link>
+          </p>
+        </Card>
+      </main>
+    );
   }
 
   const clientError = (): string | null => {

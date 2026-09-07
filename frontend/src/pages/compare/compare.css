@@ -1,0 +1,197 @@
+/** Compare MPs (`/compare`) — layout only; reuses Card / MetricCard / recharts. */
+
+/* dataviz categorical palette, slots 1–4 (light theme only — the app has no dark mode) */
+.mpc {
+  --mpc-s1: #2a78d6;
+  --mpc-s2: #eb6834;
+  --mpc-s3: #1baf7a;
+  --mpc-s4: #eda100;
+}
+
+.mpc-note {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  max-width: 80ch;
+}
+
+/* selected-MP chips */
+.mpc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.mpc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  background: var(--color-brand-050);
+  border: 1px solid var(--color-brand-100);
+  border-radius: var(--radius-pill);
+  color: var(--color-brand-800);
+}
+
+.mpc-chip__x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: var(--text-md);
+  line-height: 1;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.mpc-chip__x:hover {
+  background: var(--color-brand-100);
+}
+
+/* search results */
+.mpc-results {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 320px;
+  overflow-y: auto;
+  border: var(--border);
+  border-radius: var(--radius-md);
+}
+
+.mpc-results > li + li {
+  border-top: var(--border);
+}
+
+.mpc-result {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  font: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.mpc-result:hover {
+  background: var(--color-surface-sunken);
+}
+
+.mpc-result:focus-visible {
+  outline: 2px solid var(--color-brand-700);
+  outline-offset: -2px;
+}
+
+.mpc-result__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.mpc-result__meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+/* metric picker */
+.mpc-metric-pick {
+  max-width: 320px;
+  margin-bottom: var(--space-4);
+}
+
+/* bar chart */
+.mpc-chart {
+  min-width: 0;
+}
+
+.mpc-chart__plot {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* recharts sizes to this fixed-height parent; guard against a 0-width flex parent */
+.mpc-chart__plot .recharts-responsive-container {
+  min-width: 0;
+}
+
+.mpc-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.mpc-chart__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mpc-chart__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+/* comparison table */
+.mpc-table-wrap {
+  overflow-x: auto;
+}
+
+.mpc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.mpc-table th,
+.mpc-table td {
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  border-bottom: var(--border);
+  vertical-align: top;
+}
+
+.mpc-table thead th {
+  border-bottom: 2px solid var(--color-border);
+}
+
+.mpc-table tbody th {
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.mpc-table td {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.mpc-table__mp {
+  display: block;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.mpc-table__sub {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  color: var(--color-text-muted);
+}

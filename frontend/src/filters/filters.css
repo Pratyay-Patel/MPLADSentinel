@@ -1,0 +1,27 @@
+/**
+ * App-wide filter bar (year / state / district / status), rendered at the top of
+ * the Dashboard, Project Register and Risk & Alerts. Layout only — reuses the
+ * shared field / button primitives.
+ */
+
+.global-filters {
+  background: var(--color-surface);
+  border: var(--border);
+  border-left: 3px solid var(--color-brand-600);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.global-filters__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+}
+
+.global-filters__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}

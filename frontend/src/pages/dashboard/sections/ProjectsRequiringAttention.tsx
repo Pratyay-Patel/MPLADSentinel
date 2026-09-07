@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import type { AttentionItem } from '../../../data';
 import { DataTable, EmptyState, ViewProjectLink, type Column } from '../../../ui';
 import { formatINRCompact, workTitle } from '../../../format';
@@ -81,12 +83,22 @@ export function ProjectsRequiringAttention({ items }: { items: AttentionItem[] }
           description="No work currently meets an attention threshold."
         />
       ) : (
-        <DataTable
-          caption="Projects requiring attention"
-          columns={columns}
-          rows={items}
-          getRowKey={({ project }) => project.sourceWorkId}
-        />
+        <>
+          <DataTable
+            caption="Projects requiring attention"
+            columns={columns}
+            rows={items}
+            getRowKey={({ project }) => project.sourceWorkId}
+          />
+          <div className="dash-attention__foot">
+            <Link className="ui-btn ui-btn--ghost ui-btn--sm" to="/projects">
+              Open full register <span aria-hidden>→</span>
+            </Link>
+            <Link className="ui-btn ui-btn--ghost ui-btn--sm" to="/risk">
+              Open risk queue <span aria-hidden>→</span>
+            </Link>
+          </div>
+        </>
       )}
     </section>
   );
