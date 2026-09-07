@@ -13,12 +13,17 @@
  */
 
 export type {
+  AssignmentInput,
+  AssignmentPatch,
+  AssignmentStatus,
   BackendHealth,
   DataSource,
+  FieldOfficer,
   Grievance,
   GrievanceInput,
   GrievanceStatus,
   GrievanceStatusPatch,
+  InspectionAssignment,
   LifecycleState,
   Money,
   PaymentDataState,
@@ -133,6 +138,17 @@ export {
   type GrievanceWorkOption,
 } from './features/grievances';
 export { useGrievancesService } from './features/useGrievancesService';
+
+export {
+  createInspectionsService,
+  ASSIGNMENT_STATUSES,
+  ASSIGNMENT_STATUS_LABEL,
+  nextAssignmentStatuses,
+  type InspectionsService,
+  type InspectionsData,
+  type InspectionWorkOption,
+} from './features/inspections';
+export { useInspectionsService } from './features/useInspectionsService';
 
 export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';
 export {

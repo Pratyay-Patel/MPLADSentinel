@@ -1,10 +1,14 @@
 import type { PublicProject } from './publicProject';
 import type {
+  AssignmentInput,
+  AssignmentPatch,
   BackendHealth,
   DataSource,
+  FieldOfficer,
   Grievance,
   GrievanceInput,
   GrievanceStatusPatch,
+  InspectionAssignment,
   PaymentInstallment,
   Project,
   ProjectRisk,
@@ -80,4 +84,20 @@ export interface DataProvider {
     patch: GrievanceStatusPatch,
     signal?: AbortSignal,
   ): Promise<Grievance>;
+
+  /** Field officers an authority can assign an inspection to. */
+  listFieldOfficers(signal?: AbortSignal): Promise<FieldOfficer[]>;
+
+  /** Every inspection assignment, newest first. */
+  listAssignments(signal?: AbortSignal): Promise<InspectionAssignment[]>;
+
+  /** Request an inspection of a work by a field officer; returns the stored record. */
+  createAssignment(input: AssignmentInput, signal?: AbortSignal): Promise<InspectionAssignment>;
+
+  /** Advance an assignment's status / edit it (authority action); returns the updated record. */
+  updateAssignment(
+    id: string,
+    patch: AssignmentPatch,
+    signal?: AbortSignal,
+  ): Promise<InspectionAssignment>;
 }

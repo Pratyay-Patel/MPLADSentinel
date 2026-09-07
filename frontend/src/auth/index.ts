@@ -11,6 +11,7 @@ export {
   canAccess,
   reviewsGrievances,
   actionsGrievances,
+  assignsInspections,
   landingPathFor,
   type Area,
 } from './access';

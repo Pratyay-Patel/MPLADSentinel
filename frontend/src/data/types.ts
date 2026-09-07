@@ -173,3 +173,55 @@ export interface GrievanceStatusPatch {
   status: GrievanceStatus;
   actionNote?: string | null;
 }
+
+/**
+ * Lifecycle of an inspection assignment (backend `AssignmentStatus`).
+ * `ASSIGNED → IN_PROGRESS → COMPLETED`, or `CANCELLED` from an open state.
+ * The UI labels these "Requested / In progress / Completed / Cancelled".
+ */
+export type AssignmentStatus = 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
+/** A field officer an authority can assign an inspection to (`GET /api/officers`). */
+export interface FieldOfficer {
+  /** Stable code used by the mobile app, e.g. `OFF102`. */
+  officerCode: string;
+  name: string;
+  phone: string | null;
+}
+
+/** What an authority fills in to request an inspection. */
+export interface AssignmentInput {
+  sourceWorkId: number;
+  officerCode: string;
+  /** ISO date (day precision), or null. */
+  dueDate: string | null;
+  note: string | null;
+}
+
+/**
+ * An inspection assignment. `workTitle` / `officerName` / `assignedByName` are
+ * joined in by the backend. The Audit Trail renders only the *date* portion of
+ * `assignedAt` / `updatedAt`.
+ */
+export interface InspectionAssignment {
+  id: string;
+  sourceWorkId: number;
+  workTitle: string;
+  officerCode: string | null;
+  officerName: string | null;
+  assignedByName: string | null;
+  status: AssignmentStatus;
+  dueDate: string | null;
+  note: string | null;
+  /** ISO timestamp. */
+  assignedAt: string;
+  /** ISO timestamp of the last status/detail change. */
+  updatedAt: string;
+}
+
+/** Fields an authority can change on an assignment. A non-null value is applied. */
+export interface AssignmentPatch {
+  status?: AssignmentStatus;
+  dueDate?: string | null;
+  note?: string | null;
+}

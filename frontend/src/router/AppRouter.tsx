@@ -9,6 +9,7 @@ import { CitizenPortal } from '../pages/citizen/CitizenPortal';
 import { CitizenProjectView } from '../pages/citizen/CitizenProjectView';
 import { AuditPage } from '../pages/featurePages';
 import { Grievances } from '../pages/grievances/Grievances';
+import { InspectionsPage } from '../pages/inspections/InspectionsPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
@@ -100,6 +101,14 @@ export const appRouter = createBrowserRouter([
         element: (
           <RequireRole area="assistant">
             <AssistantPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'inspections',
+        element: (
+          <RequireRole area="inspections">
+            <InspectionsPage />
           </RequireRole>
         ),
       },
