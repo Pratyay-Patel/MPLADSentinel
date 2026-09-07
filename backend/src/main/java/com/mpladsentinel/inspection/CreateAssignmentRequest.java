@@ -2,6 +2,8 @@ package com.mpladsentinel.inspection;
 
 import java.time.LocalDate;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -22,6 +24,9 @@ public record CreateAssignmentRequest(
         LocalDate dueDate,
 
         /** Optional instruction shown to the officer. */
-        @Size(max = 2000) String note
+        @Size(max = 2000) String note,
+
+        /** Field-evidence photos this inspection calls for (1–20). Defaults to 2 when omitted. */
+        @Min(1) @Max(20) Integer requiredPhotos
 ) {
 }

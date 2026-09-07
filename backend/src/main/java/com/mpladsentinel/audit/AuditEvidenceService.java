@@ -23,6 +23,9 @@ public class AuditEvidenceService {
 
     private static final Logger log = LoggerFactory.getLogger(AuditEvidenceService.class);
 
+    /** Hard ceiling on how many evidence images one request may ask for. */
+    static final int MAX_LIMIT = 20;
+
     private final PinataClient pinata;
     private final PinataProperties properties;
 
@@ -31,13 +34,21 @@ public class AuditEvidenceService {
         this.properties = properties;
     }
 
-    public AuditEvidenceResponse forWork(long sourceWorkId) {
+    /**
+     * @param limit how many of the latest uploads to return; {@code null} (or
+     *              &lt; 1) falls back to {@code mplads.pinata.evidence-limit}.
+     *              Bounded to {@value #MAX_LIMIT}.
+     */
+    public AuditEvidenceResponse forWork(long sourceWorkId, Integer limit) {
         if (!properties.configured()) {
             log.debug("Pinata not configured (PINATA_JWT unset) — no evidence for work {}", sourceWorkId);
             return new AuditEvidenceResponse(List.of(), false);
         }
+        int count = limit != null && limit >= 1
+                ? Math.min(limit, MAX_LIMIT)
+                : properties.evidenceLimit();
         try {
-            List<AuditPhoto> photos = pinata.fetchLatestFiles(properties.evidenceLimit()).stream()
+            List<AuditPhoto> photos = pinata.fetchLatestFiles(count).stream()
                     .map(file -> new AuditPhoto(
                             file.cid(), file.name(), properties.gatewayUrlFor(file.cid())))
                     .toList();

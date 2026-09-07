@@ -32,6 +32,11 @@ public class InspectionAssignmentService {
     private static final List<AssignmentStatus> OPEN_STATUSES =
             List.of(AssignmentStatus.ASSIGNED, AssignmentStatus.IN_PROGRESS);
 
+    /** Default field-evidence photo count when the request omits it. */
+    static final short DEFAULT_REQUIRED_PHOTOS = 2;
+    static final short MIN_REQUIRED_PHOTOS = 1;
+    static final short MAX_REQUIRED_PHOTOS = 20;
+
     private final InspectionAssignmentRepository assignments;
     private final AppUserRepository users;
     private final WorkRepository works;
@@ -67,6 +72,7 @@ public class InspectionAssignmentService {
                 new InspectionAssignment(work.getSourceWorkId(), officer.getId(), assignedByUserId);
         assignment.setDueDate(request.dueDate());
         assignment.setNote(trimToNull(request.note()));
+        assignment.setRequiredPhotos(clampRequiredPhotos(request.requiredPhotos()));
         return single(assignments.save(assignment));
     }
 
@@ -111,6 +117,9 @@ public class InspectionAssignmentService {
             }
             if (request.note() != null) {
                 assignment.setNote(trimToNull(request.note()));
+            }
+            if (request.requiredPhotos() != null) {
+                assignment.setRequiredPhotos(clampRequiredPhotos(request.requiredPhotos()));
             }
             assignment.touchUpdatedAt();
             return single(assignments.save(assignment));
@@ -177,11 +186,20 @@ public class InspectionAssignmentService {
                 row.getStatus(),
                 row.getDueDate(),
                 row.getNote(),
+                row.getRequiredPhotos(),
                 row.getAssignedAt(),
                 row.getUpdatedAt());
     }
 
     private static String trimToNull(String value) {
         return StringUtils.hasText(value) ? value.trim() : null;
+    }
+
+    /** {@code null} → the default; otherwise bounded to [MIN, MAX] (bean validation already checks). */
+    private static short clampRequiredPhotos(Integer value) {
+        if (value == null) {
+            return DEFAULT_REQUIRED_PHOTOS;
+        }
+        return (short) Math.max(MIN_REQUIRED_PHOTOS, Math.min(MAX_REQUIRED_PHOTOS, value));
     }
 }

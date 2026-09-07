@@ -48,6 +48,10 @@ public class InspectionAssignment {
     @Column(columnDefinition = "text")
     private String note;
 
+    /** How many field-evidence photos this inspection calls for (1–20). */
+    @Column(name = "required_photos", nullable = false)
+    private short requiredPhotos = 2;
+
     @Column(name = "assigned_at", nullable = false)
     private Instant assignedAt = Instant.now();
 
@@ -101,6 +105,14 @@ public class InspectionAssignment {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public short getRequiredPhotos() {
+        return requiredPhotos;
+    }
+
+    public void setRequiredPhotos(short requiredPhotos) {
+        this.requiredPhotos = requiredPhotos;
     }
 
     public Instant getAssignedAt() {

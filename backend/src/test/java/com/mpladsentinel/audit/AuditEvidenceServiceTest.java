@@ -33,7 +33,7 @@ class AuditEvidenceServiceTest {
     void returnsNotConfiguredAndNeverCallsPinataWhenNoJwt() {
         AuditEvidenceService service = new AuditEvidenceService(pinata, props(""));
 
-        AuditEvidenceResponse response = service.forWork(4213908L);
+        AuditEvidenceResponse response = service.forWork(4213908L, null);
 
         assertThat(response.configured()).isFalse();
         assertThat(response.photos()).isEmpty();
@@ -47,7 +47,7 @@ class AuditEvidenceServiceTest {
                 new PinataFile("bafyB", "site-1.jpg", null)));
         AuditEvidenceService service = new AuditEvidenceService(pinata, props("real-jwt"));
 
-        AuditEvidenceResponse response = service.forWork(4213908L);
+        AuditEvidenceResponse response = service.forWork(4213908L, null);
 
         assertThat(response.configured()).isTrue();
         assertThat(response.photos()).extracting(AuditEvidenceResponse.AuditPhoto::url)
@@ -58,11 +58,32 @@ class AuditEvidenceServiceTest {
     }
 
     @Test
+    void usesTheRequestedLimitOverTheConfiguredDefault() {
+        when(pinata.fetchLatestFiles(5)).thenReturn(List.of());
+        AuditEvidenceService service = new AuditEvidenceService(pinata, props("real-jwt"));
+
+        service.forWork(4213908L, 5);
+
+        // the configured default is 2; the request asked for 5
+        org.mockito.Mockito.verify(pinata).fetchLatestFiles(5);
+    }
+
+    @Test
+    void clampsAnOverlargeLimitToTheCeiling() {
+        when(pinata.fetchLatestFiles(AuditEvidenceService.MAX_LIMIT)).thenReturn(List.of());
+        AuditEvidenceService service = new AuditEvidenceService(pinata, props("real-jwt"));
+
+        service.forWork(4213908L, 999);
+
+        org.mockito.Mockito.verify(pinata).fetchLatestFiles(AuditEvidenceService.MAX_LIMIT);
+    }
+
+    @Test
     void degradesToConfiguredWithNoPhotosWhenPinataFails() {
         when(pinata.fetchLatestFiles(2)).thenThrow(new PinataException("Pinata GET /v3/files failed: HTTP 500"));
         AuditEvidenceService service = new AuditEvidenceService(pinata, props("real-jwt"));
 
-        AuditEvidenceResponse response = service.forWork(4213908L);
+        AuditEvidenceResponse response = service.forWork(4213908L, null);
 
         assertThat(response.configured()).isTrue();
         assertThat(response.photos()).isEmpty();

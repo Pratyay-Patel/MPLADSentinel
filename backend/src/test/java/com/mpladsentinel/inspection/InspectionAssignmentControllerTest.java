@@ -161,6 +161,40 @@ class InspectionAssignmentControllerTest extends AbstractPostgresIntegrationTest
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void requiredPhotosDefaultsToTwoAndAcceptsAnExplicitValueAndIsEditable() {
+        long defaultWork = newWork("Footbridge");
+        assertThat(((Number) createAssignment(defaultWork, "OFF101", "mospi").get("requiredPhotos")).intValue())
+                .isEqualTo(2);
+
+        long customWork = newWork("Water pipeline");
+        ResponseEntity<Map> created = rest.exchange("/api/assignments", HttpMethod.POST,
+                body(new HashMap<>(Map.of("sourceWorkId", customWork, "officerCode", "OFF102",
+                        "requiredPhotos", 5)), "state"),
+                Map.class);
+        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(((Number) created.getBody().get("requiredPhotos")).intValue()).isEqualTo(5);
+
+        String id = (String) created.getBody().get("id");
+        ResponseEntity<Map> patched = rest.exchange("/api/assignments/" + id, HttpMethod.PATCH,
+                body(Map.of("requiredPhotos", 8), "state"), Map.class);
+        assertThat(patched.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(((Number) patched.getBody().get("requiredPhotos")).intValue()).isEqualTo(8);
+    }
+
+    @Test
+    void rejectsAnOutOfRangeRequiredPhotos() {
+        long workId = newWork("Street lighting");
+        for (int bad : new int[] {0, 21}) {
+            assertThat(rest.exchange("/api/assignments", HttpMethod.POST,
+                    body(new HashMap<>(Map.of("sourceWorkId", workId, "officerCode", "OFF103",
+                            "requiredPhotos", bad)), "state"),
+                    String.class).getStatusCode()).as("requiredPhotos=%d", bad)
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Test
     void aSecondOpenAssignmentForTheSameWorkAndOfficerIsAConflict() {
         long workId = newWork("Drainage line");
         createAssignment(workId, "OFF103", "district");

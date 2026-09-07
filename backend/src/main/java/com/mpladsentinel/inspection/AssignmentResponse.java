@@ -22,6 +22,7 @@ public record AssignmentResponse(
         AssignmentStatus status,
         LocalDate dueDate,
         String note,
+        int requiredPhotos,
         Instant assignedAt,
         Instant updatedAt
 ) {

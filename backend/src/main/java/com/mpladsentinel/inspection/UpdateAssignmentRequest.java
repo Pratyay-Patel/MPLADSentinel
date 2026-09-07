@@ -2,6 +2,8 @@ package com.mpladsentinel.inspection;
 
 import java.time.LocalDate;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -12,7 +14,8 @@ import jakarta.validation.constraints.Size;
  *   <li>{@code status} — advance the lifecycle
  *       ({@code ASSIGNED -> IN_PROGRESS -> COMPLETED}) or {@code CANCELLED} from
  *       an open state. An illegal transition is rejected with {@code 400}.</li>
- *   <li>{@code dueDate} / {@code note} — edit the assignment.</li>
+ *   <li>{@code dueDate} / {@code note} / {@code requiredPhotos} — edit the
+ *       assignment.</li>
  * </ul>
  */
 public record UpdateAssignmentRequest(
@@ -21,6 +24,8 @@ public record UpdateAssignmentRequest(
 
         LocalDate dueDate,
 
-        @Size(max = 2000) String note
+        @Size(max = 2000) String note,
+
+        @Min(1) @Max(20) Integer requiredPhotos
 ) {
 }
