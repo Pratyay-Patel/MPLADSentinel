@@ -7,13 +7,13 @@ import { formatCount } from '../../../format';
 /**
  * Risk signals — aggregates over the works currently shown:
  *  • how works split across the four assessed risk levels (donut), and
- *  • (when `showFactors`) which rule-based factors are driving those flags.
+ *  • (when `showFactors`) which factors are driving those flags.
  *
  * Computed from the risk view models already loaded for the dashboard (keyed off
  * `data.projects`, so they follow the global filter bar); no extra fetch.
- * Rule-based indicators, not an ML score (decision D22). The mosaic layout on the
- * Overview renders the donut on its own (`showFactors={false}`); the factor
- * breakdown lives in the named anomaly cards.
+ * Produced by the weighted statistical risk model (decision D22). The mosaic
+ * layout on the Overview renders the donut on its own (`showFactors={false}`);
+ * the factor breakdown lives in the named anomaly cards.
  */
 export function RiskSignals({
   data,
@@ -56,7 +56,7 @@ export function RiskSignals({
         title="Risk signals"
         description={
           showFactors
-            ? 'Distribution of works by assessed risk level, and the rule-based factors behind the flags. Indicators for review — not proof of wrongdoing.'
+            ? 'Distribution of works by assessed risk level, and the factors behind the flags. Indicators for review — not proof of wrongdoing.'
             : 'How the assessed works split across risk levels. Indicators for review — not proof of wrongdoing.'
         }
       />

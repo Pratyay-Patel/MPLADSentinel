@@ -1,19 +1,21 @@
 import type { Project, ProjectRisk, RiskLevel } from '../types';
 
 /**
- * Rule-based risk indicators — the **demo-mode** risk source.
+ * Statistical risk model (Round-1 baseline) — the **demo-mode** risk source.
  *
- * The real Round-1 engine runs server-side in Spring Boot (decision D22,
- * `com.mpladsentinel.mplads.risk`); `ApiDataProvider` reads it via
- * `/api/works/risk`. This module is now used **only by `DemoDataProvider`** so
- * `VITE_DATA_SOURCE=demo` still shows risk without a backend. The two
- * implementations share the same rule ids, weights and thresholds and are kept
- * in sync by hand.
+ * A weighted scoring model: each factor below contributes a fixed number of
+ * points; the 0–100 score is their sum (capped). The real Round-1 engine runs
+ * server-side in Spring Boot (decision D22, `com.mpladsentinel.mplads.risk`);
+ * `ApiDataProvider` reads it via `/api/works/risk`. This module is used **only by
+ * `DemoDataProvider`** so `VITE_DATA_SOURCE=demo` still shows scores without a
+ * backend. The two implementations share the same factor ids, weights and
+ * thresholds and are kept in sync by hand.
  *
- * Every rule uses only fields the verified MPLADS source provides. There is
+ * Every factor uses only fields the verified MPLADS source provides. There is
  * deliberately NO physical-progress, geospatial, duplicate-project or
- * delay-prediction rule (docs/data-source.md §14 — the source has none of that).
- * It is not an ML model.
+ * delay-prediction factor (docs/data-source.md §14 — the source has none of
+ * that). This baseline is the calibration layer the planned ensemble trains
+ * against; it is not itself a trained model.
  */
 
 export interface RiskContext {

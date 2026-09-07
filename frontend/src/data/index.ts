@@ -137,7 +137,9 @@ export {
 export {
   recommendedAction,
   riskDimensions,
+  featureContributions,
   RISK_DIMENSIONS,
   type RiskDimension,
   type RecommendedAction,
+  type FactorContribution,
 } from './risk/riskInsights';

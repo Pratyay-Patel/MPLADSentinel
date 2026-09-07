@@ -1,12 +1,13 @@
 import { recommendedAction, riskDimensions, type ProjectRisk } from '../../data';
 import { Card, KeyValueList, RiskLevelBadge, SectionHeader } from '../../ui';
+import { FactorContributionChart } from './FactorContributionChart';
 
 /**
  * Risk assessment card for Project Details. Beyond the score + raw reasons it
- * shows a "recommended next action" for the reviewer and a fixed checklist of
- * the six rule dimensions with this work's hits marked. Every value comes from
- * the shared `ProjectRisk` view model (`src/data/risk/riskInsights.ts`) — no
- * fabricated per-dimension numbers.
+ * shows a SHAP-style per-factor score contribution, a "recommended next action"
+ * for the reviewer, and a fixed checklist of the model's six factors with this
+ * work's hits marked. Every value comes from the shared `ProjectRisk` view model
+ * (`src/data/risk/riskInsights.ts`) — no fabricated per-factor numbers.
  */
 export function RiskInsights({ risk }: { risk: ProjectRisk }) {
   const action = recommendedAction(risk);
@@ -17,7 +18,7 @@ export function RiskInsights({ risk }: { risk: ProjectRisk }) {
     <Card>
       <SectionHeader
         title="Risk assessment"
-        description="Indicators computed from this work's financial and data-quality signals — pointers for review, not proof of wrongdoing."
+        description="Score from the weighted statistical risk model over this work's financial and data-quality signals — pointers for review, not proof of wrongdoing."
         actions={<RiskLevelBadge level={risk.level} />}
       />
 
@@ -33,6 +34,8 @@ export function RiskInsights({ risk }: { risk: ProjectRisk }) {
         <>
           <KeyValueList items={[{ label: 'Risk score', value: `${risk.score} / 100` }]} />
 
+          <FactorContributionChart risk={risk} />
+
           {action && (
             <div className="detail-action" role="note">
               <p className="detail-action__title">Recommended next action</p>
@@ -42,20 +45,14 @@ export function RiskInsights({ risk }: { risk: ProjectRisk }) {
               </p>
             </div>
           )}
-
-          <ul className="risk-reasons" style={{ marginTop: 'var(--space-3)' }}>
-            {risk.reasons.map((reason) => (
-              <li key={reason}>{reason}</li>
-            ))}
-          </ul>
         </>
       )}
 
       <div className="detail-dimensions" aria-label="Risk dimension checklist">
         <p className="detail-dimensions__caption">
           {hasIndicators
-            ? 'Where the flagged indicators fall across the six rule dimensions:'
-            : 'The six rule dimensions checked for every work — none flagged here:'}
+            ? "Where the flagged indicators fall across the model's six factors:"
+            : "The model's six factors, checked for every work — none flagged here:"}
         </p>
         <ul className="detail-dimensions__list">
           {dimensions.map((dim) => (

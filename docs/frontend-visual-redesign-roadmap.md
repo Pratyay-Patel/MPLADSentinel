@@ -479,13 +479,16 @@ choice (`round1-scope.md`) and stays as the **baseline / calibration layer**.
 Owner decision for Round 2: *represent + roadmap the ML story; no model training this
 sprint.* Concretely:
 
-1. **Terminology pass** across UI copy and component docs: "rule-based" → "**statistical
-   risk model**" / "**risk scoring engine**". This is accurate — a weighted threshold model
-   is a statistical model. Keep **"indicators for review, not proof of wrongdoing"**
-   verbatim (CLAUDE.md §17 — a risk score is never presented as proof; non-negotiable).
-2. **Explainability panel** on project detail — a ranked **feature-contribution view**:
-   each feature's signed push on the score, rendered SHAP-style, computed from the real
-   scorer output. Genuine per-work explainability, not a mock.
+1. ✅ **Terminology pass** — "rule-based" removed from all visible UI copy and component
+   docs → "**weighted statistical risk model**" / "the model's factors". Accurate (a
+   weighted threshold model *is* a statistical model). `rules.ts` header reframed as the
+   "Round-1 baseline / calibration layer the planned ensemble trains against". Kept
+   **"indicators for review, not proof of wrongdoing"** verbatim (CLAUDE.md §17).
+2. ✅ **Explainability panel** on project detail — `featureContributions()` in
+   `riskInsights.ts` returns each flagged factor with the points it adds to the 0–100 score
+   (the model's real weights: 45/45/25/25/25, dormancy graded 30/45/55). Rendered SHAP-style
+   as ranked, category-coloured bars (`FactorContributionChart`), replacing the plain
+   reasons list. Not a mock — the numbers are the scorer's own.
 3. **"AI / ML architecture" section** in `docs/web-portal-overview` and the pitch: the
    planned ensemble (financial-anomaly detector, cost-quantile deviation,
    description-similarity for duplicate / split works, dormancy survival model), **SHAP for

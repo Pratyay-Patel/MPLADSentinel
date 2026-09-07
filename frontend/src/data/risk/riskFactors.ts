@@ -55,7 +55,7 @@ export const RISK_FACTOR_DESCRIPTIONS: Record<RiskFactorCategory, string> = {
   'Dormant, no payments': 'Recommended long ago with no payment records yet.',
   'Cost outlier vs peers': 'Estimated cost is the highest within its category cohort.',
   'Payment data unavailable': 'Payment records could not be retrieved for the work.',
-  'Other signal': 'Other rule-based indicators flagged for review.',
+  'Other signal': 'Other statistical indicators flagged for review.',
 };
 
 export function riskFactorFromSlug(slug: string): RiskFactorCategory | null {

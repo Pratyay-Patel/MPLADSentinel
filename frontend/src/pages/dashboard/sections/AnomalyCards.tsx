@@ -16,8 +16,8 @@ const MAX_CARDS = 6;
 /**
  * Named anomaly cards — the same `summarizeRiskFactors` counts the old bar list
  * showed, re-skinned as scannable cards. Each links into the risk queue filtered
- * to that factor (`/risk?factor=<slug>`). Counts are rule-based indicators for
- * review, not confirmed findings (decision D22 / CLAUDE.md §17).
+ * to that factor (`/risk?factor=<slug>`). Counts are statistical risk-model
+ * indicators for review, not confirmed findings (decision D22 / CLAUDE.md §17).
  */
 export function AnomalyCards({ data }: { data: DashboardData }) {
   const risks = useMemo(
@@ -36,7 +36,7 @@ export function AnomalyCards({ data }: { data: DashboardData }) {
     <Card>
       <SectionHeader
         title="Risk factors detected"
-        description="How often each rule-based indicator is flagged across the works in view. Indicators for review, not confirmed findings."
+        description="How often each risk factor is flagged across the works in view, by the statistical risk model. Indicators for review, not confirmed findings."
       />
       <ul className="anomaly-cards">
         {factors.map((factor) => (
