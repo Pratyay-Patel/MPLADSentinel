@@ -43,6 +43,14 @@ public class AppUser {
     @Column(name = "display_name", length = 128)
     private String displayName;
 
+    /** Stable field-officer id used by the Flutter app (e.g. {@code OFF102}); {@code null} for every non-field-officer account. */
+    @Column(name = "officer_code", unique = true, length = 16)
+    private String officerCode;
+
+    /** Field-officer contact number; {@code null} for every non-field-officer account. */
+    @Column(length = 32)
+    private String phone;
+
     @Column(nullable = false)
     private boolean enabled = true;
 
@@ -57,6 +65,15 @@ public class AppUser {
         this.passwordHash = passwordHash;
         this.role = role;
         this.displayName = displayName;
+    }
+
+    /** Field-officer account: carries the wire {@code officerCode} and a contact number. */
+    public static AppUser fieldOfficer(String username, String passwordHash, String displayName,
+                                       String officerCode, String phone) {
+        AppUser user = new AppUser(username, passwordHash, WebRole.FIELD_OFFICER, displayName);
+        user.officerCode = officerCode;
+        user.phone = phone;
+        return user;
     }
 
     public Long getId() {
@@ -101,6 +118,22 @@ public class AppUser {
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
+    }
+
+    public String getOfficerCode() {
+        return officerCode;
+    }
+
+    public void setOfficerCode(String officerCode) {
+        this.officerCode = officerCode;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public boolean isEnabled() {
