@@ -105,6 +105,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/grievances").hasRole("CITIZEN")
                         .requestMatchers(HttpMethod.PATCH, "/api/grievances/**")
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT")
+                        // Inspection assignments: MoSPI/State/District create and
+                        // advance them; any government role reads. FIELD_OFFICER
+                        // has no authority-facing endpoints and is excluded here.
+                        .requestMatchers(HttpMethod.POST, "/api/assignments")
+                        .hasAnyRole("MOSPI", "STATE", "DISTRICT")
+                        .requestMatchers(HttpMethod.PATCH, "/api/assignments/**")
+                        .hasAnyRole("MOSPI", "STATE", "DISTRICT")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/assignments", "/api/assignments/**", "/api/officers")
+                        .hasAnyRole("MOSPI", "STATE", "DISTRICT", "AUDITOR", "MP")
                         // Everything else requires a signed-in session.
                         .anyRequest().authenticated());
 
