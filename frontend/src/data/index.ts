@@ -71,6 +71,17 @@ export {
 export { useAnalyticsService } from './features/useAnalyticsService';
 
 export {
+  createAssistantService,
+  type AssistantService,
+  type AssistantData,
+  type AssistantWork,
+  type AssistantMp,
+  type AssistantState,
+  type AssistantCategory,
+} from './features/assistant';
+export { useAssistantService } from './features/useAssistantService';
+
+export {
   createProjectDetailService,
   type ProjectDetailService,
   type ProjectDetailData,

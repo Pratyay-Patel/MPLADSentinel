@@ -532,22 +532,25 @@ form.
   a recorded payment are known, so numerator and denominator cover the same works (avoids
   the >900% artefacts a mismatched population produces).
 
-### 9.4 New nav tab — Assistant (`/assistant`)
+### 9.4 New nav tab — Assistant (`/assistant`)  ✅ done
 
 Grounded Q&A chatbot. In the **INTELLIGENCE** sidebar group; area `assistant`, authorities
 only for now (a citizen-facing version can come later).
 
-- **Grounded / extractive only.** Answers are composed from (a) our precomputed aggregates
-  (state / MP / category rollups, risk counts, the works index) and (b) a fixed methodology
-  knowledge base (how the score works, what each factor means, MPLADS guideline basics). It
-  does **not** free-generate claims about a specific work being fraudulent, or any figure it
-  cannot cite.
-- Canned starter prompts: "How is the risk score computed?", "Which states have the lowest
-  fund utilisation?", "Show high-risk works in <state>", "What does 'dormant, no payments'
-  mean?"
-- Every answer that names works / states ends with a deep link into the matching view.
-- Round-2 build: intent match + templated answers over local data, **no LLM call**. A real
-  LLM behind the Python AI service is P2.
+- ✅ **Grounded retrieval, extractive only.** `data/features/assistant.ts` builds an
+  in-memory **index of every loaded work, MP, state, district and category** (reusing the
+  analytics + risk services) plus headline aggregates. `pages/assistant/answer.ts` routes a
+  question through ~17 ordered matchers to a **templated** reply — methodology answers from
+  a fixed guide (`knowledge.ts`), everything else retrieved from the index. **No LLM call**,
+  no free-generated figures; unknown questions hit a fallback.
+- ✅ Coverage: methodology, factor definitions, **a work by id** ("work #…" / "why is …
+  flagged"), **an MP by name** (surname is enough), **a state / district / category**
+  ("works in …", "summary of …"), most-expensive / works-over-₹X, most-flagged MP, fund
+  utilisation (overall + lowest/highest ranking), most common factors, flagged counts.
+- ✅ Every data answer carries a deep link (`/projects/:id`, `/projects`, `/risk`,
+  `/risk?state=…`, `/compare`, `/analytics`) and keeps "indicator for review, not proof"
+  wherever risk is mentioned. Described in the pitch as a **grounded retrieval assistant
+  over the MPLADS dataset** — a real LLM+RAG version stays P2 (Python AI service).
 
 **Assistant vs. the existing voice command bar — kept separate, no overlap:**
 
