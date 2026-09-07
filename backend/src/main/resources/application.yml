@@ -55,6 +55,20 @@ mplads:
     retry-delay: ${MPLADS_EI_RETRY_DELAY:500ms}
     # Default page size (API 'limit'); the API accepts 1..100.
     default-page-size: ${MPLADS_EI_DEFAULT_PAGE_SIZE:20}
+  pinata:
+    # Pinata / IPFS — READ-ONLY demo integration for the Audit Trail "Field
+    # Evidence" section. `jwt` is a SECRET: backend-only, never in the frontend /
+    # Vercel / git / source. Blank (the default) => GET /api/audit/{id}/photos
+    # returns an empty list with "configured": false and the page still renders.
+    jwt: ${PINATA_JWT:}
+    api-base-url: ${PINATA_API_BASE_URL:https://api.pinata.cloud}
+    # Files API "network" segment: public (pinFileToIPFS uploads) or private.
+    network: ${PINATA_NETWORK:public}
+    gateway-base-url: ${PINATA_GATEWAY_BASE_URL:https://gateway.pinata.cloud/ipfs/}
+    connect-timeout: ${PINATA_CONNECT_TIMEOUT:5s}
+    read-timeout: ${PINATA_READ_TIMEOUT:10s}
+    # How many of the most recent uploads to show as evidence.
+    evidence-limit: ${PINATA_EVIDENCE_LIMIT:2}
   ingestion:
     # Manual-trigger ingestion pipeline (Phase 2E-2). No scheduler; all values
     # have conservative defaults and are environment-overridable.

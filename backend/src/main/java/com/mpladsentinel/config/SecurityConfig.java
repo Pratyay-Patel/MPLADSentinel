@@ -115,6 +115,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/assignments", "/api/assignments/**", "/api/officers")
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT", "AUDITOR", "MP")
+                        // Audit Trail evidence (Pinata-backed) — any government role.
+                        .requestMatchers(HttpMethod.GET, "/api/audit/**")
+                        .hasAnyRole("MOSPI", "STATE", "DISTRICT", "AUDITOR", "MP")
                         // Everything else requires a signed-in session.
                         .anyRequest().authenticated());
 
