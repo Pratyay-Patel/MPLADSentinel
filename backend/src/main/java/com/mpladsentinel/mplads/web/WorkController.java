@@ -26,7 +26,7 @@ public class WorkController {
     @GetMapping()
     public List<WorkResponse> list(
         @RequestParam(defaultValue = "1") int page,
-        @RequestParam(defaultValue = "25") int size
+        @RequestParam(defaultValue = "6044") int size
     ) {
         return queryService.listWorks(page,size);
     }

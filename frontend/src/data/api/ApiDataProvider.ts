@@ -21,7 +21,7 @@ import {
 import type { DataProvider } from '../DataProvider';
 import { ProviderError } from '../errors';
 import type { BackendHealth, Project, ProjectRisk } from '../types';
-
+import {getCached , setCache} from '../../cache/cache'
 /**
  * Maps a failed API call onto the ProviderError kinds the UI understands, with a
  * message that is safe to show a user. The raw ApiError is kept as `cause` for
@@ -89,6 +89,7 @@ export function createApiDataProvider(): DataProvider {
 
     async listProjects(signal) {
       try {
+        
         return (await getWorks(signal)).map(normalizeProject);
       } catch (error) {
         throw toProviderError('listProjects', error);
