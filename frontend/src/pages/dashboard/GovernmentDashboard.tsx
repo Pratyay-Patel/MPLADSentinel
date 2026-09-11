@@ -15,7 +15,7 @@ import { ProjectsRequiringAttention } from './sections/ProjectsRequiringAttentio
 import { RegionalInsight } from './sections/RegionalInsight';
 import { RiskSignals } from './sections/RiskSignals';
 import { WorkDistribution } from './sections/WorkDistribution';
-
+import {setCache,getCached} from '../../cache/cache'
 /**
  * Government / MoSPI Intelligence Dashboard — the first product screen.
  *
@@ -31,8 +31,26 @@ export function GovernmentDashboard() {
   const dashboardService = useDashboardService();
   const [reloadKey, setReloadKey] = useState(0);
 
+  const loadDashboard = async (
+    signal: AbortSignal,
+  ): Promise<DashboardData> => {
+    const key = 'dashboard';
+
+    const cached = await getCached<DashboardData>(key);
+
+    if (cached) {
+      return cached;
+    }
+
+    const data = await dashboardService.load(signal);
+
+    await setCache(key, data);
+
+    return data;
+  };
+
   const state = useAsyncData(
-    (signal) => dashboardService.load(signal),
+    loadDashboard,
     [dashboardService, reloadKey],
     {
       isEmpty: (data) => data.projects.length === 0,
