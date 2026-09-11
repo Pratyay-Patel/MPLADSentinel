@@ -48,11 +48,12 @@ public class WorkQueryService {
 
     // --- authority-facing (full) view -----------------------------------
 
-    public List<WorkResponse> listWorks() {
-        return works.findAll().stream()
-                .sorted(LISTING_ORDER)
-                .map(WorkResponse::from)
-                .toList();
+    public List<WorkResponse> listWorks(int page , int size) {
+        int offset = (page - 1) * size;
+        return works.findAllBySizeAndOffset(size , offset)
+            .stream()
+            .map(WorkResponse::from)
+            .toList();
     }
 
     public Optional<WorkResponse> getWork(long sourceWorkId) {

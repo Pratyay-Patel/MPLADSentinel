@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.mpladsentinel.mplads.domain.Work;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Data access for {@link Work}. Business logic (ingestion upserts, dashboard
@@ -53,4 +54,16 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
     @Query("select w.category, max(w.estimatedCost), count(w) from Work w "
             + "where w.category is not null and w.estimatedCost is not null group by w.category")
     List<Object[]> categoryCohorts();
+
+    @Query(
+        value = """
+            select *
+            from Work as w
+            order by id
+            limit :size
+            offset :offset
+            """,
+        nativeQuery = true
+    )
+    List<Work> findAllBySizeAndOffset(@Param("size") int size,@Param("offset") int offset);
 }

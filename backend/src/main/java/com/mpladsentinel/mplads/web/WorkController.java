@@ -3,10 +3,7 @@ package com.mpladsentinel.mplads.web;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Authority-facing read APIs over the ingested MPLADS works.
@@ -26,10 +23,14 @@ public class WorkController {
         this.queryService = queryService;
     }
 
-    @GetMapping
-    public List<WorkResponse> list() {
-        return queryService.listWorks();
+    @GetMapping()
+    public List<WorkResponse> list(
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "25") int size
+    ) {
+        return queryService.listWorks(page,size);
     }
+
 
     @GetMapping("/summary")
     public WorkSummaryResponse summary() {
