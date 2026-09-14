@@ -15,11 +15,14 @@ import {
   SectionHeader,
   StatusBadge,
 } from '../../ui';
-import { CalendarIcon, InfoIcon, MapPinIcon, RupeeIcon, ShieldIcon } from '../../ui/icons';
+import { CalendarIcon, InfoIcon, MapPinIcon, NetworkIcon, RupeeIcon, ShieldIcon } from '../../ui/icons';
+import { CartelDetectionPreview } from './CartelDetectionPreview';
 import { DetailTimeline } from './DetailTimeline';
 import { flagLabel, houseLabel, LIFECYCLE_LABEL, LIFECYCLE_TONE } from './labels';
 import { PaymentsSection } from './PaymentsSection';
 import { RiskInsights } from './RiskInsights';
+import { computeVendorConcentration } from './vendorConcentration';
+import { VendorConcentrationGraph } from './VendorConcentrationGraph';
 
 /**
  * Project Details (`/projects/:id`) — the full record for a single MPLADS work,
@@ -114,6 +117,7 @@ export function ProjectDetail() {
 
 function ProjectDetailView({ data, showRisk }: { data: ProjectDetailData; showRisk: boolean }) {
   const { project, payments, risk } = data;
+  const vendorConcentration = computeVendorConcentration(payments);
 
   return (
     <>
@@ -177,6 +181,36 @@ function ProjectDetailView({ data, showRisk }: { data: ProjectDetailData; showRi
       {showRisk && <RiskInsights risk={risk} />}
 
       <PaymentsSection project={project} payments={payments} />
+
+      {showRisk && vendorConcentration && (
+        <Card>
+          <SectionHeader
+            title="Vendor concentration (HHI)"
+            description="How this work's recorded payments are split across vendors — computed live from the payment installments above."
+            icon={<NetworkIcon />}
+            tone={vendorConcentration.concentrationLabel === 'Highly concentrated' ? 'danger' : 'warning'}
+          />
+          <VendorConcentrationGraph
+            data={vendorConcentration}
+            workTitle={workTitle(project.workDescription, project.sourceWorkId)}
+            riskScore={risk?.score}
+          />
+        </Card>
+      )}
+
+      {showRisk && vendorConcentration && (
+        <Card>
+          <SectionHeader
+            title="Cross-tender cluster detection"
+            description={
+              'Bipartite-graph analysis aimed at surfacing shadow directorships, shell-entity structures, and coordinated tender manipulation. By modeling contractor-and-work relationships as a bipartite network, the system can flag rotational bidding rings — cases where a single syndicate places artificial L2/L3 cover bids purely to stay under the competitive-bidding thresholds mandated by Central Vigilance Commission (CVC) guidelines.'
+            }
+            icon={<NetworkIcon />}
+            tone="neutral"
+          />
+          <CartelDetectionPreview />
+        </Card>
+      )}
 
       <Card>
         <SectionHeader
