@@ -129,7 +129,25 @@
   padding: var(--space-4);
   background: var(--color-surface-sunken);
   border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-brand-500);
   border-radius: var(--radius-md);
+}
+
+.anomaly-card[data-tone='info'] {
+  background: var(--color-info-bg);
+  border-left-color: var(--color-info-fg);
+}
+.anomaly-card[data-tone='warning'] {
+  background: var(--color-warning-bg);
+  border-left-color: var(--color-warning-fg);
+}
+.anomaly-card[data-tone='success'] {
+  background: var(--color-success-bg);
+  border-left-color: var(--color-success-fg);
+}
+.anomaly-card[data-tone='brand'] {
+  background: var(--color-brand-050);
+  border-left-color: var(--color-brand-700);
 }
 
 .anomaly-card__count {

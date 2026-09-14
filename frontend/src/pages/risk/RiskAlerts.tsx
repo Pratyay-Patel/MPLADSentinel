@@ -37,6 +37,14 @@ import {
 
 const LEVELS: RiskLevel[] = ['HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'];
 
+/** Mirrors RiskLevelBadge's tone mapping so the summary tiles and the badges agree. */
+const LEVEL_TONE: Record<RiskLevel, StatusTone> = {
+  HIGH: 'danger',
+  MEDIUM: 'warning',
+  LOW: 'success',
+  UNKNOWN: 'neutral',
+};
+
 const LIFECYCLE_TONE: Record<RiskRow['project']['lifecycleState'], StatusTone> = {
   RECOMMENDED: 'info',
   COMPLETED: 'success',
@@ -283,7 +291,12 @@ function RiskBody({ data }: { data: RiskListData }) {
 
       <div className="ui-metric-grid">
         {LEVELS.map((level) => (
-          <MetricCard key={level} label={`${level} risk`} value={countsByLevel[level]} />
+          <MetricCard
+            key={level}
+            label={`${level} risk`}
+            value={countsByLevel[level]}
+            tone={LEVEL_TONE[level]}
+          />
         ))}
       </div>
 

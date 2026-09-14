@@ -13,6 +13,10 @@ import { formatCount } from '../../../format';
 
 const MAX_CARDS = 6;
 
+/** Cycled per-card accent — these are risk indicators, not a fixed severity scale,
+ * so tone here is purely for visual distinction, not a danger/success judgement. */
+const CARD_TONES = ['info', 'warning', 'success', 'brand'] as const;
+
 /**
  * Named anomaly cards — the same `summarizeRiskFactors` counts the old bar list
  * showed, re-skinned as scannable cards. Each links into the risk queue filtered
@@ -39,8 +43,8 @@ export function AnomalyCards({ data }: { data: DashboardData }) {
         description="How often each risk factor is flagged across the works in view, by the statistical risk model. Indicators for review, not confirmed findings."
       />
       <ul className="anomaly-cards">
-        {factors.map((factor) => (
-          <li key={factor.label} className="anomaly-card">
+        {factors.map((factor, i) => (
+          <li key={factor.label} className="anomaly-card" data-tone={CARD_TONES[i % CARD_TONES.length]}>
             <span className="anomaly-card__count">{formatCount(factor.count)}</span>
             <span className="anomaly-card__label">{factor.label}</span>
             <span className="anomaly-card__desc">{RISK_FACTOR_DESCRIPTIONS[factor.label]}</span>

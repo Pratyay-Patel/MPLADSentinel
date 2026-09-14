@@ -131,12 +131,14 @@ function AnalyticsBody({ data }: { data: AnalyticsData }) {
           label="Works analysed"
           value={formatCount(data.totalWorks)}
           hint="MPLADS works in the dataset"
+          tone="info"
         />
         <MetricCard
           icon={<RupeeIcon />}
           label="Sanctioned (total)"
           value={formatINRCompact(data.sanctionedTotal)}
           hint="Estimated cost of works with an estimate"
+          tone="warning"
         />
         <MetricCard
           icon={<RupeeIcon />}
@@ -149,12 +151,14 @@ function AnalyticsBody({ data }: { data: AnalyticsData }) {
           label="Recorded utilisation"
           value={pct(data.recordedUtilisationPct)}
           hint="Payments ÷ sanctioned, over works with both known"
+          tone="info"
         />
         <MetricCard
           icon={<CircleCheckIcon />}
           label="Completed vs not"
           value={`${formatCount(data.completedWorks)} / ${formatCount(data.notCompletedWorks)}`}
           hint="Seen in the completed listing vs not yet"
+          tone="success"
         />
       </div>
 
