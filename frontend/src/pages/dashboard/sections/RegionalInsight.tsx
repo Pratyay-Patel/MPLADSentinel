@@ -1,14 +1,14 @@
 import type { RegionStat } from '../../../data';
-import { BarList, Card, IndiaBubbleMap, SectionHeader } from '../../../ui';
+import { BarList, Card, IndiaLeafletMap, SectionHeader } from '../../../ui';
 import { MapPinIcon } from '../../../ui/icons';
 import { formatCount } from '../../../format';
 
 const TOP_LIST_LIMIT = 8;
 
 /**
- * Regional distribution — a schematic bubble map of works per state, plus a
- * short ranked list. Locations are approximate; this is "where the works are",
- * not geospatial analysis.
+ * Regional distribution — a real Leaflet/OpenStreetMap map with one bubble per
+ * state, plus a short ranked list. Bubble positions are state centroids, not
+ * exact work sites; this is "where the works are", not geospatial analysis.
  */
 export function RegionalInsight({ regions }: { regions: RegionStat[] }) {
   const topList = [...regions].slice(0, TOP_LIST_LIMIT);
@@ -26,7 +26,7 @@ export function RegionalInsight({ regions }: { regions: RegionStat[] }) {
       ) : (
         <div className="dash-region">
           <div className="dash-region__map">
-            <IndiaBubbleMap
+            <IndiaLeafletMap
               regions={regions.map((r) => ({
                 state: r.state,
                 works: r.works,
@@ -34,7 +34,7 @@ export function RegionalInsight({ regions }: { regions: RegionStat[] }) {
                 medium: r.medium,
                 low: r.low,
               }))}
-              ariaLabel="Bubble map of MPLADS works per Indian state"
+              ariaLabel="Map of MPLADS works per Indian state"
             />
           </div>
           <div className="dash-region__list">

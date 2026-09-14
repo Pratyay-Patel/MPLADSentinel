@@ -39,6 +39,7 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 6. RBAC dropdown-only login modal (no real auth flow needed behind it)
 7. Alerts and Notifications UI (send-notice action for high-risk projects)
 8. De-duplication of works UI/flow
+9. National "Works across India" dashboard bubble map → replaced with a real Leaflet/OSM map — **DONE, verified** (added mid-session, not in the original 8; see below)
 
 ---
 
@@ -123,6 +124,23 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 **Not done / explicitly out of scope for now:** adding the same map to the citizen-facing public project view (`CitizenProjectView.tsx`) — citizens don't see risk scores by design, so it would need a neutral-only variant. Raise this if you want it added too.
 
 **Post-review change (user-requested):** the two on-screen disclaimer lines ("Location is recorded as a free-text description..." above the map, and "Approximate — centred on `<state>`..." below it) were removed for a cleaner look. **The underlying behavior is unchanged** — the map still only shows a state-level approximation, not the exact work site — this only removes the visible caveat text. Worth remembering if a judge asks how precise the map is: the honest answer (state-level, not exact site) is no longer stated in the UI itself, so it may need to be said verbally in the demo.
+
+---
+
+## Feature 9 — National dashboard map: bubble map → real Leaflet map
+
+**Status: DONE, verified in-browser (demo build).** Frontend-only. Not one of the original 8 numbered features — added mid-session after the user saw the individual-project Leaflet map (Feature 4) and wanted the same treatment applied to the "Works across India" national dashboard widget, which had been a schematic SVG bubble map.
+
+**User's spec:** replace the SVG map with a real Leaflet/OpenStreetMap map, same functionality (one bubble per state sized by work count, hover shows the risk-level breakdown), bubbles must stay a **single blue hue only** (not colored by risk), inspired by a competitor's "National Risk Map" screen.
+
+**Implementation:**
+- New component `frontend/src/ui/IndiaLeafletMap.tsx`, replacing `IndiaBubbleMap.tsx` (deleted — confirmed zero other call sites first) at its one usage site, `RegionalInsight.tsx` on the dashboard.
+- Reuses the same real state-centroid coordinates (`coordForState()` in `indiaGeo.ts`) as Feature 4's per-project map — one shared source of truth for state positions across both features.
+- `CircleMarker` per state, radius scaled by `sqrt(works / maxWorks)` (same formula as the old SVG version), single brand-blue hue (`--color-brand-500`) with translucent fill — never risk-colored, per the explicit "blue only" instruction.
+- Hover shows a `react-leaflet` `Tooltip` with the same content as before: state name, work count, and `<N> high · <N> medium · <N> low` — reusing the existing `.india-map__tip-*` CSS classes for identical typography.
+- **Cleanup:** deleted `IndiaBubbleMap.tsx` (dead after the swap) and pruned `indiaGeo.ts` down to only what's still shared (`STATE_COORDS`, `coordForState`) — removed the schematic-projection-only helpers (`projectLat`, `projectLon`, `MAP_VIEW_W/H`, the outline polygon) that existed solely to draw the old SVG map and had no other callers.
+
+**Verified:** `tsc --noEmit` clean, `eslint` clean, full `vitest` suite — 284/286 pass (same 2 pre-existing failures; one additional AuditPage test failure during one run was confirmed flaky/unrelated by re-running it in isolation, where it passed). Visually verified in-browser (demo build): real pannable/zoomable OSM map renders with translucent blue bubbles sized by state work-count; hovering a bubble (tested on Rajasthan) shows the correct "4 works · 1 high · 2 medium · 1 low" tooltip, matching the old SVG map's behavior exactly.
 
 **Implementation note (found mid-build, not in the original plan):** `MetricCard`'s tone only colored the icon chip — cards with no `icon` prop (all of `RiskAlerts.tsx`, half of `CompareMps.tsx`) showed no accent at all. Fixed by also applying the tone as a 3px top-border accent on the card itself, so it's visible with or without an icon. `AnomalyCards.tsx` cards get a left-border + tinted-background accent instead (cycled across 4 tones, since those are dynamic risk-factor cards, not a fixed set of 4 semantic categories).
 

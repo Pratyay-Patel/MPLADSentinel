@@ -935,3 +935,19 @@ textarea.ui-control {
   color: var(--color-text-muted);
   text-align: center;
 }
+
+/* IndiaLeafletMap — reuses the tip/caption text styles above */
+
+.india-leaflet-map__container {
+  width: 100%;
+  height: 340px;
+  border-radius: var(--radius-md);
+  border: var(--border);
+  isolation: isolate;
+}
+
+.india-map__tip-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
