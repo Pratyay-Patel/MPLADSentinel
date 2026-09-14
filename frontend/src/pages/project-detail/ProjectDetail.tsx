@@ -152,10 +152,6 @@ function ProjectDetailView({ data, showRisk }: { data: ProjectDetailData; showRi
             { label: 'Location', value: project.locationRaw ?? '—' },
           ]}
         />
-        <p className="detail-note">
-          Location is recorded as a free-text description. Map coordinates are not maintained for
-          MPLADS works.
-        </p>
         <ProjectLocationMap
           state={project.state}
           district={project.district}

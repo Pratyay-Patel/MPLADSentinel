@@ -362,12 +362,6 @@
   isolation: isolate;
 }
 
-.ui-project-map__note {
-  margin-top: var(--space-2);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-}
-
 /* ---- Input / Select / SearchInput -------------------------- */
 
 .ui-field {

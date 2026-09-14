@@ -54,10 +54,6 @@ export function ProjectLocationMap({ state, district, riskLevel }: ProjectLocati
           </Tooltip>
         </CircleMarker>
       </MapContainer>
-      <p className="ui-project-map__note">
-        Approximate — centred on {coord.name}. Exact work-site coordinates are not available in
-        the source data.
-      </p>
     </div>
   );
 }
