@@ -32,7 +32,7 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 
 1. Color hues / light background accents on existing components — **DONE, committed**
 2. Warm/cool custom icons (not Canva-sticker style) — **DONE, verified**
-3. More borders / "bubbly" card styling (Nirikshak-AI-like)
+3. More borders / "bubbly" card styling (Nirikshak-AI-like) — **DONE, verified**
 4. Real map component on project lookup (location can stay hardcoded for now)
 5a. Contractor–vendor collusion graph visualization
 5b. Human-in-the-loop approve/reject UI + dual-authority sign-off (extends `AssignmentStatus`)
@@ -80,6 +80,25 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 **Files touched:** `frontend/src/ui/icons.tsx` (8 new icons), `frontend/src/ui/SectionHeader.tsx`, `frontend/src/ui/ui.css`, and the icon+tone wiring in: `dashboard/sections/{NationalOverview,AnomalyCards,FinancialIntelligence,RegionalInsight,RiskSignals,WorkDistribution}.tsx`, `analytics/AnalyticsPage.tsx`, `compare/CompareMps.tsx`, `citizen/CitizenProjectView.tsx`, `grievances/Grievances.tsx`, `inspections/InspectionsPage.tsx`, `assistant/AssistantPage.tsx`, `project-detail/{ProjectDetail,RiskInsights,PaymentsSection}.tsx` — roughly 30 `SectionHeader` call sites in total.
 
 **Verified:** `tsc --noEmit` clean, `eslint` clean (no unused imports despite ~15 new icon imports across files), full `vitest` suite — 284/286 pass, same 2 pre-existing unrelated failures as Feature 1. Visually verified in-browser (demo build) on Dashboard (all sections), Compare MPs, and Analytics — icon chips render correctly with the intended tone colors and don't disturb layout.
+
+---
+
+## Feature 3 — Borders / "bubbly" card styling
+
+**Status: DONE, verified in-browser (demo build) — colored borders confirmed on Dashboard's National overview cards and Risk factors detected cards; hover-lift confirmed via CSS inspection (pure :hover pseudo-class, so mouseout revert is guaranteed).**
+
+**Clarified two separate things were being asked for:**
+1. **At-rest border style** — user showed two competitor styles: Code Acers (bold black border + hard offset shadow, "neubrutalism") vs. Nirikshak (thin colored border per card, matched to what the card represents — red=risk/anomaly, amber=time-risk, green=AI/positive, blue=general info). **User chose the Nirikshak-style subtle colored border**, logically tone-matched — this is exactly Feature 1's existing tone system, just needs to go full-perimeter instead of top-only.
+2. **Hover interaction** — user separately asked for cards to lift slightly on hover and settle back on mouse-out (not present in either static reference image, since that's an interaction, not a photo-able style). Added independently of the border-color decision.
+
+**Implementation:**
+- `MetricCard` (`ui.css` `.ui-metric`): border changed from `border: var(--border-strong); border-top: 3px solid <tone>` (gray sides, colored top only) to a full 2px border colored by tone on all sides — `border-color` override per tone instead of `border-top-color`.
+- `AnomalyCards` (`dashboard.css` `.anomaly-card`): same change, from a 3px left-accent to a full 2px tone-colored border.
+- `Card` (generic `.ui-card`, used ~40+ places for section wrappers) and `.dash-attention` (the "Projects requiring attention" hero panel): no tone concept (they wrap mixed content), so border unchanged — only the hover-lift added.
+- **Hover-lift**, added to all four (`ui-card`, `ui-metric`, `anomaly-card`, `dash-attention`): `transition: transform 150ms ease, box-shadow 150ms ease`, `:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }`.
+- **Not touched:** the small `risk-summary__count` badge inside the Risk & Alerts warning banner, and the audit-timeline node glyph — neither is an independently-hoverable "card," so adding lift there would look noisy rather than purposeful.
+
+**Verified:** `tsc --noEmit` clean, `eslint` clean.
 
 **Implementation note (found mid-build, not in the original plan):** `MetricCard`'s tone only colored the icon chip — cards with no `icon` prop (all of `RiskAlerts.tsx`, half of `CompareMps.tsx`) showed no accent at all. Fixed by also applying the tone as a 3px top-border accent on the card itself, so it's visible with or without an icon. `AnomalyCards.tsx` cards get a left-border + tinted-background accent instead (cycled across 4 tones, since those are dynamic risk-factor cards, not a fixed set of 4 semantic categories).
 

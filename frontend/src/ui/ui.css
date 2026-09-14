@@ -76,6 +76,12 @@
   border: var(--border-strong);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.ui-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
 }
 
 .ui-card--pad {
@@ -260,26 +266,31 @@
   gap: var(--space-2);
   padding: var(--space-4) var(--space-5);
   background: var(--color-surface);
-  border: var(--border-strong);
-  border-top: 3px solid var(--color-brand-700);
+  border: 2px solid var(--color-brand-700);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.ui-metric:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
 }
 
 .ui-metric[data-tone='info'] {
-  border-top-color: var(--color-info-fg);
+  border-color: var(--color-info-fg);
 }
 .ui-metric[data-tone='success'] {
-  border-top-color: var(--color-success-fg);
+  border-color: var(--color-success-fg);
 }
 .ui-metric[data-tone='warning'] {
-  border-top-color: var(--color-warning-fg);
+  border-color: var(--color-warning-fg);
 }
 .ui-metric[data-tone='danger'] {
-  border-top-color: var(--color-danger-fg);
+  border-color: var(--color-danger-fg);
 }
 .ui-metric[data-tone='neutral'] {
-  border-top-color: var(--color-neutral-fg);
+  border-color: var(--color-neutral-fg);
 }
 
 .ui-metric__head {
