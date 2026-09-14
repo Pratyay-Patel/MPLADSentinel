@@ -221,9 +221,32 @@ export interface InspectionAssignment {
   assignedAt: string;
   /** ISO timestamp of the last status/detail change. */
   updatedAt: string;
+  /** Target status (COMPLETED/CANCELLED) awaiting a second, different authority's
+   * dual-sign-off confirmation. Null when nothing is pending. */
+  pendingStatus: AssignmentStatus | null;
+  /** The requesting authority's username — compare against the current session's
+   * username to know whether "you" may confirm this (a different user must). */
+  pendingRequestedByUsername: string | null;
+  pendingRequestedByName: string | null;
+  pendingJustification: string | null;
+  /** ISO timestamp, or null when nothing is pending. */
+  pendingRequestedAt: string | null;
 }
 
-/** Fields an authority can change on an assignment. A non-null value is applied. */
+/** Body of the first dual-authority sign-off request (completing or cancelling). */
+export interface SignOffRequestInput {
+  targetStatus: AssignmentStatus;
+  justification: string;
+}
+
+/** Body of the second, different authority's sign-off confirmation. */
+export interface SignOffConfirmInput {
+  justification: string;
+}
+
+/** Fields an authority can change on an assignment. A non-null value is applied.
+ * `status` may only be set to `IN_PROGRESS` here — completing/cancelling requires
+ * dual-authority sign-off (see {@link SignOffRequestInput}). */
 export interface AssignmentPatch {
   status?: AssignmentStatus;
   dueDate?: string | null;

@@ -112,6 +112,12 @@ public class SecurityConfig {
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT")
                         .requestMatchers(HttpMethod.PATCH, "/api/assignments/**")
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT")
+                        // Dual-authority sign-off (completing/cancelling requires a second,
+                        // different authority to confirm) — same role set as PATCH; the
+                        // "different user" check itself is enforced in the service layer.
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/assignments/*/sign-off/request", "/api/assignments/*/sign-off/confirm")
+                        .hasAnyRole("MOSPI", "STATE", "DISTRICT")
                         .requestMatchers(HttpMethod.GET,
                                 "/api/assignments", "/api/assignments/**", "/api/officers")
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT", "AUDITOR", "MP")

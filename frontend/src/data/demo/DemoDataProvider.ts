@@ -1,3 +1,4 @@
+import { readDemoSession } from '../../auth/demoAuth';
 import { workTitle } from '../../format';
 import { deriveRisk } from '../risk/rules';
 import type { DataProvider } from '../DataProvider';
@@ -87,6 +88,11 @@ function seedAssignments(): InspectionAssignment[] {
       requiredPhotos,
       assignedAt: isoAgo(assignedDaysAgo),
       updatedAt: isoAgo(updatedDaysAgo),
+      pendingStatus: null,
+      pendingRequestedByUsername: null,
+      pendingRequestedByName: null,
+      pendingJustification: null,
+      pendingRequestedAt: null,
     };
   };
   return [
@@ -300,6 +306,11 @@ export function createDemoDataProvider(): DataProvider {
         requiredPhotos: clampPhotos(input.requiredPhotos),
         assignedAt: now,
         updatedAt: now,
+        pendingStatus: null,
+        pendingRequestedByUsername: null,
+        pendingRequestedByName: null,
+        pendingJustification: null,
+        pendingRequestedAt: null,
       };
       demoAssignments = [assignment, ...demoAssignments];
       return { ...assignment };
@@ -312,6 +323,13 @@ export function createDemoDataProvider(): DataProvider {
         throw new ProviderError('unknown', `No assignment with id ${id}.`);
       }
       if (patch.status && patch.status !== assignment.status) {
+        if (patch.status === 'COMPLETED' || patch.status === 'CANCELLED') {
+          throw new ProviderError(
+            'unknown',
+            'Completing or cancelling an assignment requires dual-authority sign-off — ' +
+              'request it, then have a different authority confirm.',
+          );
+        }
         if (!assignmentTransitionOk(assignment.status, patch.status)) {
           throw new ProviderError(
             'unknown',
@@ -329,6 +347,72 @@ export function createDemoDataProvider(): DataProvider {
       if (patch.requiredPhotos !== undefined && patch.requiredPhotos !== null) {
         assignment.requiredPhotos = clampPhotos(patch.requiredPhotos);
       }
+      assignment.updatedAt = new Date().toISOString();
+      return { ...assignment };
+    },
+
+    // --- dual-authority sign-off (mirrors the real backend, migration V10) ---
+
+    async requestAssignmentSignOff(id, input, signal) {
+      ensureNotAborted(signal);
+      const assignment = demoAssignments.find((a) => a.id === id);
+      if (!assignment) {
+        throw new ProviderError('unknown', `No assignment with id ${id}.`);
+      }
+      if (!OPEN_ASSIGNMENT_STATUSES.includes(assignment.status)) {
+        throw new ProviderError('unknown', `This assignment is already ${assignment.status}.`);
+      }
+      if (input.targetStatus !== 'COMPLETED' && input.targetStatus !== 'CANCELLED') {
+        throw new ProviderError('unknown', 'targetStatus must be COMPLETED or CANCELLED.');
+      }
+      if (!assignmentTransitionOk(assignment.status, input.targetStatus)) {
+        throw new ProviderError(
+          'unknown',
+          `Cannot move an assignment from ${assignment.status} to ${input.targetStatus}.`,
+        );
+      }
+      if (assignment.pendingStatus) {
+        throw new ProviderError('unknown', 'A sign-off is already pending for this assignment.');
+      }
+      const actor = readDemoSession();
+      assignment.pendingStatus = input.targetStatus;
+      assignment.pendingRequestedByUsername = actor?.username ?? null;
+      assignment.pendingRequestedByName = actor?.displayName ?? actor?.username ?? 'an authority';
+      assignment.pendingJustification = input.justification.trim();
+      assignment.pendingRequestedAt = new Date().toISOString();
+      assignment.updatedAt = new Date().toISOString();
+      return { ...assignment };
+    },
+
+    async confirmAssignmentSignOff(id, input, signal) {
+      ensureNotAborted(signal);
+      const assignment = demoAssignments.find((a) => a.id === id);
+      if (!assignment) {
+        throw new ProviderError('unknown', `No assignment with id ${id}.`);
+      }
+      if (!assignment.pendingStatus) {
+        throw new ProviderError('unknown', 'No sign-off is pending for this assignment.');
+      }
+      const actor = readDemoSession();
+      if (actor?.username && actor.username === assignment.pendingRequestedByUsername) {
+        throw new ProviderError(
+          'unknown',
+          'A different authority must confirm this sign-off — the officer who requested ' +
+            'it cannot also confirm it.',
+        );
+      }
+      const label = assignment.pendingStatus === 'COMPLETED' ? 'Completion' : 'Cancellation';
+      const requestedByName = assignment.pendingRequestedByName ?? 'an authority';
+      const confirmingName = actor?.displayName ?? actor?.username ?? 'an authority';
+      assignment.note =
+        `${label} requested by ${requestedByName}: ${assignment.pendingJustification}\n` +
+        `${label} confirmed by ${confirmingName}: ${input.justification.trim()}`;
+      assignment.status = assignment.pendingStatus;
+      assignment.pendingStatus = null;
+      assignment.pendingRequestedByUsername = null;
+      assignment.pendingRequestedByName = null;
+      assignment.pendingJustification = null;
+      assignment.pendingRequestedAt = null;
       assignment.updatedAt = new Date().toISOString();
       return { ...assignment };
     },

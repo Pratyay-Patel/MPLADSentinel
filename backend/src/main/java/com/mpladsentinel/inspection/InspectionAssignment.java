@@ -58,6 +58,21 @@ public class InspectionAssignment {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
+    /** Target status awaiting a second, different authority's sign-off (dual-authority
+     * anti-corruption control, migration V10). Null when nothing is pending. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pending_status", length = 16)
+    private AssignmentStatus pendingStatus;
+
+    @Column(name = "pending_requested_by_user_id")
+    private Long pendingRequestedByUserId;
+
+    @Column(name = "pending_justification", columnDefinition = "text")
+    private String pendingJustification;
+
+    @Column(name = "pending_requested_at")
+    private Instant pendingRequestedAt;
+
     protected InspectionAssignment() {
     }
 
@@ -125,5 +140,37 @@ public class InspectionAssignment {
 
     public void touchUpdatedAt() {
         this.updatedAt = Instant.now();
+    }
+
+    public AssignmentStatus getPendingStatus() {
+        return pendingStatus;
+    }
+
+    public Long getPendingRequestedByUserId() {
+        return pendingRequestedByUserId;
+    }
+
+    public String getPendingJustification() {
+        return pendingJustification;
+    }
+
+    public Instant getPendingRequestedAt() {
+        return pendingRequestedAt;
+    }
+
+    /** Records a pending sign-off request. */
+    public void requestSignOff(AssignmentStatus targetStatus, Long requestedByUserId, String justification) {
+        this.pendingStatus = targetStatus;
+        this.pendingRequestedByUserId = requestedByUserId;
+        this.pendingJustification = justification;
+        this.pendingRequestedAt = Instant.now();
+    }
+
+    /** Clears any pending sign-off (called once it is confirmed, or if ever withdrawn). */
+    public void clearPendingSignOff() {
+        this.pendingStatus = null;
+        this.pendingRequestedByUserId = null;
+        this.pendingJustification = null;
+        this.pendingRequestedAt = null;
     }
 }

@@ -11,6 +11,12 @@ import java.time.LocalDate;
  * <p>{@code workTitle}, {@code officerName} and {@code assignedByName} are joined
  * in so the list screens do not need extra lookups. The Audit Trail page renders
  * only the <em>date</em> portion of {@code assignedAt} / {@code updatedAt}.
+ *
+ * <p>The {@code pending*} fields (migration V10) are non-null only while this
+ * assignment is awaiting a second authority's dual-sign-off confirmation to
+ * complete or cancel. {@code pendingRequestedByUsername} lets the frontend
+ * proactively hide the confirm action for the user who made the request —
+ * the backend enforces the same rule regardless.
  */
 public record AssignmentResponse(
         String id,
@@ -24,6 +30,11 @@ public record AssignmentResponse(
         String note,
         int requiredPhotos,
         Instant assignedAt,
-        Instant updatedAt
+        Instant updatedAt,
+        AssignmentStatus pendingStatus,
+        String pendingRequestedByUsername,
+        String pendingRequestedByName,
+        String pendingJustification,
+        Instant pendingRequestedAt
 ) {
 }

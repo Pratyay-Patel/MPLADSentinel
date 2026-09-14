@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { clearDemoSession, writeDemoSession } from '../../auth/demoAuth';
 import type { DataProvider } from '../DataProvider';
 import { createDemoDataProvider } from '../demo/DemoDataProvider';
 import { ProviderError } from '../errors';
@@ -11,6 +12,8 @@ import {
 } from './inspections';
 
 describe('createInspectionsService', () => {
+  afterEach(() => clearDemoSession());
+
   it('loads assignments, the officer list, and a sorted work picker', async () => {
     const { assignments, officers, works } =
       await createInspectionsService(createDemoDataProvider()).load();
@@ -81,7 +84,7 @@ describe('createInspectionsService', () => {
     ).rejects.toThrow(/Unknown field officer/i);
   });
 
-  it('advances an assignment through the workflow but rejects a backwards move', async () => {
+  it('advances an assignment to IN_PROGRESS but rejects a backwards move', async () => {
     const service = createInspectionsService(createDemoDataProvider());
     const { works } = await service.load();
     const created = await service.assign({
@@ -94,12 +97,62 @@ describe('createInspectionsService', () => {
 
     const inProgress = await service.updateAssignment(created.id, { status: 'IN_PROGRESS' });
     expect(inProgress.status).toBe('IN_PROGRESS');
-    const completed = await service.updateAssignment(created.id, { status: 'COMPLETED' });
-    expect(completed.status).toBe('COMPLETED');
 
     await expect(
       service.updateAssignment(created.id, { status: 'ASSIGNED' }),
     ).rejects.toThrow(/Cannot move an assignment/i);
+  });
+
+  it('rejects completing/cancelling directly — dual-authority sign-off is required', async () => {
+    const service = createInspectionsService(createDemoDataProvider());
+    const { works } = await service.load();
+    const created = await service.assign({
+      sourceWorkId: works[6].sourceWorkId,
+      officerCode: 'OFF104',
+      dueDate: null,
+      note: null,
+      requiredPhotos: 2,
+    });
+
+    await expect(
+      service.updateAssignment(created.id, { status: 'COMPLETED' }),
+    ).rejects.toThrow(/dual-authority sign-off/i);
+  });
+
+  it('requires a different authority to confirm a sign-off, and merges both justifications', async () => {
+    const service = createInspectionsService(createDemoDataProvider());
+    const { works } = await service.load();
+    const created = await service.assign({
+      sourceWorkId: works[7].sourceWorkId,
+      officerCode: 'OFF103',
+      dueDate: null,
+      note: null,
+      requiredPhotos: 2,
+    });
+
+    writeDemoSession('MOSPI');
+    const requested = await service.requestSignOff(created.id, {
+      targetStatus: 'COMPLETED',
+      justification: 'Verified on-site.',
+    });
+    expect(requested.status).toBe('ASSIGNED');
+    expect(requested.pendingStatus).toBe('COMPLETED');
+    expect(requested.pendingRequestedByUsername).toBe('mospi');
+
+    // Same authority (still logged in as MOSPI) cannot confirm its own request.
+    await expect(
+      service.confirmSignOff(created.id, { justification: 'Confirming my own request.' }),
+    ).rejects.toThrow(/different authority/i);
+
+    // A different authority can.
+    writeDemoSession('DISTRICT');
+    const confirmed = await service.confirmSignOff(created.id, {
+      justification: 'Independently reviewed.',
+    });
+    expect(confirmed.status).toBe('COMPLETED');
+    expect(confirmed.pendingStatus).toBeNull();
+    expect(confirmed.note).toContain('Verified on-site.');
+    expect(confirmed.note).toContain('Independently reviewed.');
   });
 
   it('propagates a load failure', async () => {

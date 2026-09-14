@@ -1,8 +1,10 @@
 import {
+  confirmSignOff,
   getAssignments,
   getFieldOfficers,
   patchAssignment,
   postAssignment,
+  requestSignOff,
 } from '../../api/assignments';
 import { getAuditPhotos } from '../../api/audit';
 import { ApiError } from '../../api/client';
@@ -28,6 +30,14 @@ import type { BackendHealth, Project, ProjectRisk } from '../types';
  * debugging; the `_operation` label documents the call site but is never
  * surfaced to the user.
  */
+/** Extracts `message` from a parsed `ApiErrorResponse` body, if present. */
+function backendMessage(body: unknown): string | null {
+  if (body && typeof body === 'object' && 'message' in body && typeof body.message === 'string') {
+    return body.message;
+  }
+  return null;
+}
+
 function toProviderError(_operation: string, error: unknown): ProviderError {
   if (error instanceof ApiError) {
     if (error.status === 0) {
@@ -42,6 +52,14 @@ function toProviderError(_operation: string, error: unknown): ProviderError {
     }
     if (error.status === 403) {
       return new ProviderError('unavailable', 'You do not have access to this information.', {
+        cause: error,
+      });
+    }
+    if (error.status === 409 || error.status === 400) {
+      // Conflicts/validation failures (e.g. dual-authority sign-off rules, the
+      // open-assignment-already-exists check) carry a real, actionable message
+      // from the backend — worth showing instead of a generic one.
+      return new ProviderError('unavailable', backendMessage(error.body) ?? 'That action is not allowed right now.', {
         cause: error,
       });
     }
@@ -213,6 +231,22 @@ export function createApiDataProvider(): DataProvider {
         return await patchAssignment(id, patch, signal);
       } catch (error) {
         throw toProviderError('updateAssignment', error);
+      }
+    },
+
+    async requestAssignmentSignOff(id, input, signal) {
+      try {
+        return await requestSignOff(id, input, signal);
+      } catch (error) {
+        throw toProviderError('requestAssignmentSignOff', error);
+      }
+    },
+
+    async confirmAssignmentSignOff(id, input, signal) {
+      try {
+        return await confirmSignOff(id, input, signal);
+      } catch (error) {
+        throw toProviderError('confirmAssignmentSignOff', error);
       }
     },
 

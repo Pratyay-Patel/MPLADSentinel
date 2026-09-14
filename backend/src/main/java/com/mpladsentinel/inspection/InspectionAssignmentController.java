@@ -69,11 +69,47 @@ public class InspectionAssignmentController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    /**
+     * First authority: request completing or cancelling this assignment.
+     * Dual-authority sign-off (anti-corruption control) — see
+     * {@link InspectionAssignmentService#requestSignOff}.
+     */
+    @PostMapping("/{id}/sign-off/request")
+    public ResponseEntity<AssignmentResponse> requestSignOff(@PathVariable long id,
+                                                             @Valid @RequestBody RequestSignOffRequest request,
+                                                             @AuthenticationPrincipal AppUserDetails principal) {
+        return service.requestSignOff(id, request, principal.id())
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Second, different authority: confirm a pending sign-off, finalising the
+     * status. See {@link InspectionAssignmentService#confirmSignOff}.
+     */
+    @PostMapping("/{id}/sign-off/confirm")
+    public ResponseEntity<AssignmentResponse> confirmSignOff(@PathVariable long id,
+                                                             @Valid @RequestBody ConfirmSignOffRequest request,
+                                                             @AuthenticationPrincipal AppUserDetails principal) {
+        return service.confirmSignOff(id, request, principal.id(), principal.displayName())
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     /** An open assignment already exists for this work + officer. */
     @ExceptionHandler(OpenAssignmentExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiErrorResponse handleOpenAssignmentExists(OpenAssignmentExistsException ex,
                                                        HttpServletRequest request) {
+        return new ApiErrorResponse(Instant.now(), HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(), ex.getMessage(), request.getRequestURI());
+    }
+
+    /** Invalid sign-off request/confirmation (none pending, already pending, or the
+     * confirming authority is the same user who made the request). */
+    @ExceptionHandler(SignOffException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiErrorResponse handleSignOffConflict(SignOffException ex, HttpServletRequest request) {
         return new ApiErrorResponse(Instant.now(), HttpStatus.CONFLICT.value(),
                 HttpStatus.CONFLICT.getReasonPhrase(), ex.getMessage(), request.getRequestURI());
     }

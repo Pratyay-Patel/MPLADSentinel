@@ -36,7 +36,7 @@ class FlywayMigrationTest extends AbstractPostgresIntegrationTest {
                 .map(Object::toString)
                 .toList();
 
-        assertThat(applied).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9");
+        assertThat(applied).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
         assertThat(flyway.info().current().getState()).isEqualTo(MigrationState.SUCCESS);
     }
 
@@ -74,6 +74,16 @@ class FlywayMigrationTest extends AbstractPostgresIntegrationTest {
     void requiredPhotosColumnFromV9Exists() {
         assertThat(columnExists("inspection_assignment", "required_photos")).isTrue();
         assertThat(constraintExists("ck_inspection_assignment_required_photos")).isTrue();
+    }
+
+    @Test
+    void dualSignOffColumnsFromV10Exist() {
+        assertThat(columnExists("inspection_assignment", "pending_status")).isTrue();
+        assertThat(columnExists("inspection_assignment", "pending_requested_by_user_id")).isTrue();
+        assertThat(columnExists("inspection_assignment", "pending_justification")).isTrue();
+        assertThat(columnExists("inspection_assignment", "pending_requested_at")).isTrue();
+        assertThat(constraintExists("ck_inspection_assignment_pending_status")).isTrue();
+        assertThat(constraintExists("ck_inspection_assignment_pending_consistent")).isTrue();
     }
 
     @Test

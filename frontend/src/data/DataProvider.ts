@@ -14,6 +14,8 @@ import type {
   Project,
   ProjectRisk,
   ProjectSummary,
+  SignOffConfirmInput,
+  SignOffRequestInput,
 } from './types';
 
 /**
@@ -95,10 +97,34 @@ export interface DataProvider {
   /** Request an inspection of a work by a field officer; returns the stored record. */
   createAssignment(input: AssignmentInput, signal?: AbortSignal): Promise<InspectionAssignment>;
 
-  /** Advance an assignment's status / edit it (authority action); returns the updated record. */
+  /** Advance an assignment's status / edit it (authority action); returns the updated record.
+   * `patch.status` may only be `IN_PROGRESS` — completing/cancelling goes through the
+   * dual-authority sign-off methods below. */
   updateAssignment(
     id: string,
     patch: AssignmentPatch,
+    signal?: AbortSignal,
+  ): Promise<InspectionAssignment>;
+
+  /**
+   * Dual-authority sign-off, step 1: an authority requests completing or
+   * cancelling an open assignment. Does not change the real status — a second,
+   * different authority must call {@link confirmAssignmentSignOff}.
+   */
+  requestAssignmentSignOff(
+    id: string,
+    input: SignOffRequestInput,
+    signal?: AbortSignal,
+  ): Promise<InspectionAssignment>;
+
+  /**
+   * Dual-authority sign-off, step 2: a second, different authority confirms a
+   * pending sign-off, finalising the real status. Rejects if the confirming
+   * user is the one who made the request.
+   */
+  confirmAssignmentSignOff(
+    id: string,
+    input: SignOffConfirmInput,
     signal?: AbortSignal,
   ): Promise<InspectionAssignment>;
 
