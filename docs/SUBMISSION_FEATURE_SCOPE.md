@@ -35,7 +35,7 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 3. More borders / "bubbly" card styling (Nirikshak-AI-like) — **DONE, verified**
 4. Real map component on project lookup (location can stay hardcoded for now) — **DONE, verified**
 5a. Contractor–vendor collusion graph visualization — **DONE, verified (reframed as real vendor-concentration HHI, see below)**
-5b. Human-in-the-loop approve/reject UI + dual-authority sign-off (extends `AssignmentStatus`)
+5b. Human-in-the-loop approve/reject UI + dual-authority sign-off (extends `AssignmentStatus`) — **DONE, verified (written-confirmation gate on Completed/Cancelled; dual-authority sign-off itself not yet built, see below)**
 6. RBAC dropdown-only login modal (no real auth flow needed behind it)
 7. Alerts and Notifications UI (send-notice action for high-risk projects)
 8. De-duplication of works UI/flow
@@ -194,3 +194,25 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 1. Compare MPs: "Highest fund utilisation" and "Lowest flagged share" were both `success` (duplicate adjacent color) — changed "Lowest flagged share" to `warning`.
 2. Cards with no explicit `tone` (e.g. "Recorded Payments") rendered with an invisible transparent border, breaking visual consistency with their tone-bearing neighbors — fixed by making the default border color the existing brand blue instead of transparent, so every card always shows an accent.
 3. Same duplicate-adjacent-color mistake found on Analytics ("Sanctioned (total)" and "Recorded payments" both `warning`) — removed the tone from "Recorded payments" so it uses the now-visible default brand border.
+
+---
+
+## Feature 5b — Human-in-the-loop approve/reject (written confirmation)
+
+**Status: DONE, verified.** Real, fully end-to-end feature — not sample data, not a mockup.
+
+**Scope decision:** of the two consequential `AssignmentStatus` transitions (`COMPLETED`, `CANCELLED`), only these now require confirmation — `IN_PROGRESS` is a routine step and still applies immediately. "Dual-authority sign-off" (a *second* authority approving before an action is final) is a separate, larger change to `AssignmentStatus`/the backend and was **not** built here — this feature is the written-confirmation gate only.
+
+**What's real, not just UI theater:** `AssignmentPatch` already had a real `note` field, previously only set when an inspection is first requested, and already displayed on the real Audit Trail (`AuditPage.tsx`). This feature extends that same real field: the justification typed into the new confirmation dialog is persisted via the existing `service.updateAssignment(id, { status, note })` call and genuinely shows up on the Audit Trail afterward — confirmed by end-to-end testing (typed a real justification, saw it appear on the Audit Trail page after a real, separate client-side navigation).
+
+**New reusable UI primitives** (neither existed before):
+- `frontend/src/ui/ConfirmDialog.tsx` — a GitHub-delete-repo-style confirmation: the action stays disabled until the user types an exact confirmation word (`COMPLETE` / `CANCEL`) **and** writes a non-empty justification.
+- `frontend/src/ui/Toast.tsx` — a floating, auto-dismissing (4s) notification, replacing the old plain inline text line.
+
+**Wired into:**
+- `frontend/src/pages/inspections/InspectionsPage.tsx` — the status `<Select>`'s `onChange` now calls `requestStatusChange()`, which opens `ConfirmDialog` for COMPLETED/CANCELLED and applies IN_PROGRESS immediately as before. On confirm, `advance(assignment, status, justification)` calls the real service and shows the `Toast`.
+- `frontend/src/pages/audit/AuditPage.tsx` — fixed a real correctness issue found while wiring this up: the assignment's `note` was always shown under the "Inspection requested" event, which would be misleading once notes also get written at completion/cancellation time. Now the note shows under whichever event it actually corresponds to (requested / completed / cancelled), labelled accordingly ("Reason given at completion/cancellation").
+
+**Real bug found and fixed during verification:** the initial in-browser check (via direct URL navigation between pages) showed the status reverting after navigating to the Audit Trail — this looked like a persistence bug. Root-caused it as **not** a bug: this session's browser-automation `navigate` calls do full page reloads, which reset the in-memory-only demo data provider (expected — there is no backend in `--mode demo`). Re-verified correctly using an in-app link click (real client-side SPA navigation, no reload): the completed status and the real justification note both persisted correctly.
+
+**Verified:** `tsc --noEmit` clean, `eslint` clean. New test added (`InspectionsPage.test.tsx`): confirms the dialog opens instead of calling the service immediately, the confirm button stays disabled until both the exact word and a justification are provided, and the service is only called on confirm. Full `vitest` suite: 289/291 pass (same 2 pre-existing unrelated failures). Visually verified in-browser end-to-end: dialog opens and gates correctly, real justification text persists and shows correctly-placed on the real Audit Trail after a genuine client-side navigation.

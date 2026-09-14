@@ -21,6 +21,7 @@ import { formatDate } from '../../format';
 import {
   Button,
   Card,
+  ConfirmDialog,
   DataTable,
   EmptyState,
   ErrorState,
@@ -32,6 +33,7 @@ import {
   Select,
   StatusBadge,
   Textarea,
+  Toast,
   type Column,
   type StatusTone,
 } from '../../ui';
@@ -138,6 +140,10 @@ function InspectionsBody({
   const [statusFilter, setStatusFilter] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<{
+    assignment: InspectionAssignment;
+    status: AssignmentStatus;
+  } | null>(null);
 
   const addedIds = new Set(added.map((a) => a.id));
   const rows = [...added, ...data.assignments.filter((a) => !addedIds.has(a.id))].map(
@@ -145,15 +151,29 @@ function InspectionsBody({
   );
   const filtered = statusFilter ? rows.filter((a) => a.status === statusFilter) : rows;
 
-  async function advance(assignment: InspectionAssignment, status: AssignmentStatus) {
+  async function advance(assignment: InspectionAssignment, status: AssignmentStatus, note?: string) {
     setError(null);
     setNotice(null);
     try {
-      const saved = await service.updateAssignment(assignment.id, { status });
+      const saved = await service.updateAssignment(
+        assignment.id,
+        note != null ? { status, note } : { status },
+      );
       setOverrides((prev) => ({ ...prev, [saved.id]: saved }));
       setNotice(`Assignment ${saved.id} → ${ASSIGNMENT_STATUS_LABEL[saved.status]}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not update the assignment.');
+    }
+  }
+
+  /** COMPLETED / CANCELLED are consequential — they close the assignment out and
+   * feed the real Audit Trail, so they go through a written confirmation first.
+   * IN_PROGRESS is just a routine step and applies immediately, as before. */
+  function requestStatusChange(assignment: InspectionAssignment, status: AssignmentStatus) {
+    if (status === 'COMPLETED' || status === 'CANCELLED') {
+      setConfirmTarget({ assignment, status });
+    } else {
+      void advance(assignment, status);
     }
   }
 
@@ -214,7 +234,7 @@ function InspectionsBody({
             ]}
             onChange={(e) => {
               const value = e.target.value as AssignmentStatus;
-              if (value !== a.status) advance(a, value);
+              if (value !== a.status) requestStatusChange(a, value);
             }}
           />
         );
@@ -303,11 +323,7 @@ function InspectionsBody({
             {error}
           </p>
         ) : null}
-        {notice ? (
-          <p className="insp-form__ok" role="status">
-            {notice}
-          </p>
-        ) : null}
+        {notice ? <Toast key={notice} message={notice} onDismiss={() => setNotice(null)} /> : null}
 
         <DataTable
           caption="Inspection assignments"
@@ -326,6 +342,27 @@ function InspectionsBody({
           }
         />
       </Card>
+
+      <ConfirmDialog
+        open={confirmTarget != null}
+        title={
+          confirmTarget
+            ? `Mark assignment ${confirmTarget.assignment.id} as ${ASSIGNMENT_STATUS_LABEL[confirmTarget.status]}?`
+            : ''
+        }
+        description="This closes the assignment out and is recorded on the work's Audit Trail. Type the word below and give a reason to confirm."
+        confirmWord={confirmTarget?.status === 'COMPLETED' ? 'COMPLETE' : 'CANCEL'}
+        confirmLabel={
+          confirmTarget ? `Mark ${ASSIGNMENT_STATUS_LABEL[confirmTarget.status]}` : 'Confirm'
+        }
+        tone={confirmTarget?.status === 'CANCELLED' ? 'danger' : 'success'}
+        onCancel={() => setConfirmTarget(null)}
+        onConfirm={(justification) => {
+          if (!confirmTarget) return;
+          void advance(confirmTarget.assignment, confirmTarget.status, justification);
+          setConfirmTarget(null);
+        }}
+      />
     </>
   );
 }

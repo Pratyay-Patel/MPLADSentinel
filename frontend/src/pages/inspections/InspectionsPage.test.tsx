@@ -69,4 +69,37 @@ describe('InspectionsPage', () => {
     // the chosen photo count shows on the new row (no seeded row uses 7)
     expect(within(assignmentsTable()).getByDisplayValue('7')).toBeInTheDocument();
   });
+
+  it('gates COMPLETED/CANCELLED behind a written confirmation, and applies the change only on confirm', async () => {
+    renderPage('MOSPI');
+    await screen.findByRole('heading', { name: 'Request an inspection' });
+
+    const [statusSelect] = await screen.findAllByLabelText(/^Status for /);
+    fireEvent.change(statusSelect, { target: { value: 'COMPLETED' } });
+
+    // the service must not be called yet — the dialog gates it
+    const dialogTitle = await screen.findByText(/Mark assignment .* as Completed\?/);
+    expect(dialogTitle).toBeInTheDocument();
+    const confirmButton = screen.getByRole('button', { name: 'Mark Completed' });
+    expect(confirmButton).toBeDisabled();
+
+    // wrong confirmation word keeps it disabled
+    fireEvent.change(screen.getByLabelText('Type COMPLETE to confirm'), {
+      target: { value: 'wrong' },
+    });
+    fireEvent.change(screen.getByLabelText('Reason / justification'), {
+      target: { value: 'Inspected on-site, work matches the sanctioned scope.' },
+    });
+    expect(confirmButton).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Type COMPLETE to confirm'), {
+      target: { value: 'complete' },
+    });
+    expect(confirmButton).toBeEnabled();
+
+    fireEvent.click(confirmButton);
+
+    expect(await screen.findByRole('status')).toHaveTextContent(/→ Completed/);
+    expect(screen.queryByText(/Mark assignment .* as Completed\?/)).not.toBeInTheDocument();
+  });
 });
