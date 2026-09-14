@@ -352,6 +352,22 @@
   color: var(--color-text-secondary);
 }
 
+/* ---- ProjectLocationMap -------------------------------------- */
+
+.ui-project-map__container {
+  width: 100%;
+  height: 260px;
+  border-radius: var(--radius-md);
+  border: var(--border);
+  isolation: isolate;
+}
+
+.ui-project-map__note {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
 /* ---- Input / Select / SearchInput -------------------------- */
 
 .ui-field {

@@ -23,6 +23,7 @@ export { DataTable, type DataTableProps, type Column } from './DataTable';
 export { BarList, type BarListProps, type BarListItem } from './BarList';
 export { DonutChart, type DonutChartProps, type DonutSlice } from './DonutChart';
 export { IndiaBubbleMap, type IndiaBubbleMapProps, type MapRegion } from './IndiaBubbleMap';
+export { ProjectLocationMap, type ProjectLocationMapProps } from './ProjectLocationMap';
 export { KeyValueList, type KeyValueListProps, type KeyValueItem } from './KeyValueList';
 export { RiskLevelBadge, type RiskLevelValue } from './RiskLevelBadge';
 export { RISK_LEVEL_COLOR, RISK_LEVEL_ORDER } from './riskColors';

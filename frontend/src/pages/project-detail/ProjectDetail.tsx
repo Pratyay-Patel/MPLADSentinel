@@ -11,6 +11,7 @@ import {
   KeyValueList,
   LoadingState,
   PageHeader,
+  ProjectLocationMap,
   SectionHeader,
   StatusBadge,
 } from '../../ui';
@@ -155,6 +156,11 @@ function ProjectDetailView({ data, showRisk }: { data: ProjectDetailData; showRi
           Location is recorded as a free-text description. Map coordinates are not maintained for
           MPLADS works.
         </p>
+        <ProjectLocationMap
+          state={project.state}
+          district={project.district}
+          riskLevel={showRisk ? risk?.level : undefined}
+        />
       </Card>
 
       <Card>

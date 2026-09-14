@@ -33,7 +33,7 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 1. Color hues / light background accents on existing components — **DONE, committed**
 2. Warm/cool custom icons (not Canva-sticker style) — **DONE, verified**
 3. More borders / "bubbly" card styling (Nirikshak-AI-like) — **DONE, verified**
-4. Real map component on project lookup (location can stay hardcoded for now)
+4. Real map component on project lookup (location can stay hardcoded for now) — **DONE, verified**
 5a. Contractor–vendor collusion graph visualization
 5b. Human-in-the-loop approve/reject UI + dual-authority sign-off (extends `AssignmentStatus`)
 6. RBAC dropdown-only login modal (no real auth flow needed behind it)
@@ -99,6 +99,28 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 - **Not touched:** the small `risk-summary__count` badge inside the Risk & Alerts warning banner, and the audit-timeline node glyph — neither is an independently-hoverable "card," so adding lift there would look noisy rather than purposeful.
 
 **Verified:** `tsc --noEmit` clean, `eslint` clean.
+
+---
+
+## Feature 4 — Real map on project lookup
+
+**Status: DONE, verified in-browser (demo build).** Frontend-only, no backend needed.
+
+**Data-availability check (done before building, per CLAUDE.md §8 anti-hallucination rule):** `docs/data-source.md` §13.11 states explicitly: "Geo coordinates (lat/long) | NOT PROVIDED | none anywhere." Only free-text `state`, `district`, `location` strings exist per work — never real coordinates. So exact per-work site mapping is impossible with real data.
+
+**Decision (user-approved):** state-level real centroid — the map centres on the project's actual `state` field using genuine (not fabricated) approximate state-centroid coordinates. Different states show visibly different map positions; this is honestly labelled as approximate, never claimed as the exact work site.
+
+**Implementation:**
+- Found and reused **existing** infrastructure instead of duplicating it: `coordForState()` in `frontend/src/ui/indiaGeo.ts` already has real lat/lon centroids for all 28 states + 8 UTs (previously only used by the schematic `IndiaBubbleMap` dashboard widget) — and `RISK_LEVEL_COLOR` in `riskColors.ts` already defines the exact HIGH/MEDIUM/LOW/UNKNOWN colors used everywhere else in the app (`RiskLevelBadge`, `RiskSignals` donut).
+- New component `frontend/src/ui/ProjectLocationMap.tsx`: a real Leaflet map (OpenStreetMap tiles, pan/zoom, zoom +/- controls — same as the reference screenshot) using `react-leaflet`. A `CircleMarker` (not the default Leaflet pin icon, which needs bundler-specific image-path workarounds) is colored by `riskLevel` when provided, or a neutral brand blue otherwise. A permanent tooltip labels the state + district. A caption always states: *"Approximate — centred on `<state>`. Exact work-site coordinates are not available in the source data."*
+- Wired into `ProjectDetail.tsx`'s existing "Location" card, right after the existing free-text location fields. `riskLevel` is only passed through when `showRisk` is true (the page's existing role-based risk-visibility gate) — so the map never leaks risk information to a role that isn't already shown risk elsewhere on the page.
+- New dependencies: `leaflet`, `react-leaflet` (v5, React-19-compatible), `@types/leaflet` (dev).
+
+**Real bug found and fixed mid-build:** jsdom (the test environment) has no real layout engine, so Leaflet's vector-renderer picking threw (`Cannot use 'in' operator to search for '_leaflet_id' in null`) as soon as the map mounted, breaking 3 existing `ProjectDetail.test.tsx` tests that don't even test map behavior. Fixed by mocking `react-leaflet` with plain passthrough elements in `src/test/setup.tsx` (renamed from `.ts` since it now contains JSX) — a standard, documented pattern for testing components that wrap map libraries.
+
+**Verified:** `tsc --noEmit` clean, `eslint` clean, full `vitest` suite back to the same 2 pre-existing unrelated failures (no regressions). Visually verified in-browser (demo build): a HIGH-risk Maharashtra project shows a red pin correctly centered on Maharashtra; an UNKNOWN-risk Uttar Pradesh project shows a gray pin over Uttar Pradesh; opening the same project via the register's `?section=record` link (risk hidden) shows a neutral blue pin, confirming the RBAC gate on risk-coloring works.
+
+**Not done / explicitly out of scope for now:** adding the same map to the citizen-facing public project view (`CitizenProjectView.tsx`) — citizens don't see risk scores by design, so it would need a neutral-only variant. Raise this if you want it added too.
 
 **Implementation note (found mid-build, not in the original plan):** `MetricCard`'s tone only colored the icon chip — cards with no `icon` prop (all of `RiskAlerts.tsx`, half of `CompareMps.tsx`) showed no accent at all. Fixed by also applying the tone as a 3px top-border accent on the card itself, so it's visible with or without an icon. `AnomalyCards.tsx` cards get a left-border + tinted-background accent instead (cycled across 4 tones, since those are dynamic risk-factor cards, not a fixed set of 4 semantic categories).
 
