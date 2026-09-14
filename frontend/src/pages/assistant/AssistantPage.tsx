@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { useAssistantService, useAsyncData, type AssistantData } from '../../data';
 import { Card, EmptyState, ErrorState, LoadingState, PageHeader, SectionHeader } from '../../ui';
+import { ChatIcon } from '../../ui/icons';
 import { answerQuestion, STARTER_PROMPTS, type AssistantReply } from './answer';
 import './assistant.css';
 
@@ -102,6 +103,8 @@ function Chat({ data }: { data: AssistantData }) {
       <SectionHeader
         title="Ask the assistant"
         description="Grounded answers from the loaded data and the methodology guide. It does not make claims about individual works being fraudulent."
+        icon={<ChatIcon />}
+        tone="info"
       />
 
       <div className="asst-log" ref={logRef} role="log" aria-live="polite">

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 
 import { summarizeRiskFactors, type DashboardData, type ProjectRisk } from '../../../data';
 import { BarList, Card, DonutChart, RISK_LEVEL_COLOR, RISK_LEVEL_ORDER, SectionHeader } from '../../../ui';
+import { AlertTriangleIcon } from '../../../ui/icons';
 import { formatCount } from '../../../format';
 
 /**
@@ -59,6 +60,8 @@ export function RiskSignals({
             ? 'Distribution of works by assessed risk level, and the factors behind the flags. Indicators for review — not proof of wrongdoing.'
             : 'How the assessed works split across risk levels. Indicators for review — not proof of wrongdoing.'
         }
+        icon={<AlertTriangleIcon />}
+        tone="danger"
       />
       <div className={showFactors ? 'risk-signals' : 'risk-signals risk-signals--donut-only'}>
         <div className="risk-signals__donut">

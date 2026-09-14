@@ -19,6 +19,7 @@ import {
   StatusBadge,
   type StatusTone,
 } from '../../ui';
+import { CalendarIcon, InfoIcon, MapPinIcon, RupeeIcon, UsersIcon } from '../../ui/icons';
 
 const HOUSE_LABEL: Record<string, string> = {
   LOK_SABHA: 'Lok Sabha',
@@ -121,6 +122,8 @@ function PublicView({ project }: { project: PublicProject }) {
       <Card>
         <SectionHeader
           title="Overview"
+          icon={<InfoIcon />}
+          tone="info"
           actions={
             <StatusBadge tone={STATUS_TONE[project.status]} srLabel="Status">
               {STATUS_LABEL[project.status]}
@@ -137,7 +140,7 @@ function PublicView({ project }: { project: PublicProject }) {
       </Card>
 
       <Card>
-        <SectionHeader title="Representation" />
+        <SectionHeader title="Representation" icon={<UsersIcon />} tone="success" />
         <KeyValueList
           items={[
             { label: 'Member of Parliament', value: dash(project.memberOfParliament) },
@@ -152,7 +155,7 @@ function PublicView({ project }: { project: PublicProject }) {
       </Card>
 
       <Card>
-        <SectionHeader title="Location" />
+        <SectionHeader title="Location" icon={<MapPinIcon />} tone="warning" />
         <KeyValueList
           items={[
             { label: 'State', value: dash(project.state) },
@@ -166,6 +169,8 @@ function PublicView({ project }: { project: PublicProject }) {
         <SectionHeader
           title="Funding"
           description="Estimated and final cost are separate figures."
+          icon={<RupeeIcon />}
+          tone="neutral"
         />
         <KeyValueList
           items={[
@@ -176,7 +181,12 @@ function PublicView({ project }: { project: PublicProject }) {
       </Card>
 
       <Card>
-        <SectionHeader title="Dates" description="Key dates recorded for this work." />
+        <SectionHeader
+          title="Dates"
+          description="Key dates recorded for this work."
+          icon={<CalendarIcon />}
+          tone="info"
+        />
         <KeyValueList
           items={[
             { label: 'Recommended on', value: formatDate(project.recommendedOn) },

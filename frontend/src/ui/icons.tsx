@@ -181,3 +181,64 @@ export const SidebarIcon = (p: IconProps) => (
     <line x1="9" y1="4" x2="9" y2="20" />
   </Base>
 );
+
+// --- section / card icons ------------------------------------------------
+
+export const BookIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5v-17Z" />
+    <path d="M4 19a2.5 2.5 0 0 1 2.5-2.5H20" />
+  </Base>
+);
+
+export const MapPinIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M12 21s7-6.1 7-11.5A7 7 0 0 0 5 9.5C5 14.9 12 21 12 21Z" />
+    <circle cx="12" cy="9.5" r="2.5" />
+  </Base>
+);
+
+export const NetworkIcon = (p: IconProps) => (
+  <Base {...p}>
+    <circle cx="12" cy="4.5" r="2" />
+    <circle cx="5" cy="19" r="2" />
+    <circle cx="19" cy="19" r="2" />
+    <path d="M12 6.5v6M12 12.5 5 17M12 12.5l7 4.5" />
+  </Base>
+);
+
+export const CameraIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M4 8h3l1.5-2h7L17 8h3v11H4V8Z" />
+    <circle cx="12" cy="13.5" r="3.2" />
+  </Base>
+);
+
+export const BellIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 14 6 10Z" />
+    <path d="M10 18.5a2 2 0 0 0 4 0" />
+  </Base>
+);
+
+export const LockIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="5" y="11" width="14" height="9" rx="2" />
+    <path d="M8 11V7.5a4 4 0 0 1 8 0V11" />
+  </Base>
+);
+
+export const CopyIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="9" y="9" width="11" height="12" rx="2" />
+    <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+  </Base>
+);
+
+export const CalendarIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="3.5" y="5" width="17" height="16" rx="2" />
+    <path d="M3.5 10h17" />
+    <path d="M8 3v4M16 3v4" />
+  </Base>
+);

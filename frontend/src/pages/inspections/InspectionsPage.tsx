@@ -35,6 +35,7 @@ import {
   type Column,
   type StatusTone,
 } from '../../ui';
+import { CameraIcon, ClipboardListIcon } from '../../ui/icons';
 import './inspections.css';
 
 const STATUS_TONE: Record<AssignmentStatus, StatusTone> = {
@@ -273,6 +274,8 @@ function InspectionsBody({
       <Card>
         <SectionHeader
           title="Assignments"
+          icon={<ClipboardListIcon />}
+          tone="info"
           description={
             canAssign
               ? 'Advance each assignment as the officer works. A completed assignment appears on that work’s Audit Trail.'
@@ -385,7 +388,7 @@ function AssignCard({
 
   return (
     <Card>
-      <SectionHeader title="Request an inspection" />
+      <SectionHeader title="Request an inspection" icon={<CameraIcon />} tone="warning" />
       <form className="insp-form" onSubmit={onSubmit} noValidate>
         <SearchInput
           label="Find a work"

@@ -19,11 +19,10 @@ After implementing and verifying each feature (tsc + tests), always give the use
 1. **Manual test steps against the real backend** — exact clicks/routes/roles to check it themselves in a running app.
 2. **A commit message** — the user runs `git commit` themselves (per CLAUDE.md §18, Claude never commits), so hand them a ready-to-use message, not just a description.
 
-## Testing rule — real backend only, no demo build
+## Testing rule — split by who's testing
 
-**The `--mode demo` / local-fixture build must never be used to test features going forward** — real testing happens only against the real deployed backend (frontend on Vercel, backend on the AWS EC2 instance, or `npm run dev` locally against it), since that's what will actually be redeployed after this branch merges. Feature 1 was visually verified by this session using the demo build before this rule was set — that verification is superseded; the manual test steps below are real-backend only.
-
-**Implication for how verification is split:** Claude verifies with `tsc --noEmit` and the test suite; the user does the actual in-browser check against the real backend, since Claude does not enter login passwords into forms (browser-automation rule, applies regardless of whose app or environment). If Claude ever needs to visually spot-check something itself, the user can sign in once in a shared browser tab and leave the session open for Claude to navigate within — never by handing over or having Claude type the password.
+- **Claude's own verification** (in-browser, before handing a feature back): the `--mode demo` / local-fixture build is fine and preferred — no login needed, fast, no credentials involved. Claude never enters a login password into a form regardless of build (browser-automation rule), so demo mode is what makes independent visual verification possible at all.
+- **Manual test steps given to the user**: always against the real backend (`npm run dev` normally, real login) — that's the actual deployed system that will be redeployed after this branch merges, so that's what the user should be confirming.
 
 ## Time-constrained build rule (from SESSION_HANDOFF.md, restated)
 
@@ -31,8 +30,8 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 
 ## Feature list (owner: this session/user's portion — portal-side only)
 
-1. Color hues / light background accents on existing components — **in progress**
-2. Warm/cool custom icons (not Canva-sticker style)
+1. Color hues / light background accents on existing components — **DONE, committed**
+2. Warm/cool custom icons (not Canva-sticker style) — **DONE, verified**
 3. More borders / "bubbly" card styling (Nirikshak-AI-like)
 4. Real map component on project lookup (location can stay hardcoded for now)
 5a. Contractor–vendor collusion graph visualization
@@ -63,11 +62,30 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 
 **Files touched:** `frontend/src/ui/MetricCard.tsx`, `frontend/src/ui/ui.css`, `frontend/src/pages/dashboard/sections/NationalOverview.tsx`, `frontend/src/pages/dashboard/sections/AnomalyCards.tsx`, `frontend/src/pages/dashboard/dashboard.css`, `frontend/src/pages/risk/RiskAlerts.tsx`, `frontend/src/pages/compare/CompareMps.tsx`, `frontend/src/pages/analytics/AnalyticsPage.tsx`.
 
+---
+
+## Feature 2 — Icons (warm/cool-toned, real-product style)
+
+**Status: DONE, verified in-browser (demo build).** Real, fully-implemented feature (pure presentation — no backend).
+
+**Finding:** the existing icon system (`frontend/src/ui/icons.tsx`) is already a proper 16px stroke line-icon set (`currentColor`, consistent weight) — not a Canva-sticker problem at all. The actual gap vs. the competitor references is **coverage**: `SectionHeader` (used ~30 times across the app) has no icon slot, so most section titles render as plain text with nothing next to them, unlike the competitor screenshots where nearly every heading/card has a colored icon chip.
+
+**Plan:**
+1. Add ~8 new icons to `icons.tsx`, reusing the existing stroke style: `BookIcon`, `MapPinIcon`, `NetworkIcon`, `CameraIcon`, `BellIcon`, `LockIcon`, `CopyIcon`, `CalendarIcon` — chosen to cover both this feature and upcoming ones (map, collusion graph, alerts, escrow, dedup).
+2. Add optional `icon` + `tone` (same `StatusTone` used by `MetricCard`) to `SectionHeader`, rendering a small colored icon chip left of the heading.
+3. Wire an icon + tone onto every existing `SectionHeader` call site, matched to what that section actually is (e.g. Financial intelligence → Rupee/warning, Risk signals → Alert-triangle/danger, Location → MapPin/info), reusing existing icons where they already fit.
+
+**Not touched:** sidebar nav icons (stay monochrome — different component, active-state styling risk, not requested), `PageHeader` (page-level titles didn't have icons in the reference screenshots either — it was card/section grids that did). Audit page (`AuditPage.tsx`) already had its own per-event-kind colored icons (`EVENT_META`) — left untouched, already ahead of this feature.
+
+**Files touched:** `frontend/src/ui/icons.tsx` (8 new icons), `frontend/src/ui/SectionHeader.tsx`, `frontend/src/ui/ui.css`, and the icon+tone wiring in: `dashboard/sections/{NationalOverview,AnomalyCards,FinancialIntelligence,RegionalInsight,RiskSignals,WorkDistribution}.tsx`, `analytics/AnalyticsPage.tsx`, `compare/CompareMps.tsx`, `citizen/CitizenProjectView.tsx`, `grievances/Grievances.tsx`, `inspections/InspectionsPage.tsx`, `assistant/AssistantPage.tsx`, `project-detail/{ProjectDetail,RiskInsights,PaymentsSection}.tsx` — roughly 30 `SectionHeader` call sites in total.
+
+**Verified:** `tsc --noEmit` clean, `eslint` clean (no unused imports despite ~15 new icon imports across files), full `vitest` suite — 284/286 pass, same 2 pre-existing unrelated failures as Feature 1. Visually verified in-browser (demo build) on Dashboard (all sections), Compare MPs, and Analytics — icon chips render correctly with the intended tone colors and don't disturb layout.
+
 **Implementation note (found mid-build, not in the original plan):** `MetricCard`'s tone only colored the icon chip — cards with no `icon` prop (all of `RiskAlerts.tsx`, half of `CompareMps.tsx`) showed no accent at all. Fixed by also applying the tone as a 3px top-border accent on the card itself, so it's visible with or without an icon. `AnomalyCards.tsx` cards get a left-border + tinted-background accent instead (cycled across 4 tones, since those are dynamic risk-factor cards, not a fixed set of 4 semantic categories).
 
 **Verified:** `tsc --noEmit` clean; full `vitest` suite run — 284/286 pass, the 2 failures (`PlaceholderPage.test.tsx`) confirmed pre-existing and unrelated (reproduced with this feature's changes fully stashed out). Visually verified in-browser via the existing `--mode demo` persona-picker build (no backend needed) across Dashboard, Risk & Alerts, Compare MPs, and Analytics — all four pages show the intended distinct light-blue/beige/light-green/red accents, semantically mapped where the data has a real meaning (risk levels) and cycled for visual variety where it doesn't (comparison tiles, anomaly cards).
 
-**Side discovery:** the `--mode demo` build already has a full RBAC-style **persona picker** (`LoginPage.tsx` + `DEMO_PERSONAS`) — a card grid to choose MoSPI/State/District/Auditor/MP/Citizen and enter with no real login. This overlaps heavily with planned Feature 6 ("RBAC dropdown-only login modal") — worth revisiting whether Feature 6 is largely already done, or just needs restyling from cards to a dropdown, when we get to it. (Not something to test/build against directly, per the real-backend-only testing rule above — it's cited here purely as a code-reuse note.)
+**Side discovery:** the `--mode demo` build already has a full RBAC-style **persona picker** (`LoginPage.tsx` + `DEMO_PERSONAS`) — a card grid to choose MoSPI/State/District/Auditor/MP/Citizen and enter with no real login. This overlaps heavily with planned Feature 6 ("RBAC dropdown-only login modal") — worth revisiting whether Feature 6 is largely already done, or just needs restyling from cards to a dropdown, when we get to it.
 
 **Post-review fixes (user caught these from screenshots, both real bugs):**
 1. Compare MPs: "Highest fund utilisation" and "Lowest flagged share" were both `success` (duplicate adjacent color) — changed "Lowest flagged share" to `warning`.

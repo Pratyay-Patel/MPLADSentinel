@@ -19,6 +19,7 @@ import {
   Select,
   SectionHeader,
 } from '../../ui';
+import { BarsIcon, SearchIcon, TrendingUpIcon } from '../../ui/icons';
 import { MpCompareChart } from './MpCompareChart';
 import { METRICS, pct, type Metric } from './metrics';
 
@@ -131,6 +132,8 @@ function CompareBody({ data }: { data: MpComparisonData }) {
         <SectionHeader
           title="Choose MPs"
           description={`Add up to ${MAX_MPS}. Type to search by name, constituency or state.`}
+          icon={<SearchIcon />}
+          tone="info"
         />
 
         {selected.length > 0 && (
@@ -272,6 +275,8 @@ function Comparison({
         <SectionHeader
           title="Metric comparison"
           description="One bar per selected MP; the dashed line is the average across all MPs."
+          icon={<TrendingUpIcon />}
+          tone="success"
         />
         <div className="mpc-metric-pick">
           <Select
@@ -285,7 +290,7 @@ function Comparison({
       </Card>
 
       <Card>
-        <SectionHeader title="Detailed comparison" />
+        <SectionHeader title="Detailed comparison" icon={<BarsIcon />} tone="warning" />
         <div className="mpc-table-wrap">
           <table className="mpc-table">
             <thead>

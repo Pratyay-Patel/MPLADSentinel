@@ -1,5 +1,6 @@
 import type { DashboardData } from '../../../data';
 import { BarList, Card, SectionHeader } from '../../../ui';
+import { ListIcon } from '../../../ui/icons';
 import { formatCount } from '../../../format';
 
 /**
@@ -14,6 +15,8 @@ export function WorkDistribution({ data }: { data: DashboardData }) {
       <SectionHeader
         title="Work distribution"
         description="How works are split between the recommended and completed stages. Some works appear at both."
+        icon={<ListIcon />}
+        tone="success"
       />
       <BarList
         caption="Recommended works versus completed works"

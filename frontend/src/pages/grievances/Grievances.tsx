@@ -31,6 +31,7 @@ import {
   type SelectOption,
   type StatusTone,
 } from '../../ui';
+import { ClipboardListIcon, InboxIcon, ListIcon } from '../../ui/icons';
 
 const STATUS_TONE: Record<GrievanceStatus, StatusTone> = {
   SUBMITTED: 'info',
@@ -220,7 +221,7 @@ function CitizenGrievances({
   return (
     <>
       <Card>
-        <SectionHeader title="Raise a grievance" />
+        <SectionHeader title="Raise a grievance" icon={<ClipboardListIcon />} tone="warning" />
         <form className="grv-form" onSubmit={onSubmit} noValidate>
           <div className="grv-form__grid">
             <Select
@@ -297,7 +298,7 @@ function CitizenGrievances({
       </Card>
 
       <Card>
-        <SectionHeader title="Grievances you have raised" />
+        <SectionHeader title="Grievances you have raised" icon={<ListIcon />} tone="info" />
         <DataTable
           caption="Grievances you have raised"
           columns={columns}
@@ -426,6 +427,8 @@ function ReviewQueue({
     <Card>
       <SectionHeader
         title="Review queue"
+        icon={<InboxIcon />}
+        tone="danger"
         description={
           canAction
             ? 'Move each grievance through Submitted → Under review → Actioned → Closed and note the action taken.'

@@ -1,5 +1,6 @@
 import type { RegionStat } from '../../../data';
 import { BarList, Card, IndiaBubbleMap, SectionHeader } from '../../../ui';
+import { MapPinIcon } from '../../../ui/icons';
 import { formatCount } from '../../../format';
 
 const TOP_LIST_LIMIT = 8;
@@ -17,6 +18,8 @@ export function RegionalInsight({ regions }: { regions: RegionStat[] }) {
       <SectionHeader
         title="Works across India"
         description="Number of works per state in the current dataset, with the assessed risk split. Hover a bubble for detail."
+        icon={<MapPinIcon />}
+        tone="info"
       />
       {regions.length === 0 ? (
         <p className="risk-signals__note">No state information available.</p>

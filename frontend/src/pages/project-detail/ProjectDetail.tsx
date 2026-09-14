@@ -14,6 +14,7 @@ import {
   SectionHeader,
   StatusBadge,
 } from '../../ui';
+import { CalendarIcon, InfoIcon, MapPinIcon, RupeeIcon, ShieldIcon } from '../../ui/icons';
 import { DetailTimeline } from './DetailTimeline';
 import { flagLabel, houseLabel, LIFECYCLE_LABEL, LIFECYCLE_TONE } from './labels';
 import { PaymentsSection } from './PaymentsSection';
@@ -116,7 +117,7 @@ function ProjectDetailView({ data, showRisk }: { data: ProjectDetailData; showRi
   return (
     <>
       <Card>
-        <SectionHeader title="Overview" />
+        <SectionHeader title="Overview" icon={<InfoIcon />} tone="info" />
         <KeyValueList
           items={[
             {
@@ -142,7 +143,7 @@ function ProjectDetailView({ data, showRisk }: { data: ProjectDetailData; showRi
       </Card>
 
       <Card>
-        <SectionHeader title="Location" />
+        <SectionHeader title="Location" icon={<MapPinIcon />} tone="warning" />
         <KeyValueList
           items={[
             { label: 'State', value: project.state ?? '—' },
@@ -160,6 +161,8 @@ function ProjectDetailView({ data, showRisk }: { data: ProjectDetailData; showRi
         <SectionHeader
           title="Financials"
           description="The recommended estimate and the final cost are separate figures; they are never merged."
+          icon={<RupeeIcon />}
+          tone="success"
         />
         <KeyValueList
           items={[
@@ -177,12 +180,14 @@ function ProjectDetailView({ data, showRisk }: { data: ProjectDetailData; showRi
         <SectionHeader
           title="Timeline"
           description="Key dates recorded for this work, in chronological order."
+          icon={<CalendarIcon />}
+          tone="neutral"
         />
         <DetailTimeline project={project} payments={payments} />
       </Card>
 
       <Card>
-        <SectionHeader title="Data source & quality" />
+        <SectionHeader title="Data source & quality" icon={<ShieldIcon />} tone="neutral" />
         <KeyValueList
           items={[
             { label: 'Data source', value: 'MPLADS works data' },

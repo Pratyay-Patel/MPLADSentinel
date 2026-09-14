@@ -16,7 +16,7 @@ import { formatCount, formatINRCompact } from '../../../format';
 export function NationalOverview({ data }: { data: DashboardData }) {
   return (
     <section aria-label="National overview">
-      <SectionHeader title="National overview" />
+      <SectionHeader title="National overview" icon={<LayoutGridIcon />} tone="info" />
       <div className="ui-metric-grid">
         <MetricCard
           icon={<LayoutGridIcon />}

@@ -9,6 +9,7 @@ import {
   type ProjectRisk,
 } from '../../../data';
 import { Card, SectionHeader } from '../../../ui';
+import { AlertTriangleIcon } from '../../../ui/icons';
 import { formatCount } from '../../../format';
 
 const MAX_CARDS = 6;
@@ -41,6 +42,8 @@ export function AnomalyCards({ data }: { data: DashboardData }) {
       <SectionHeader
         title="Risk factors detected"
         description="How often each risk factor is flagged across the works in view, by the statistical risk model. Indicators for review, not confirmed findings."
+        icon={<AlertTriangleIcon />}
+        tone="warning"
       />
       <ul className="anomaly-cards">
         {factors.map((factor, i) => (
