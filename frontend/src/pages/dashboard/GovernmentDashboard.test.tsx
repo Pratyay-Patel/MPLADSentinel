@@ -135,7 +135,14 @@ describe('GovernmentDashboard', () => {
       listAssignments: vi.fn().mockResolvedValue([]),
       createAssignment: vi.fn(),
       updateAssignment: vi.fn(),
+      requestAssignmentSignOff: vi.fn(),
+      confirmAssignmentSignOff: vi.fn(),
       getAuditPhotos: vi.fn().mockResolvedValue({ photos: [], configured: false }),
+      listNotifications: vi.fn().mockResolvedValue([]),
+      markNotificationRead: vi.fn(),
+      markAllNotificationsRead: vi.fn(),
+      clearAllNotifications: vi.fn(),
+      sendSlaNotice: vi.fn(),
     };
     renderDashboard(emptyProvider);
     expect(await screen.findByText('No work data available')).toBeInTheDocument();
@@ -160,7 +167,14 @@ describe('GovernmentDashboard', () => {
       listAssignments: vi.fn().mockResolvedValue([]),
       createAssignment: vi.fn(),
       updateAssignment: vi.fn(),
+      requestAssignmentSignOff: vi.fn(),
+      confirmAssignmentSignOff: vi.fn(),
       getAuditPhotos: vi.fn().mockResolvedValue({ photos: [], configured: false }),
+      listNotifications: vi.fn().mockResolvedValue([]),
+      markNotificationRead: vi.fn(),
+      markAllNotificationsRead: vi.fn(),
+      clearAllNotifications: vi.fn(),
+      sendSlaNotice: vi.fn(),
     };
     renderDashboard(failingProvider);
 

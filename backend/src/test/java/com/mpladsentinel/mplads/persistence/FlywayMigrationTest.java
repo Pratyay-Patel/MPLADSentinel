@@ -36,7 +36,7 @@ class FlywayMigrationTest extends AbstractPostgresIntegrationTest {
                 .map(Object::toString)
                 .toList();
 
-        assertThat(applied).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
+        assertThat(applied).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11");
         assertThat(flyway.info().current().getState()).isEqualTo(MigrationState.SUCCESS);
     }
 
@@ -54,6 +54,7 @@ class FlywayMigrationTest extends AbstractPostgresIntegrationTest {
         assertThat(tableExists("work_payment")).isTrue();
         assertThat(tableExists("app_user")).isTrue();
         assertThat(tableExists("grievance")).isTrue();
+        assertThat(tableExists("notification")).isTrue();
     }
 
     @Test
@@ -84,6 +85,17 @@ class FlywayMigrationTest extends AbstractPostgresIntegrationTest {
         assertThat(columnExists("inspection_assignment", "pending_requested_at")).isTrue();
         assertThat(constraintExists("ck_inspection_assignment_pending_status")).isTrue();
         assertThat(constraintExists("ck_inspection_assignment_pending_consistent")).isTrue();
+    }
+
+    @Test
+    void notificationTableFromV11Exists() {
+        assertThat(tableExists("notification")).isTrue();
+        assertThat(columnExists("notification", "recipient_user_id")).isTrue();
+        assertThat(columnExists("notification", "category")).isTrue();
+        assertThat(columnExists("notification", "source_work_id")).isTrue();
+        assertThat(columnExists("notification", "is_read")).isTrue();
+        assertThat(columnExists("notification", "dismissed")).isTrue();
+        assertThat(constraintExists("ck_notification_category")).isTrue();
     }
 
     @Test

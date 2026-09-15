@@ -270,3 +270,25 @@ export interface AuditEvidence {
   photos: AuditPhoto[];
   configured: boolean;
 }
+
+/**
+ * What generated a {@link AppNotification}: a real HIGH-risk work seeded from
+ * the rule-based risk engine, or an authority's explicit "Send Notice" action.
+ */
+export type NotificationCategory = 'HIGH_RISK_WORK' | 'SLA_NOTICE';
+
+/**
+ * An in-app notification (the header bell). "Clearing" a notification hides it
+ * from this list but does not delete it server-side — see {@link DataProvider}.
+ */
+export interface AppNotification {
+  id: string;
+  category: NotificationCategory;
+  title: string;
+  message: string;
+  /** The work this notification is about, or null for a general one. */
+  sourceWorkId: number | null;
+  read: boolean;
+  /** ISO timestamp. */
+  createdAt: string;
+}

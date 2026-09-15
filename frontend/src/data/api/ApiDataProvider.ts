@@ -11,6 +11,13 @@ import { ApiError } from '../../api/client';
 import { getGrievances, patchGrievanceStatus, postGrievance } from '../../api/grievances';
 import { getHealth } from '../../api/health';
 import {
+  clearAllNotifications,
+  getNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  sendSlaNotice,
+} from '../../api/notifications';
+import {
   getPublicWork,
   getPublicWorks,
   getWork,
@@ -255,6 +262,46 @@ export function createApiDataProvider(): DataProvider {
         return await getAuditPhotos(sourceWorkId, limit, signal);
       } catch (error) {
         throw toProviderError('getAuditPhotos', error);
+      }
+    },
+
+    async listNotifications(signal) {
+      try {
+        return await getNotifications(signal);
+      } catch (error) {
+        throw toProviderError('listNotifications', error);
+      }
+    },
+
+    async markNotificationRead(id, signal) {
+      try {
+        return await markNotificationRead(id, signal);
+      } catch (error) {
+        throw toProviderError('markNotificationRead', error);
+      }
+    },
+
+    async markAllNotificationsRead(signal) {
+      try {
+        await markAllNotificationsRead(signal);
+      } catch (error) {
+        throw toProviderError('markAllNotificationsRead', error);
+      }
+    },
+
+    async clearAllNotifications(signal) {
+      try {
+        await clearAllNotifications(signal);
+      } catch (error) {
+        throw toProviderError('clearAllNotifications', error);
+      }
+    },
+
+    async sendSlaNotice(sourceWorkId, signal) {
+      try {
+        await sendSlaNotice(sourceWorkId, signal);
+      } catch (error) {
+        throw toProviderError('sendSlaNotice', error);
       }
     },
   };

@@ -1,10 +1,12 @@
 import { readDemoSession } from '../../auth/demoAuth';
+import type { Role } from '../../auth/roles';
 import { workTitle } from '../../format';
 import { deriveRisk } from '../risk/rules';
 import type { DataProvider } from '../DataProvider';
 import { ProviderError } from '../errors';
 import { toPublicProject } from '../publicProject';
 import type {
+  AppNotification,
   AssignmentStatus,
   BackendHealth,
   FieldOfficer,
@@ -104,6 +106,80 @@ function seedAssignments(): InspectionAssignment[] {
 
 let demoAssignments: InspectionAssignment[] = seedAssignments();
 let assignmentSeq = demoAssignments.length;
+
+// --- notifications (session-only, like grievances/assignments above) --------
+
+/** Caps the one-time high-risk-alert bootstrap — mirrors the real backend. */
+const MAX_SEEDED_HIGH_RISK_ALERTS = 5;
+
+interface DemoNotification extends AppNotification {
+  /** Who this notification is for — the demo has one persona per role, so this
+   * stands in for the real backend's `recipient_user_id`. */
+  recipientRole: Role;
+  /** "Clear all" sets this rather than removing the row — mirrors the real
+   * `notification.dismissed` column (migration V11). */
+  dismissed: boolean;
+}
+
+const demoNotifications: DemoNotification[] = [];
+let notificationSeq = 0;
+
+function currentDemoRole(): Role | null {
+  return readDemoSession()?.role ?? null;
+}
+
+function toAppNotification(n: DemoNotification): AppNotification {
+  return {
+    id: n.id,
+    category: n.category,
+    title: n.title,
+    message: n.message,
+    sourceWorkId: n.sourceWorkId,
+    read: n.read,
+    createdAt: n.createdAt,
+  };
+}
+
+/** Roles the high-risk-work alert bootstrap applies to — risk is not exposed to
+ * citizens (`ProjectRisk` is authority-only), mirrors the backend's `RISK_VISIBLE_ROLES`. */
+const RISK_VISIBLE_ROLES: readonly Role[] = ['MOSPI', 'STATE', 'DISTRICT', 'AUDITOR', 'MP'];
+
+/** One-time, per-role bootstrap from the real (demo-fixture) risk assessment —
+ * mirrors `NotificationService.seedHighRiskAlertsIfNeeded` on the backend. */
+function seedHighRiskAlertsIfNeeded(role: Role): void {
+  if (!RISK_VISIBLE_ROLES.includes(role)) {
+    return;
+  }
+  const alreadySeeded = demoNotifications.some(
+    (n) => n.recipientRole === role && n.category === 'HIGH_RISK_WORK',
+  );
+  if (alreadySeeded) {
+    return;
+  }
+  const ctx = { allProjects: [...demoProjects], asOf: RISK_REFERENCE_DATE };
+  const highRisk = demoProjects
+    .map((project) => ({ project, risk: deriveRisk(project, ctx) }))
+    .filter(({ risk }) => risk.level === 'HIGH')
+    .slice(0, MAX_SEEDED_HIGH_RISK_ALERTS);
+
+  for (const { project, risk } of highRisk) {
+    notificationSeq += 1;
+    const title = workTitle(project.workDescription, project.sourceWorkId);
+    const reasons = risk.reasons.join('; ');
+    demoNotifications.unshift({
+      id: `demo-notification-${notificationSeq}`,
+      category: 'HIGH_RISK_WORK',
+      title: `High-risk work flagged: ${title}`,
+      message:
+        risk.score != null ? `Assessed HIGH risk (score ${risk.score}). ${reasons}` : `Assessed HIGH risk. ${reasons}`,
+      sourceWorkId: project.sourceWorkId,
+      read: false,
+      createdAt: new Date().toISOString(),
+      recipientRole: role,
+      dismissed: false,
+    });
+  }
+}
 
 const LIFECYCLE_STATES: LifecycleState[] = [
   'RECOMMENDED',
@@ -415,6 +491,76 @@ export function createDemoDataProvider(): DataProvider {
       assignment.pendingRequestedAt = null;
       assignment.updatedAt = new Date().toISOString();
       return { ...assignment };
+    },
+
+    // --- notifications ---------------------------------------------------
+
+    async listNotifications(signal) {
+      ensureNotAborted(signal);
+      const role = currentDemoRole();
+      if (!role) {
+        return [];
+      }
+      seedHighRiskAlertsIfNeeded(role);
+      return demoNotifications
+        .filter((n) => n.recipientRole === role && !n.dismissed)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .map(toAppNotification);
+    },
+
+    async markNotificationRead(id, signal) {
+      ensureNotAborted(signal);
+      const role = currentDemoRole();
+      const notification = demoNotifications.find((n) => n.id === id && n.recipientRole === role);
+      if (!notification) {
+        throw new ProviderError('unknown', `No notification with id ${id}.`);
+      }
+      notification.read = true;
+      return toAppNotification(notification);
+    },
+
+    async markAllNotificationsRead(signal) {
+      ensureNotAborted(signal);
+      const role = currentDemoRole();
+      for (const notification of demoNotifications) {
+        if (notification.recipientRole === role && !notification.dismissed) {
+          notification.read = true;
+        }
+      }
+    },
+
+    async clearAllNotifications(signal) {
+      ensureNotAborted(signal);
+      const role = currentDemoRole();
+      for (const notification of demoNotifications) {
+        if (notification.recipientRole === role) {
+          notification.dismissed = true;
+        }
+      }
+    },
+
+    async sendSlaNotice(sourceWorkId, signal) {
+      ensureNotAborted(signal);
+      const project = demoProjects.find((p) => p.sourceWorkId === sourceWorkId);
+      if (!project) {
+        throw new ProviderError('unknown', `No work with source id ${sourceWorkId}.`);
+      }
+      notificationSeq += 1;
+      const title = workTitle(project.workDescription, project.sourceWorkId);
+      demoNotifications.unshift({
+        id: `demo-notification-${notificationSeq}`,
+        category: 'SLA_NOTICE',
+        title: `Attention required: ${title}`,
+        message:
+          'This work has been flagged as high-risk / requiring attention and needs your review.',
+        sourceWorkId: project.sourceWorkId,
+        read: false,
+        createdAt: new Date().toISOString(),
+        // Always the single seeded District Authority persona — mirrors the
+        // real backend, which has no per-district accounts yet (decision D31).
+        recipientRole: 'DISTRICT',
+        dismissed: false,
+      });
     },
 
     async getAuditPhotos(_sourceWorkId, _limit, signal) {

@@ -13,6 +13,7 @@
  */
 
 export type {
+  AppNotification,
   AssignmentInput,
   AssignmentPatch,
   AssignmentStatus,
@@ -28,6 +29,7 @@ export type {
   InspectionAssignment,
   LifecycleState,
   Money,
+  NotificationCategory,
   PaymentDataState,
   PaymentInstallment,
   Project,
@@ -167,6 +169,12 @@ export {
   type InspectionFinding,
 } from './features/audit';
 export { useAuditService } from './features/useAuditService';
+
+export {
+  createNotificationsService,
+  type NotificationsService,
+} from './features/notifications';
+export { useNotificationsService } from './features/useNotificationsService';
 
 export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';
 export {

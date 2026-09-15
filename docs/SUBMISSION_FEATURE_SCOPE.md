@@ -35,9 +35,9 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 3. More borders / "bubbly" card styling (Nirikshak-AI-like) — **DONE, verified**
 4. Real map component on project lookup (location can stay hardcoded for now) — **DONE, verified**
 5a. Contractor–vendor collusion graph visualization — **DONE, verified (reframed as real vendor-concentration HHI, see below)**
-5b. Human-in-the-loop approve/reject UI + dual-authority sign-off (extends `AssignmentStatus`) — **DONE, verified (written-confirmation gate on Completed/Cancelled; dual-authority sign-off itself not yet built, see below)**
-6. RBAC dropdown-only login modal (no real auth flow needed behind it)
-7. Alerts and Notifications UI (send-notice action for high-risk projects)
+5b. Human-in-the-loop approve/reject UI + dual-authority sign-off (extends `AssignmentStatus`) — **DONE, verified (written-confirmation gate, plus the full real dual-authority sign-off backend + frontend, see Feature 6 below)**
+6. RBAC dropdown-only login modal (no real auth flow needed behind it) — **DONE, verified** (see "Feature 6b" below; real-mode signs out + redirects to `/login` rather than skipping auth)
+7. Alerts and Notifications UI (send-notice action for high-risk projects) — **DONE, verified, full backend + frontend** (see below)
 8. De-duplication of works UI/flow
 9. National "Works across India" dashboard bubble map → replaced with a real Leaflet/OSM map — **DONE, verified** (added mid-session, not in the original 8; see below)
 
@@ -239,3 +239,35 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 - `inspections.test.ts`: split the old combined test and added one asserting direct COMPLETED/CANCELLED is rejected, and one exercising the full request → same-user-rejected → different-user-confirms → merged-note flow (11/11 pass). `InspectionsPage.test.tsx`: rewrote the stale gating test and added a full two-identity UI test using `writeDemoSession()` to keep the React session and the demo provider's acting-user in sync (5/5 pass).
 
 **Verified:** `tsc --noEmit` clean, `eslint` clean. Full frontend `vitest` suite: 292/294 pass (same 2 pre-existing unrelated failures, confirmed unrelated by running them against the pre-feature commit). Backend: 193/193 pass. Visually verified in-browser end-to-end using genuine in-app identity switches (Sign Out → persona picker, never a URL reload, since the demo provider's assignment list is an in-memory singleton that resets on reload): requested as MoSPI → correctly blocked from confirming its own request → switched to District Authority → confirmed → Audit Trail shows the real merged note crediting both authorities by name with both justifications.
+
+## Feature 6b — RBAC dropdown (demo persona switcher + real-login redirect)
+
+**Status: DONE, verified.** A "Role: X ▾" dropdown in the app header (`PersonaSwitcher.tsx`), colorful per-persona icons, active persona's label text colored to match.
+
+**Two behaviours, one component, no auth bypass:**
+- **Demo build:** picking a different persona calls the same `login(role, 'demo')` the `/login` persona cards use — a real session change.
+- **Real backend build:** picking a different role calls `logout()` then navigates to `/login` — the user must authenticate for real as that role. This is a navigation shortcut, not a password-less switch, so it does not reintroduce the arbitrary-role-selection problem decision D31 retired — D31's own demo-auth carve-out is what the demo path already relies on.
+
+**Verified:** `tsc`/`eslint` clean; 5 new tests (`PersonaSwitcher.test.tsx`) across both behaviours (demo direct-switch vs. real logout+redirect, mocking `../api/auth`). Visually verified in-browser: colorful icons + colored active label match the reference design; switching personas in demo mode genuinely changes the sidebar/RBAC view.
+
+## Feature 7 — Alerts and Notifications (header bell + Send Notice)
+
+**Status: DONE, verified. Real backend + real frontend.**
+
+**Part 1 — notification bell (`NotificationBell.tsx`):** a header bell with an unread-count badge and a dropdown feed. Unread notifications render bold with a dot; "Mark all as read" dims them; "Clear all" empties the visible feed but only sets `dismissed = true` server-side — the row is retained, never deleted, exactly as asked.
+
+**Part 2 — "Send Notice" (`SendNoticeButton.tsx`):** added directly into the existing "Projects requiring attention" table (Dashboard) and the Risk & Alerts table's Action column — no separate "SLA Delays" tab, per the explicit decision to fold this into the existing screens instead of copying the competitor's separate-tab layout. Clicking it creates a real notification addressed to the single seeded District Authority account (there are no per-district accounts yet — decision D31) and shows a toast, matching the competitor's one-click flow.
+
+**Real backend (Spring Boot), not a demo-only simulation:**
+- `V11__notification.sql`: a `notification` table (`recipient_user_id`, `category`, `title`, `message`, `source_work_id`, `is_read`, `dismissed`, `created_at`). `dismissed` is what "Clear all" sets.
+- `NotificationService`: `sendSlaNotice()` validates the work is real (400 if not) and addresses the single seeded `DISTRICT` account. `listFor()` bootstraps a **real, one-time, per-recipient** set of `HIGH_RISK_WORK` alerts by reusing the existing rule-based `RiskEngine` (D22) — capped at 5, never re-seeded once present (even after "Clear all" dismisses them), and **never for CITIZEN/FIELD_OFFICER** roles, since risk is not exposed to citizens elsewhere in the app. `markRead`/`markAllRead`/`clearAll` are scoped to the caller's own notifications.
+- `NotificationController`: `GET /api/notifications`, `POST /{id}/read`, `POST /mark-all-read`, `POST /clear` (any signed-in role, scoped to themselves), `POST /send-notice` (MoSPI/State/District/Auditor/MP only — the same roles that see the Dashboard/Risk pages).
+- Tests: `NotificationControllerTest` (10 integration tests over real Postgres — idempotent seeding, citizen exclusion, send-notice RBAC, mark-read ownership, clear-all persistence) + `NotificationServiceTest` (10 Mockito unit tests for the seeding/capping logic, deliberately independent of the shared test Postgres's accumulated fixtures from other test classes). **212/212 backend tests pass.**
+
+**Frontend:** `types.ts`/`DataProvider.ts` gain `AppNotification`/`NotificationCategory` and the 5 provider methods; `ApiDataProvider` and `DemoDataProvider` both implement them — the demo provider mirrors the backend exactly (one-time per-role high-risk seed reusing the same demo risk fixtures, citizen exclusion, `sendSlaNotice` always addressing the `DISTRICT` demo persona, "clear" dismisses rather than deletes).
+
+**A real gap found and fixed during implementation:** the initial `seedHighRiskAlertsIfNeeded` had no role check, meaning a citizen loading their notifications would have triggered real HIGH-risk-work alerts into their own feed — leaking risk-assessment data the rest of the app deliberately keeps authority-only (`RiskController`'s own Javadoc: "Risk is not exposed to citizens"). Fixed on both backend (`RISK_VISIBLE_ROLES` in `NotificationService`) and frontend (`RISK_VISIBLE_ROLES` in `DemoDataProvider`) before this was verified, with a dedicated test on each side.
+
+**Also found and fixed:** the frontend's `tsc --noEmit` had been silently checking nothing all along — `tsconfig.json` uses project references (`"files": []` + `references`), which requires `tsc -b` (build mode) to actually resolve and check anything; bare `--noEmit` was a no-op. Running `tsc -b --force` for real surfaced pre-existing gaps unrelated to this feature (two test files' hand-written `DataProvider` mocks were missing the dual-authority sign-off methods from a previous feature, and one pre-existing `StatusTone`/`MetricCard` type mismatch in `RiskAlerts.tsx`) — all fixed. `npm run build` (the real `tsc -b && vite build`) now succeeds.
+
+**Verified:** real `tsc -b` build clean, `eslint` clean, real production `vite build` succeeds. Backend: 212/212 pass. Frontend: 307/309 vitest pass (2 pre-existing unrelated failures). Visually verified in-browser end-to-end: opened the bell as MoSPI and saw 5 real HIGH-risk-work alerts with real work titles/scores/reasons; clicked "Send Notice" on the Dashboard's "Projects requiring attention" table, button flipped to "Notice sent"; switched to District Authority via the persona picker and found the exact "Attention required: Multipurpose community centre" notice in their feed.

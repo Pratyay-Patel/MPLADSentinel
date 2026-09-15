@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { resolveDataSource } from '../data';
 import { CloseIcon, MenuIcon, SidebarIcon } from '../ui/icons';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { NotificationBell } from './NotificationBell';
 import { PersonaSwitcher } from './PersonaSwitcher';
 import { UserMenu } from './UserMenu';
 import { VoiceCommand } from './VoiceCommand';
@@ -87,6 +88,7 @@ export function AppHeader({
       <VoiceCommand />
       <LanguageSwitcher />
       <PersonaSwitcher />
+      <NotificationBell />
 
       <div className="app-header__user">
         <UserMenu />

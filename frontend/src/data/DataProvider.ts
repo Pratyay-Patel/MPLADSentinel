@@ -1,5 +1,6 @@
 import type { PublicProject } from './publicProject';
 import type {
+  AppNotification,
   AssignmentInput,
   AssignmentPatch,
   AuditEvidence,
@@ -139,4 +140,26 @@ export interface DataProvider {
     limit?: number,
     signal?: AbortSignal,
   ): Promise<AuditEvidence>;
+
+  /** The signed-in user's active (non-cleared) notifications, newest first. */
+  listNotifications(signal?: AbortSignal): Promise<AppNotification[]>;
+
+  /** Marks one of the caller's own notifications read; returns the updated record. */
+  markNotificationRead(id: string, signal?: AbortSignal): Promise<AppNotification>;
+
+  /** Marks every active notification of the caller's read. */
+  markAllNotificationsRead(signal?: AbortSignal): Promise<void>;
+
+  /**
+   * "Clear all" — hides every active notification from {@link listNotifications}.
+   * The records are not deleted server-side, only dismissed.
+   */
+  clearAllNotifications(signal?: AbortSignal): Promise<void>;
+
+  /**
+   * An authority flags a work as needing attention. Always lands in the single
+   * seeded District Authority account's notifications for now — there is no
+   * per-district account yet (decision D31).
+   */
+  sendSlaNotice(sourceWorkId: number, signal?: AbortSignal): Promise<void>;
 }

@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 
 import { SessionProvider } from '../auth';
 import type { Role } from '../auth';
+import { DataProviderProvider } from '../data';
+import { createDemoDataProvider } from '../data/demo/DemoDataProvider';
 import { AppShell } from './AppShell';
 
 function renderAt(path: string, role: Role = 'MOSPI') {
@@ -23,7 +25,9 @@ function renderAt(path: string, role: Role = 'MOSPI') {
   );
   return render(
     <SessionProvider initialRole={role}>
-      <RouterProvider router={router} />
+      <DataProviderProvider provider={createDemoDataProvider()}>
+        <RouterProvider router={router} />
+      </DataProviderProvider>
     </SessionProvider>,
   );
 }

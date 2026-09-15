@@ -242,3 +242,10 @@ export const CalendarIcon = (p: IconProps) => (
     <path d="M8 3v4M16 3v4" />
   </Base>
 );
+
+export const SendIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="m3 11 18-8-8 18-2.5-7.5L3 11Z" />
+    <path d="M12.5 13.5 20 4" />
+  </Base>
+);

@@ -124,6 +124,11 @@ public class SecurityConfig {
                         // Audit Trail evidence (Pinata-backed) — any government role.
                         .requestMatchers(HttpMethod.GET, "/api/audit/**")
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT", "AUDITOR", "MP")
+                        // Notifications: any signed-in role reads/marks their own (matched
+                        // by anyRequest below); only the roles that see the Dashboard /
+                        // Risk & Alerts pages may send an attention notice.
+                        .requestMatchers(HttpMethod.POST, "/api/notifications/send-notice")
+                        .hasAnyRole("MOSPI", "STATE", "DISTRICT", "AUDITOR", "MP")
                         // Everything else requires a signed-in session.
                         .anyRequest().authenticated());
 

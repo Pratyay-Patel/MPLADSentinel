@@ -30,3 +30,4 @@ export { RISK_LEVEL_COLOR, RISK_LEVEL_ORDER } from './riskColors';
 export { ViewProjectLink, type ViewProjectLinkProps } from './ViewProjectLink';
 export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog';
 export { Toast, type ToastProps } from './Toast';
+export { SendNoticeButton, type SendNoticeButtonProps } from './SendNoticeButton';
