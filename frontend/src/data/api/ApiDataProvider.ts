@@ -8,6 +8,12 @@ import {
 } from '../../api/assignments';
 import { getAuditPhotos } from '../../api/audit';
 import { ApiError } from '../../api/client';
+import {
+  getFundRequest,
+  getFundRequests,
+  postFundReleaseNotice,
+  postFundRequest,
+} from '../../api/fundRequests';
 import { getGrievances, patchGrievanceStatus, postGrievance } from '../../api/grievances';
 import { getHealth } from '../../api/health';
 import {
@@ -340,6 +346,39 @@ export function createApiDataProvider(): DataProvider {
         return await patchWorkRecommendationStatus(id, patch, signal);
       } catch (error) {
         throw toProviderError('updateWorkRecommendationStatus', error);
+      }
+    },
+
+    async listFundRequests(signal) {
+      try {
+        return await getFundRequests(signal);
+      } catch (error) {
+        throw toProviderError('listFundRequests', error);
+      }
+    },
+
+    async getFundRequest(id, signal) {
+      try {
+        return await getFundRequest(id, signal);
+      } catch (error) {
+        if (isNotFound(error)) return null;
+        throw toProviderError('getFundRequest', error);
+      }
+    },
+
+    async createFundRequest(input, signal) {
+      try {
+        return await postFundRequest(input, signal);
+      } catch (error) {
+        throw toProviderError('createFundRequest', error);
+      }
+    },
+
+    async sendFundReleaseNotice(id, signal) {
+      try {
+        return await postFundReleaseNotice(id, signal);
+      } catch (error) {
+        throw toProviderError('sendFundReleaseNotice', error);
       }
     },
   };

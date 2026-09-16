@@ -1,9 +1,16 @@
 package com.mpladsentinel.mplads.dedup;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -150,5 +157,70 @@ class DuplicateWorkEngineTest {
         assertThat(pair.score()).isEqualTo(90); // 60 (text) + 30 (cost)
         assertThat(pair.confidence()).isEqualTo(DuplicateConfidence.HIGH);
         assertThat(pair.reasons()).hasSize(2);
+    }
+
+    // --- caching (latency fix) ------------------------------------------
+
+    @Test
+    void servesTheSecondCallFromCacheWithinTheTtl() {
+        when(works.findAll()).thenReturn(matchingPair());
+        TestClock clock = new TestClock(Instant.parse("2026-01-01T00:00:00Z"));
+        DuplicateWorkEngine cachingEngine = new DuplicateWorkEngine(works, new DuplicateRuleSet(), clock);
+
+        List<DuplicatePair> first = cachingEngine.findAll();
+        clock.advance(Duration.ofMinutes(5)); // still within the 10-minute TTL
+        List<DuplicatePair> second = cachingEngine.findAll();
+
+        assertThat(second).isSameAs(first);
+        verify(works, times(1)).findAll();
+    }
+
+    @Test
+    void recomputesOnceTheTtlHasElapsed() {
+        when(works.findAll()).thenReturn(matchingPair());
+        TestClock clock = new TestClock(Instant.parse("2026-01-01T00:00:00Z"));
+        DuplicateWorkEngine cachingEngine = new DuplicateWorkEngine(works, new DuplicateRuleSet(), clock);
+
+        cachingEngine.findAll();
+        clock.advance(Duration.ofMinutes(11)); // past the 10-minute TTL
+        cachingEngine.findAll();
+
+        verify(works, times(2)).findAll();
+    }
+
+    private static List<Work> matchingPair() {
+        Work a = locatedWork(1, "Rajasthan", "Jaipur", "Roads");
+        a.setWorkDescription("construction of community hall in gram panchayat area for public use");
+        Work b = locatedWork(2, "Rajasthan", "Jaipur", "Roads");
+        b.setWorkDescription("construction of community hall in gram panchayat area for general use");
+        return List.of(a, b);
+    }
+
+    /** A {@link Clock} test double whose {@link #instant()} can be advanced on demand. */
+    private static final class TestClock extends Clock {
+        private Instant now;
+
+        TestClock(Instant now) {
+            this.now = now;
+        }
+
+        void advance(Duration amount) {
+            now = now.plus(amount);
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return ZoneOffset.UTC;
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public Instant instant() {
+            return now;
+        }
     }
 }

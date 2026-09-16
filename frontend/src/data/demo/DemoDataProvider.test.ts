@@ -101,9 +101,10 @@ describe('DemoDataProvider', () => {
   });
 
   it('listDuplicateWorks flags real fixture pairs with a real signal, and every pair has a reason', async () => {
-    const pairs = await provider.listDuplicateWorks();
+    const { pairs, totalFound } = await provider.listDuplicateWorks();
 
     expect(Array.isArray(pairs)).toBe(true);
+    expect(totalFound).toBe(pairs.length);
     for (const pair of pairs) {
       expect(pair.reasons.length).toBeGreaterThan(0);
       expect(pair.score).toBeGreaterThan(0);

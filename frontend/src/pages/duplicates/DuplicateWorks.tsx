@@ -5,6 +5,7 @@ import {
   useDuplicatesService,
   type DuplicateConfidence,
   type DuplicatePair,
+  type DuplicatePairsResult,
   type DuplicateWorkSummary,
 } from '../../data';
 import { formatINRCompact, workTitle } from '../../format';
@@ -67,10 +68,10 @@ export function DuplicateWorks() {
   const service = useDuplicatesService();
   const [reloadKey, setReloadKey] = useState(0);
 
-  const state = useAsyncData<DuplicatePair[]>(
+  const state = useAsyncData<DuplicatePairsResult>(
     (signal) => service.load(signal),
     [service, reloadKey],
-    { isEmpty: (data) => data.length === 0 },
+    { isEmpty: (data) => data.pairs.length === 0 },
   );
 
   return (
@@ -106,19 +107,21 @@ export function DuplicateWorks() {
         </Card>
       )}
 
-      {state.status === 'success' && <DuplicateWorksBody pairs={state.data} />}
+      {state.status === 'success' && <DuplicateWorksBody data={state.data} />}
     </div>
   );
 }
 
-function DuplicateWorksBody({ pairs }: { pairs: DuplicatePair[] }) {
+function DuplicateWorksBody({ data }: { data: DuplicatePairsResult }) {
+  const { pairs } = data;
   const [confidence, setConfidence] = useState<'' | DuplicateConfidence>('');
 
+  // Already sorted by score (highest first) and capped by the service — no
+  // need to re-sort here, filtering by confidence preserves that order.
   const filtered = useMemo(
     () => (confidence ? pairs.filter((p) => p.confidence === confidence) : pairs),
     [pairs, confidence],
   );
-  const sorted = useMemo(() => [...filtered].sort((a, b) => b.score - a.score), [filtered]);
 
   const columns: Column<DuplicatePair>[] = [
     { key: 'workA', header: 'Work A', render: (p) => <WorkCell work={p.workA} /> },
@@ -160,14 +163,14 @@ function DuplicateWorksBody({ pairs }: { pairs: DuplicatePair[] }) {
           onChange={(e) => setConfidence(e.target.value as '' | DuplicateConfidence)}
         />
         <span className="text-muted">
-          {sorted.length} of {pairs.length} {pairs.length === 1 ? 'pair' : 'pairs'}
+          {filtered.length} of {pairs.length} {pairs.length === 1 ? 'pair' : 'pairs'} shown
         </span>
       </div>
 
       <DataTable
         caption="Candidate duplicate work pairs"
         columns={columns}
-        rows={sorted}
+        rows={filtered}
         pageSize={25}
         getRowKey={(p) => `${p.workA.sourceWorkId}-${p.workB.sourceWorkId}`}
         emptyState={

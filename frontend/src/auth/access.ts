@@ -20,10 +20,18 @@ export type Area =
   | 'audit'
   | 'citizen'
   | 'grievances'
-  | 'recommendations';
+  | 'recommendations'
+  | 'escrow';
 
 const ALL_ROLES: Role[] = [...ROLES];
 const AUTHORITIES: Role[] = ['MOSPI', 'STATE', 'DISTRICT', 'AUDITOR', 'MP'];
+
+/**
+ * Escrow & Fund Control involves exactly these two roles (District Officer
+ * requests, MoSPI reviews / sends the release notice) — no other authority
+ * role has a part in this feature.
+ */
+const FUND_CONTROL_ROLES: Role[] = ['DISTRICT', 'MOSPI'];
 
 /** Roles allowed into each area. Keep in sync with docs/round1-scope.md P0.5. */
 export const AREA_ROLES: Record<Area, Role[]> = {
@@ -39,6 +47,7 @@ export const AREA_ROLES: Record<Area, Role[]> = {
   citizen: ALL_ROLES,
   grievances: ALL_ROLES,
   recommendations: ALL_ROLES,
+  escrow: FUND_CONTROL_ROLES,
 };
 
 export function canAccess(role: Role, area: Area): boolean {

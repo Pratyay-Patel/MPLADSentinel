@@ -1,0 +1,250 @@
+/**
+ * Escrow & Fund Control (`/escrow`, `/escrow/:id`) — layout only. Reuses the
+ * shared tokens and primitives (Card, DataTable, StatusBadge, ConfirmDialog),
+ * mirroring Inspections's / Duplicate Works's structure.
+ */
+
+.escrow-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  max-width: 18rem;
+}
+
+.escrow-cell__title {
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+
+.escrow-cell__sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.escrow-reason {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  max-width: 18rem;
+  display: inline-block;
+}
+
+.escrow-reasons {
+  margin: 0;
+  padding-left: var(--space-4);
+  list-style: disc;
+  font-size: var(--text-sm);
+}
+
+.escrow-actions {
+  margin: var(--space-3) 0 var(--space-4);
+}
+
+.escrow-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.escrow-filters__count {
+  padding-bottom: 0.4rem;
+}
+
+.escrow-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-sunken);
+}
+
+.escrow-work-list__hint {
+  margin: 0;
+  font-size: var(--text-xs);
+}
+
+.escrow-work-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.escrow-work-list__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.escrow-work-list__item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  cursor: pointer;
+  text-align: left;
+}
+
+.escrow-work-list__item:hover {
+  border-color: var(--color-border-strong);
+}
+
+.escrow-work-list__title {
+  flex: 1;
+  min-width: 0;
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+
+.escrow-work-list__sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.escrow-selected-work {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.escrow-selected-work__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.escrow-selected-work__title {
+  display: block;
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+
+.escrow-selected-work__sub {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.escrow-eligibility {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: var(--border);
+}
+
+.escrow-eligibility--approved {
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+}
+
+.escrow-eligibility--rejected {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+}
+
+.escrow-eligibility__title {
+  display: block;
+  font-weight: var(--weight-medium);
+  margin-bottom: var(--space-2);
+}
+
+.escrow-eligibility__checks {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.escrow-eligibility__checks li[data-pass='true'] {
+  color: var(--color-success-fg);
+}
+
+.escrow-eligibility__checks li[data-pass='false'] {
+  color: var(--color-danger-fg);
+}
+
+.escrow-eligibility__result {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.escrow-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.escrow-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+}
+
+.escrow-confirm__icon {
+  color: var(--color-success-fg);
+}
+
+.escrow-confirm__title {
+  margin: 0;
+}
+
+.escrow-confirm__reason {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.escrow-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.escrow-timeline__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: var(--border);
+}
+
+.escrow-timeline__item:last-child {
+  border-bottom: none;
+}
+
+.escrow-timeline__date {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  min-width: 6rem;
+}
+
+.escrow-timeline__label {
+  font-weight: var(--weight-medium);
+}
+
+.escrow-timeline__actor,
+.escrow-timeline__detail {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}

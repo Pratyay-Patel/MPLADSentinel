@@ -3,7 +3,7 @@ package com.mpladsentinel.mplads.dedup;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -100,11 +100,13 @@ class DuplicateControllerTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void findsTheNearIdenticalPairAndExcludesUnrelatedWorks() {
-        DuplicatePair[] all = rest.exchange(
-                "/api/works/duplicates", HttpMethod.GET, as("mospi"), DuplicatePair[].class).getBody();
+        DuplicatePairsResponse response = rest.exchange(
+                "/api/works/duplicates", HttpMethod.GET, as("mospi"), DuplicatePairsResponse.class).getBody();
 
-        assertThat(all).isNotNull();
-        DuplicatePair pair = Arrays.stream(all)
+        assertThat(response).isNotNull();
+        List<DuplicatePair> all = response.pairs();
+        assertThat(response.totalFound()).isEqualTo(all.size());
+        DuplicatePair pair = all.stream()
                 .filter(p -> ids(p).contains(DUP_A) && ids(p).contains(DUP_B))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("expected a pair for " + DUP_A + "/" + DUP_B));

@@ -11,6 +11,8 @@ import { AuditPage } from '../pages/audit/AuditPage';
 import { Grievances } from '../pages/grievances/Grievances';
 import { RecommendWork } from '../pages/recommend/RecommendWork';
 import { InspectionsPage } from '../pages/inspections/InspectionsPage';
+import { EscrowFundControl } from '../pages/escrow/EscrowFundControl';
+import { FundRequestDetail } from '../pages/escrow/FundRequestDetail';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
@@ -119,6 +121,22 @@ export const appRouter = createBrowserRouter([
         element: (
           <RequireRole area="inspections">
             <InspectionsPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'escrow',
+        element: (
+          <RequireRole area="escrow">
+            <EscrowFundControl />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'escrow/:id',
+        element: (
+          <RequireRole area="escrow">
+            <FundRequestDetail />
           </RequireRole>
         ),
       },

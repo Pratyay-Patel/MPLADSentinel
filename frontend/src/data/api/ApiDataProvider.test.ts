@@ -210,14 +210,15 @@ describe('ApiDataProvider', () => {
       confidence: 'HIGH',
       reasons: ['x'],
     };
-    const fetchMock = stubFetch(jsonResponse([pair]));
+    const fetchMock = stubFetch(jsonResponse({ pairs: [pair], totalFound: 1 }));
 
-    const pairs = await provider.listDuplicateWorks();
+    const result = await provider.listDuplicateWorks();
 
     expect(fetchMock.mock.calls[0][0]).toBe('/api/works/duplicates');
-    expect(pairs).toHaveLength(1);
-    expect(pairs[0].confidence).toBe('HIGH');
-    expect(pairs[0].workA.sourceWorkId).toBe(900000001);
+    expect(result.totalFound).toBe(1);
+    expect(result.pairs).toHaveLength(1);
+    expect(result.pairs[0].confidence).toBe('HIGH');
+    expect(result.pairs[0].workA.sourceWorkId).toBe(900000001);
   });
 
   it('maps a backend error status to a ProviderError of kind "unavailable"', async () => {

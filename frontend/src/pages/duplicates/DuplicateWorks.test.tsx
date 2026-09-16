@@ -46,7 +46,7 @@ describe('DuplicateWorks', () => {
   it('shows candidate pairs with confidence and reasons', async () => {
     const provider: DataProvider = {
       ...createDemoDataProvider(),
-      listDuplicateWorks: async () => [PAIR],
+      listDuplicateWorks: async () => ({ pairs: [PAIR], totalFound: 1 }),
     };
     renderPage(provider);
 
@@ -69,7 +69,7 @@ describe('DuplicateWorks', () => {
     };
     const provider: DataProvider = {
       ...createDemoDataProvider(),
-      listDuplicateWorks: async () => [PAIR, other],
+      listDuplicateWorks: async () => ({ pairs: [PAIR, other], totalFound: 2 }),
     };
     renderPage(provider);
 
@@ -83,7 +83,7 @@ describe('DuplicateWorks', () => {
   it('shows an empty state when there are no candidate duplicates', async () => {
     const provider: DataProvider = {
       ...createDemoDataProvider(),
-      listDuplicateWorks: async () => [],
+      listDuplicateWorks: async () => ({ pairs: [], totalFound: 0 }),
     };
     renderPage(provider);
 

@@ -6,8 +6,10 @@ import type {
   AuditEvidence,
   BackendHealth,
   DataSource,
-  DuplicatePair,
+  DuplicatePairsResult,
   FieldOfficer,
+  FundRequest,
+  FundRequestInput,
   Grievance,
   GrievanceInput,
   GrievanceStatusPatch,
@@ -75,11 +77,12 @@ export interface DataProvider {
   listProjectRisks(signal?: AbortSignal): Promise<Record<number, ProjectRisk>>;
 
   /**
-   * De-duplication of works (requirements F7, decision D35): every
-   * candidate duplicate pair across all ingested works, computed live —
+   * De-duplication of works (requirements F7, decision D35): the
+   * highest-scoring candidate duplicate pairs across all ingested works
+   * (capped for responsiveness) plus the true count found, computed live —
    * nothing is persisted.
    */
-  listDuplicateWorks(signal?: AbortSignal): Promise<DuplicatePair[]>;
+  listDuplicateWorks(signal?: AbortSignal): Promise<DuplicatePairsResult>;
 
   /**
    * Payment installments for one work. Empty unless the work's
@@ -189,4 +192,25 @@ export interface DataProvider {
     patch: WorkRecommendationStatusPatch,
     signal?: AbortSignal,
   ): Promise<WorkRecommendation>;
+
+  /**
+   * Escrow & Fund Control. A District Officer sees only their own requests
+   * (server-scoped); MoSPI sees all.
+   */
+  listFundRequests(signal?: AbortSignal): Promise<FundRequest[]>;
+
+  /** One fund request by id, or `null` if unknown (or not the caller's own). */
+  getFundRequest(id: string, signal?: AbortSignal): Promise<FundRequest | null>;
+
+  /**
+   * District Officer only. Decided `APPROVED`/`REJECTED` immediately by the
+   * eligibility engine — the returned record already carries the decision.
+   */
+  createFundRequest(input: FundRequestInput, signal?: AbortSignal): Promise<FundRequest>;
+
+  /**
+   * MoSPI only. Records that an approved request's release notice was sent
+   * to the bank — a database flag only, never a real bank transaction.
+   */
+  sendFundReleaseNotice(id: string, signal?: AbortSignal): Promise<FundRequest>;
 }

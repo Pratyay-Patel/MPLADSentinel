@@ -130,6 +130,17 @@ public class SecurityConfig {
                         // Audit Trail evidence (Pinata-backed) — any government role.
                         .requestMatchers(HttpMethod.GET, "/api/audit/**")
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT", "AUDITOR", "MP")
+                        // Escrow & Fund Control: only these two roles are involved. A
+                        // District Officer requests an installment; the eligibility
+                        // engine decides APPROVED/REJECTED automatically (no manual
+                        // approve/reject endpoint exists); MoSPI reads everything and
+                        // records a release notice on an approved request. GET is
+                        // scoped in the service layer (District sees only their own).
+                        .requestMatchers(HttpMethod.POST, "/api/fund-requests").hasRole("DISTRICT")
+                        .requestMatchers(HttpMethod.POST, "/api/fund-requests/*/release-notice")
+                        .hasRole("MOSPI")
+                        .requestMatchers(HttpMethod.GET, "/api/fund-requests", "/api/fund-requests/**")
+                        .hasAnyRole("DISTRICT", "MOSPI")
                         // Notifications: any signed-in role reads/marks their own (matched
                         // by anyRequest below); only the roles that see the Dashboard /
                         // Risk & Alerts pages may send an attention notice.

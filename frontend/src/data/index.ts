@@ -23,8 +23,14 @@ export type {
   DataSource,
   DuplicateConfidence,
   DuplicatePair,
+  DuplicatePairsResult,
   DuplicateWorkSummary,
   FieldOfficer,
+  FundRequest,
+  FundRequestEvent,
+  FundRequestEventType,
+  FundRequestInput,
+  FundRequestStatus,
   Grievance,
   GrievanceInput,
   GrievanceStatus,
@@ -117,6 +123,16 @@ export { createDuplicatesService, type DuplicatesService } from './features/dupl
 export { useDuplicatesService } from './features/useDuplicatesService';
 
 export {
+  createEscrowService,
+  pickRiskBalancedSample,
+  type EscrowService,
+  type EscrowData,
+  type EscrowWorkOption,
+  type FundRequestSummary,
+} from './features/escrow';
+export { useEscrowService } from './features/useEscrowService';
+
+export {
   createMpComparisonService,
   aggregateMps,
   type MpComparisonService,
@@ -199,7 +215,13 @@ export {
 export { useWorkRecommendationsService } from './features/useWorkRecommendationsService';
 
 export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';
-export { findDuplicatePairs } from './dedup/duplicateRules';
+export { findDuplicatePairs, capDuplicatePairs, MAX_DUPLICATE_PAIRS } from './dedup/duplicateRules';
+export {
+  evaluateFundEligibility,
+  remainingFunds,
+  alreadyReleasedAmount,
+  type FundEligibilityDecision,
+} from './escrow/fundEligibility';
 export {
   classifyRiskReason,
   summarizeRiskFactors,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Project } from '../types';
-import { findDuplicatePairs } from './duplicateRules';
+import type { DuplicatePair, Project } from '../types';
+import { capDuplicatePairs, findDuplicatePairs, MAX_DUPLICATE_PAIRS } from './duplicateRules';
 
 let seq = 0;
 
@@ -121,5 +121,35 @@ describe('findDuplicatePairs', () => {
     expect(pairs[0].score).toBe(90); // 60 (text) + 30 (cost)
     expect(pairs[0].confidence).toBe('HIGH');
     expect(pairs[0].reasons).toHaveLength(2);
+  });
+});
+
+function pairWithScore(score: number): DuplicatePair {
+  return {
+    workA: { sourceWorkId: 1, workDescription: null, state: null, district: null, category: null, estimatedCost: null },
+    workB: { sourceWorkId: 2, workDescription: null, state: null, district: null, category: null, estimatedCost: null },
+    score,
+    confidence: 'LOW',
+    reasons: ['x'],
+  };
+}
+
+describe('capDuplicatePairs', () => {
+  it('passes every pair through, sorted by score descending, when under the cap', () => {
+    const result = capDuplicatePairs([pairWithScore(30), pairWithScore(90), pairWithScore(60)]);
+    expect(result.totalFound).toBe(3);
+    expect(result.pairs.map((p) => p.score)).toEqual([90, 60, 30]);
+  });
+
+  it('caps at MAX_DUPLICATE_PAIRS while keeping the true count', () => {
+    const pairs = Array.from({ length: MAX_DUPLICATE_PAIRS + 100 }, (_, i) => pairWithScore(i));
+    const result = capDuplicatePairs(pairs);
+    expect(result.totalFound).toBe(MAX_DUPLICATE_PAIRS + 100);
+    expect(result.pairs).toHaveLength(MAX_DUPLICATE_PAIRS);
+    expect(Math.min(...result.pairs.map((p) => p.score))).toBe(100);
+  });
+
+  it('returns an empty result for no pairs', () => {
+    expect(capDuplicatePairs([])).toEqual({ pairs: [], totalFound: 0 });
   });
 });

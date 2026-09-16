@@ -36,7 +36,7 @@ class FlywayMigrationTest extends AbstractPostgresIntegrationTest {
                 .map(Object::toString)
                 .toList();
 
-        assertThat(applied).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12");
+        assertThat(applied).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13");
         assertThat(flyway.info().current().getState()).isEqualTo(MigrationState.SUCCESS);
     }
 
@@ -108,6 +108,20 @@ class FlywayMigrationTest extends AbstractPostgresIntegrationTest {
         assertThat(constraintExists("uq_work_recommendation_tracking_number")).isTrue();
         assertThat(constraintExists("ck_work_recommendation_category")).isTrue();
         assertThat(constraintExists("ck_work_recommendation_status")).isTrue();
+    }
+
+    @Test
+    void fundRequestTablesFromV13Exist() {
+        assertThat(tableExists("fund_request")).isTrue();
+        assertThat(columnExists("fund_request", "requested_by_user_id")).isTrue();
+        assertThat(columnExists("fund_request", "requested_amount")).isTrue();
+        assertThat(columnExists("fund_request", "status")).isTrue();
+        assertThat(columnExists("fund_request", "release_notice_sent")).isTrue();
+        assertThat(constraintExists("ck_fund_request_status")).isTrue();
+        assertThat(constraintExists("ck_fund_request_release_notice_only_approved")).isTrue();
+        assertThat(tableExists("fund_request_event")).isTrue();
+        assertThat(columnExists("fund_request_event", "event_type")).isTrue();
+        assertThat(constraintExists("ck_fund_request_event_type")).isTrue();
     }
 
     @Test

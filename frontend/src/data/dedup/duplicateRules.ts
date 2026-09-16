@@ -1,4 +1,10 @@
-import type { DuplicateConfidence, DuplicatePair, DuplicateWorkSummary, Project } from '../types';
+import type {
+  DuplicateConfidence,
+  DuplicatePair,
+  DuplicatePairsResult,
+  DuplicateWorkSummary,
+  Project,
+} from '../types';
 
 /**
  * De-duplication of works (requirements F7, decision D35) — the
@@ -139,4 +145,19 @@ export function findDuplicatePairs(projects: Project[]): DuplicatePair[] {
     }
   }
   return pairs;
+}
+
+/**
+ * Across the full ingested dataset this can surface tens of thousands of
+ * candidate pairs; rendering all of them makes the screen sluggish for no
+ * real benefit, since a reviewer only ever looks at the highest-confidence
+ * pairs first. Kept in sync by hand with the real backend's own cap
+ * (`DuplicateController.MAX_RETURNED_PAIRS`).
+ */
+export const MAX_DUPLICATE_PAIRS = 9_999;
+
+/** Sorts by score (highest first) and caps at {@link MAX_DUPLICATE_PAIRS}, mirroring what the real backend does before it serializes a response. */
+export function capDuplicatePairs(pairs: DuplicatePair[]): DuplicatePairsResult {
+  const sorted = [...pairs].sort((a, b) => b.score - a.score);
+  return { pairs: sorted.slice(0, MAX_DUPLICATE_PAIRS), totalFound: pairs.length };
 }

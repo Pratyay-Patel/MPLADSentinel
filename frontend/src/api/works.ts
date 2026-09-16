@@ -1,6 +1,6 @@
 import type { PublicProject } from '../data/publicProject';
 import type {
-  DuplicatePair,
+  DuplicatePairsResult,
   PaymentInstallment,
   Project,
   ProjectRisk,
@@ -52,6 +52,6 @@ export const getWorkRisk = (
 
 // --- de-duplication of works (F7, decision D35, authority-only) ----
 
-/** Every candidate duplicate pair across all ingested works. */
-export const getWorkDuplicates = (signal?: AbortSignal): Promise<DuplicatePair[]> =>
+/** The highest-scoring candidate duplicate pairs, plus the true count found. */
+export const getWorkDuplicates = (signal?: AbortSignal): Promise<DuplicatePairsResult> =>
   apiClient.get('/works/duplicates', { signal });

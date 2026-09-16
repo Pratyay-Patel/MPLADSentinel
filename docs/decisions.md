@@ -689,3 +689,99 @@ suite 340/342 pass (2 pre-existing unrelated failures). Real production
 and route render correctly for an authority role and are inaccessible/hidden
 for Citizen; the empty state renders correctly given the demo fixture set's
 genuine absence of duplicates.
+
+## D36 — Escrow & Fund Control
+
+Decision: a bonus feature (outside `docs/requirements.md`'s numbered list,
+same status as F7/D35) built to a fully-specified user request. A District
+Officer requests an installment against a work; the request is decided
+**immediately and automatically** — `APPROVED` or `REJECTED` — by a
+deterministic, two-rule eligibility engine. MoSPI / Ministry Authority sees
+every request (including rejected ones, kept permanently visible) and can
+record a "release notice to bank" on an approved one.
+
+There is deliberately **no manual approve/reject step and no
+`PENDING`/`UNDER_REVIEW` state.** The user's own spec never gives MoSPI an
+approve/reject action (only "Send Release Notice to Bank"), and confirmed
+directly: the rule engine's result "should be either approved or rejected...
+immediately," considering not just risk but also fund sufficiency, since the
+spec's own rejection example ("Requested amount exceeds the remaining
+sanctioned project funds") is about funds, not risk.
+
+Per the explicit exclusion list, this is **frontend + database only**: no
+Hyperledger Fabric, chaincode, smart contracts, blockchain transactions,
+wallets, cryptocurrency, bank APIs, or real INR transfers. "Send Release
+Notice to Bank" sets a boolean + timestamp in Postgres — nothing else. A
+`fund_request_event` history table records every transition
+(`CREATED`/`APPROVED`/`REJECTED`/`RELEASE_NOTICE_SENT`) so a future blockchain
+integration could map each row to a ledger transaction without any schema
+change — not built now, per the spec's own "Future Blockchain Concept — DO NOT
+IMPLEMENT NOW" section.
+
+**Implemented.**
+
+- New `com.mpladsentinel.escrow` package (mirrors `grievance`/`recommendation`
+  /`inspection` as a top-level feature package, distinct from
+  `com.mpladsentinel.mplads.*` core/risk/dedup logic). `FundEligibilityEngine`
+  runs two independent checks at request-creation time, either capable of
+  rejecting alone:
+  1. **Funds check** — `requestedAmount` must not exceed the work's remaining
+     sanctioned funds (`estimatedCost − alreadyReleased`, where
+     `alreadyReleased` only counts once `paymentDataState ==
+     FETCHED_PRESENT`). No `estimatedCost` → reject (eligibility can't be
+     verified).
+  2. **Risk check** — reuses the existing `RiskEngine` (D22); the work's
+     current risk must not be `HIGH`.
+  `APPROVED` only when both pass. `Work` gets no new column — it deliberately
+  has no "sanctioned amount" field (guarded by an existing test,
+  `FlywayMigrationTest.speculativeColumnsAreAbsentFromWork`); all money fields
+  live on the new `fund_request` table instead.
+- `V13__fund_request.sql` adds `fund_request` (one row per installment
+  request, status `APPROVED`/`REJECTED`, decision reason, release-notice
+  fields) and `fund_request_event` (append-only history — deliberately a
+  dedicated table, not `InspectionAssignment`'s single-`updated_at` reuse,
+  since the spec requires a full chronological trail).
+- `POST /api/fund-requests` → `hasRole("DISTRICT")`; `POST
+  /api/fund-requests/*/release-notice` → `hasRole("MOSPI")`; `GET
+  /api/fund-requests, /api/fund-requests/**` → `hasAnyRole("DISTRICT",
+  "MOSPI")` — the first 2-role-only RBAC block in `SecurityConfig` (every
+  prior block was 3+ roles). District additionally only sees its own requests
+  (scoped in the service layer; a District Officer requesting someone else's
+  request id gets 404, not 403, to avoid leaking existence).
+- Frontend: `frontend/src/auth/access.ts` gets the first 2-role-only `Area`
+  (`FUND_CONTROL_ROLES = ['DISTRICT', 'MOSPI']`). New `/escrow` (list,
+  role-aware District/Ministry views) and `/escrow/:id` (detail) pages, nav
+  item "Escrow & Fund Control" in the Monitoring group.
+  `frontend/src/data/escrow/fundEligibility.ts` is a 1:1 TypeScript port of
+  the backend engine (same two checks, same order), following the "kept in
+  sync by hand" convention from `risk/rules.ts` (D22) and
+  `dedup/duplicateRules.ts` (D35) — used both by `DemoDataProvider` and by
+  every provider's create-request screen to preview the likely decision
+  before submitting.
+- `FundRequest`'s money fields are plain `number`, not `Money`-wrapped
+  (matches the backend DTO, which serializes `BigDecimal` as a bare JSON
+  number) — same asymmetry already established for `DuplicateWorkSummary`
+  (D35); screens wrap them inline (`{ amount, currency: 'INR' }`) before
+  calling the shared `formatINRCompact`/`formatINRExact` formatters.
+
+**Verified.** Backend: `FundEligibilityEngineTest` (7 unit tests — unknown
+sanctioned amount, funds exceeded, already-released payments accounted for,
+unfetched payment data not counted, HIGH risk rejects, approves when funds
+sufficient and risk not HIGH, approves when risk unknown) +
+`FundRequestControllerTest` (6 integration tests over real Postgres — RBAC
+gating, a real approval with full history, a real rejection that stays
+visible, release notice sent once and rejected on a second attempt or on a
+rejected request, District-sees-only-its-own vs. MoSPI-sees-all). Full
+backend suite: 248/248 pass. Frontend: `tsc -b --force` and `eslint` clean;
+`fundEligibility.test.ts` (11 tests, mirrors the backend unit tests) +
+`escrow.test.ts` (5 tests — summary tallies, provider delegation, a demo
+request rejected on funds, an unknown-work error) +
+`EscrowFundControl.test.tsx` (4 tests — District empty state, submitting a
+request and seeing the decision, a funds-exceeded rejection, the Ministry
+view sending a release notice) + `FundRequestDetail.test.tsx` (4 tests — not
+found, every required section renders plus a release notice send, a rejected
+request stays visible with its reason, a District Officer never sees the
+release-notice action) + `ApiDataProvider`/`DemoDataProvider`/`projects.test.ts`
+/`GovernmentDashboard.test.tsx` stub additions; full suite 364/366 pass (the
+same 2 pre-existing, unrelated failures as D35). Real production `vite build`
+succeeds.

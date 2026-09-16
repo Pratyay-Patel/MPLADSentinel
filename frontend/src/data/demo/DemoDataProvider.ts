@@ -1,7 +1,8 @@
 import { readDemoSession } from '../../auth/demoAuth';
 import type { Role } from '../../auth/roles';
 import { workTitle } from '../../format';
-import { findDuplicatePairs } from '../dedup/duplicateRules';
+import { capDuplicatePairs, findDuplicatePairs } from '../dedup/duplicateRules';
+import { alreadyReleasedAmount, evaluateFundEligibility, remainingFunds } from '../escrow/fundEligibility';
 import { deriveRisk } from '../risk/rules';
 import type { DataProvider } from '../DataProvider';
 import { ProviderError } from '../errors';
@@ -11,6 +12,8 @@ import type {
   AssignmentStatus,
   BackendHealth,
   FieldOfficer,
+  FundRequest,
+  FundRequestEvent,
   Grievance,
   GrievanceInput,
   GrievanceStatusPatch,
@@ -57,6 +60,70 @@ const demoFieldOfficers: FieldOfficer[] = [
 ];
 
 const OPEN_ASSIGNMENT_STATUSES: AssignmentStatus[] = ['ASSIGNED', 'IN_PROGRESS'];
+
+// --- fund requests / Escrow & Fund Control (session-only, like grievances) --
+
+const demoFundRequests: FundRequest[] = [];
+let fundRequestSeq = 0;
+
+function findDemoProject(sourceWorkId: number): Project | undefined {
+  return demoProjects.find((p) => p.sourceWorkId === sourceWorkId);
+}
+
+function buildFundRequest(
+  id: string,
+  project: Project,
+  requestedByUsername: string,
+  requestedByName: string,
+  requestedAmount: number,
+  remarks: string | null,
+): FundRequest {
+  const risk = deriveRisk(project, { allProjects: [...demoProjects], asOf: RISK_REFERENCE_DATE });
+  const decision = evaluateFundEligibility(project, requestedAmount, risk);
+  const now = new Date().toISOString();
+  const remainingBeforeRequest = remainingFunds(project);
+
+  const history: FundRequestEvent[] = [
+    {
+      eventType: 'CREATED',
+      occurredAt: now,
+      actorName: requestedByName,
+      detail: `Requested ₹${requestedAmount.toFixed(2)}${remarks ? ` — ${remarks}` : ''}`,
+    },
+    {
+      eventType: decision.status,
+      occurredAt: now,
+      actorName: null,
+      detail: decision.reason,
+    },
+  ];
+
+  return {
+    id,
+    sourceWorkId: project.sourceWorkId,
+    workTitle: workTitle(project.workDescription, project.sourceWorkId),
+    district: project.district,
+    requestedByUsername,
+    requestedByName,
+    requestedAmount,
+    remarks,
+    createdAt: now,
+    sanctionedAmount: project.estimatedCost?.amount ?? null,
+    alreadyReleased: alreadyReleasedAmount(project),
+    remainingBeforeRequest,
+    remainingAfterRequest: remainingBeforeRequest == null ? null : remainingBeforeRequest - requestedAmount,
+    riskLevel: risk.level,
+    riskReasons: risk.reasons,
+    status: decision.status,
+    decisionReason: decision.reason,
+    decidedAt: now,
+    releaseNoticeSent: false,
+    releaseNoticeByName: null,
+    releaseNoticeAt: null,
+    updatedAt: now,
+    history,
+  };
+}
 
 function isoAgo(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString();
@@ -311,7 +378,80 @@ export function createDemoDataProvider(): DataProvider {
 
     async listDuplicateWorks(signal) {
       ensureNotAborted(signal);
-      return findDuplicatePairs([...demoProjects]);
+      return capDuplicatePairs(findDuplicatePairs([...demoProjects]));
+    },
+
+    async listFundRequests(signal) {
+      ensureNotAborted(signal);
+      const session = readDemoSession();
+      const rows =
+        session?.role === 'DISTRICT'
+          ? demoFundRequests.filter((r) => r.requestedByUsername === session.username)
+          : demoFundRequests;
+      return rows.map((r) => ({ ...r }));
+    },
+
+    async getFundRequest(id, signal) {
+      ensureNotAborted(signal);
+      const found = demoFundRequests.find((r) => r.id === id);
+      if (!found) {
+        return null;
+      }
+      const session = readDemoSession();
+      if (session?.role === 'DISTRICT' && found.requestedByUsername !== session.username) {
+        return null;
+      }
+      return { ...found };
+    },
+
+    async createFundRequest(input, signal) {
+      ensureNotAborted(signal);
+      const project = findDemoProject(input.sourceWorkId);
+      if (!project) {
+        throw new ProviderError('unknown', `No work with source id ${input.sourceWorkId}.`);
+      }
+      const actor = readDemoSession();
+      fundRequestSeq += 1;
+      const request = buildFundRequest(
+        `demo-fund-request-${fundRequestSeq}`,
+        project,
+        actor?.username ?? 'district',
+        actor?.displayName ?? actor?.username ?? 'District Officer',
+        input.requestedAmount,
+        input.remarks?.trim() || null,
+      );
+      demoFundRequests.unshift(request);
+      return { ...request };
+    },
+
+    async sendFundReleaseNotice(id, signal) {
+      ensureNotAborted(signal);
+      const request = demoFundRequests.find((r) => r.id === id);
+      if (!request) {
+        throw new ProviderError('unknown', `No fund request with id ${id}.`);
+      }
+      if (request.status !== 'APPROVED') {
+        throw new ProviderError('unknown', 'Only an APPROVED request can have a release notice sent.');
+      }
+      if (request.releaseNoticeSent) {
+        throw new ProviderError('unknown', 'The release notice for this request has already been sent.');
+      }
+      const actor = readDemoSession();
+      const now = new Date().toISOString();
+      request.releaseNoticeSent = true;
+      request.releaseNoticeByName = actor?.displayName ?? actor?.username ?? 'MoSPI / Ministry';
+      request.releaseNoticeAt = now;
+      request.updatedAt = now;
+      request.history = [
+        ...request.history,
+        {
+          eventType: 'RELEASE_NOTICE_SENT',
+          occurredAt: now,
+          actorName: request.releaseNoticeByName,
+          detail: 'Release notice recorded for the bank. No actual bank transaction was performed.',
+        },
+      ];
+      return { ...request };
     },
 
     async getProjectPayments(sourceWorkId, signal) {

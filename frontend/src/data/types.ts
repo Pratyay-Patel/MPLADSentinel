@@ -175,6 +175,18 @@ export interface DuplicatePair {
   reasons: string[];
 }
 
+/**
+ * `GET /api/works/duplicates` response shape. Across the full ingested
+ * dataset the engine can surface tens of thousands of candidate pairs, so the
+ * backend returns only the highest-scoring ones — `totalFound` is the true
+ * count before that cap, so the UI can say "top N of total" honestly instead
+ * of silently truncating.
+ */
+export interface DuplicatePairsResult {
+  pairs: DuplicatePair[];
+  totalFound: number;
+}
+
 /** Minimal backend connectivity signal, mapped from `GET /api/health`. */
 export interface BackendHealth {
   status: string;
@@ -372,4 +384,83 @@ export interface AppNotification {
   read: boolean;
   /** ISO timestamp. */
   createdAt: string;
+}
+
+/**
+ * Escrow decision for a {@link FundRequest}. Mirrors backend
+ * `FundRequestStatus`. Decided automatically at creation — there is no
+ * `PENDING`/`UNDER_REVIEW` state and no manual approve/reject action.
+ */
+export type FundRequestStatus = 'APPROVED' | 'REJECTED';
+
+/**
+ * One entry in a fund request's permanent chronological history. Mirrors
+ * backend `FundRequestEventType`; also the exact event list the feature spec
+ * names as future blockchain-mappable events.
+ */
+export type FundRequestEventType = 'CREATED' | 'APPROVED' | 'REJECTED' | 'RELEASE_NOTICE_SENT';
+
+export interface FundRequestEvent {
+  eventType: FundRequestEventType;
+  /** ISO timestamp. */
+  occurredAt: string;
+  /** Who caused this event, or null for the automatic decision events. */
+  actorName: string | null;
+  detail: string | null;
+}
+
+/** What a District Officer fills in to request an installment. */
+export interface FundRequestInput {
+  sourceWorkId: number;
+  requestedAmount: number;
+  remarks: string | null;
+}
+
+/**
+ * A District Officer's installment/fund-release request (Escrow & Fund
+ * Control). Decided `APPROVED`/`REJECTED` automatically at creation by a
+ * rule-based eligibility engine (same style as {@link ProjectRisk}, decision
+ * D22) — there is no manual approve/reject step. Rejected requests are never
+ * deleted or hidden.
+ *
+ * `sanctionedAmount`/`alreadyReleased`/`remaining*` reflect the work's
+ * *current* figures — computed live, not frozen at request time, same as how
+ * risk is always assessed against current data rather than a snapshot.
+ */
+export interface FundRequest {
+  id: string;
+  sourceWorkId: number;
+  workTitle: string;
+  district: string | null;
+
+  requestedByUsername: string | null;
+  requestedByName: string | null;
+  requestedAmount: number;
+  remarks: string | null;
+  /** ISO timestamp. */
+  createdAt: string;
+
+  sanctionedAmount: number | null;
+  alreadyReleased: number | null;
+  remainingBeforeRequest: number | null;
+  remainingAfterRequest: number | null;
+
+  /** The work's current risk assessment (D22) — shown for context. */
+  riskLevel: RiskLevel | null;
+  riskReasons: string[];
+
+  status: FundRequestStatus;
+  decisionReason: string;
+  /** ISO timestamp. */
+  decidedAt: string;
+
+  /** "Send Release Notice to Bank" — a database flag only, never a real bank call. */
+  releaseNoticeSent: boolean;
+  releaseNoticeByName: string | null;
+  /** ISO timestamp, or null if not sent yet. */
+  releaseNoticeAt: string | null;
+
+  /** ISO timestamp. */
+  updatedAt: string;
+  history: FundRequestEvent[];
 }
