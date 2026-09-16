@@ -136,6 +136,45 @@ export interface ProjectRisk {
   assessedAt: string | null;
 }
 
+/** Confidence banding for a {@link DuplicatePair} match. Mirrors backend `DuplicateConfidence`. */
+export type DuplicateConfidence = 'LOW' | 'MEDIUM' | 'HIGH';
+
+/**
+ * A lightweight view of one side of a {@link DuplicatePair} — enough to
+ * display without a second fetch per work.
+ *
+ * `estimatedCost` here is a plain rupee amount (not {@link Money}) because
+ * that's what `GET /api/works/duplicates` actually returns — the backend
+ * `WorkSummary` record serialises `estimatedCost` as a bare number, unlike
+ * `Project.estimatedCost`, which the works DTOs wrap with a currency.
+ */
+export interface DuplicateWorkSummary {
+  sourceWorkId: number;
+  workDescription: string | null;
+  state: string | null;
+  district: string | null;
+  category: string | null;
+  estimatedCost: number | null;
+}
+
+/**
+ * A candidate duplicate: two ingested works in the same state, district and
+ * category whose description text and/or estimated cost look like the same
+ * physical work listed or sanctioned more than once (requirements F7,
+ * decision D35). Rule-based and deterministic, same style as
+ * {@link ProjectRisk} (decision D22) — an investigation indicator, never
+ * proof that two records are actually the same work.
+ */
+export interface DuplicatePair {
+  workA: DuplicateWorkSummary;
+  workB: DuplicateWorkSummary;
+  /** 0–100, capped. */
+  score: number;
+  confidence: DuplicateConfidence;
+  /** Human-readable contributing signals — never empty. */
+  reasons: string[];
+}
+
 /** Minimal backend connectivity signal, mapped from `GET /api/health`. */
 export interface BackendHealth {
   status: string;

@@ -35,6 +35,7 @@ describe('ProjectsService', () => {
       getProjectSummary: vi.fn(),
       getProjectRisk: vi.fn().mockResolvedValue(null),
       listProjectRisks: vi.fn().mockResolvedValue({}),
+      listDuplicateWorks: vi.fn().mockResolvedValue([]),
       getProjectPayments: vi.fn().mockResolvedValue([]),
       listPublicProjects: vi.fn().mockResolvedValue([]),
       getPublicProject: vi.fn().mockResolvedValue(null),

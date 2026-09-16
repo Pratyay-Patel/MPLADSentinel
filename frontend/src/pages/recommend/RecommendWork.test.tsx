@@ -21,6 +21,11 @@ function renderPage(role: Role, provider: DataProvider = createDemoDataProvider(
   );
 }
 
+// jsdom doesn't implement createObjectURL; PhotoUploadField only uses it for a
+// live preview, which isn't under test here.
+URL.createObjectURL = vi.fn(() => 'blob:mock');
+URL.revokeObjectURL = vi.fn();
+
 async function seedRecommendation(provider: DataProvider) {
   return provider.submitWorkRecommendation({
     fullName: 'Seeded Citizen',
@@ -112,6 +117,71 @@ describe('RecommendWork — citizen view', () => {
     expect(within(table).getByText('RO drinking water plant')).toBeInTheDocument();
   });
 
+  it('shows an uploaded photo thumbnail, visible to an authority in the same tab', async () => {
+    const provider = createDemoDataProvider();
+    renderPage('CITIZEN', provider);
+    await screen.findByRole('button', { name: 'Submit recommendation' });
+
+    fillValidForm();
+    fireEvent.change(screen.getByLabelText('Site photo (optional)'), {
+      target: { files: [new File(['image-bytes'], 'site.png', { type: 'image/png' })] },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit recommendation' }));
+
+    expect(await screen.findByText('Your proposal has been recorded')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Submit another recommendation' }));
+
+    const table = screen.getByRole('table', { name: 'Recommendations you have made' });
+    await waitFor(() => {
+      expect(within(table).getByAltText('Uploaded site photo')).toBeInTheDocument();
+    });
+
+    renderPage('MOSPI', provider);
+    await waitFor(() => {
+      expect(within(reviewList()).getByAltText('Uploaded site photo')).toBeInTheDocument();
+    });
+  });
+
+  it('lets a citizen attach a photo after submitting, without a photo at first', async () => {
+    const provider = createDemoDataProvider();
+    renderPage('CITIZEN', provider);
+    await screen.findByRole('button', { name: 'Submit recommendation' });
+
+    fillValidForm();
+    fireEvent.change(screen.getByLabelText(/^Work title/), {
+      target: { value: 'Post-submission photo test work' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit recommendation' }));
+
+    expect(await screen.findByText('Your proposal has been recorded')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Submit another recommendation' }));
+
+    const table = screen.getByRole('table', { name: 'Recommendations you have made' });
+    const row = within(table).getByText('Post-submission photo test work').closest('tr');
+    if (!row) throw new Error('Expected a table row for the new recommendation.');
+    expect(within(row).getByRole('button', { name: 'Add photo' })).toBeInTheDocument();
+    expect(within(row).queryByAltText('Uploaded site photo')).not.toBeInTheDocument();
+
+    fireEvent.change(within(row).getByLabelText('Add photo'), {
+      target: { files: [new File(['image-bytes'], 'later.png', { type: 'image/png' })] },
+    });
+
+    await waitFor(() => {
+      expect(within(row).getByAltText('Uploaded site photo')).toBeInTheDocument();
+    });
+    expect(within(row).getByRole('button', { name: 'Change' })).toBeInTheDocument();
+
+    renderPage('MOSPI', provider);
+    const authorityRow = await waitFor(() => {
+      const el = within(reviewList()).getByText('Post-submission photo test work').closest('tr');
+      if (!el) throw new Error('Expected a table row in the review queue.');
+      return el;
+    });
+    await waitFor(() => {
+      expect(within(authorityRow).getByAltText('Uploaded site photo')).toBeInTheDocument();
+    });
+  });
+
   it('rejects an invalid email', async () => {
     renderPage('CITIZEN');
     await screen.findByRole('button', { name: 'Submit recommendation' });
@@ -135,6 +205,7 @@ describe('RecommendWork — authority view', () => {
     expect(await screen.findByRole('heading', { name: 'Review queue' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Propose a work' })).not.toBeInTheDocument();
     expect(within(reviewList()).getByText('Seeded community hall')).toBeInTheDocument();
+    expect(within(reviewList()).getAllByText('—').length).toBeGreaterThan(0);
   });
 
   it('lets MoSPI advance a recommendation status', async () => {

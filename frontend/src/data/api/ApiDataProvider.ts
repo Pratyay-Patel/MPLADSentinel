@@ -26,6 +26,7 @@ import {
   getPublicWork,
   getPublicWorks,
   getWork,
+  getWorkDuplicates,
   getWorkPayments,
   getWorkRisk,
   getWorks,
@@ -187,6 +188,14 @@ export function createApiDataProvider(): DataProvider {
         return byWorkId;
       } catch (error) {
         throw toProviderError('listProjectRisks', error);
+      }
+    },
+
+    async listDuplicateWorks(signal) {
+      try {
+        return await getWorkDuplicates(signal);
+      } catch (error) {
+        throw toProviderError('listDuplicateWorks', error);
       }
     },
 

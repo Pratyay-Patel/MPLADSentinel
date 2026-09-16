@@ -21,6 +21,9 @@ export type {
   AuditPhoto,
   BackendHealth,
   DataSource,
+  DuplicateConfidence,
+  DuplicatePair,
+  DuplicateWorkSummary,
   FieldOfficer,
   Grievance,
   GrievanceInput,
@@ -110,6 +113,9 @@ export {
 } from './features/risk';
 export { useRiskService } from './features/useRiskService';
 
+export { createDuplicatesService, type DuplicatesService } from './features/duplicates';
+export { useDuplicatesService } from './features/useDuplicatesService';
+
 export {
   createMpComparisonService,
   aggregateMps,
@@ -193,6 +199,7 @@ export {
 export { useWorkRecommendationsService } from './features/useWorkRecommendationsService';
 
 export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';
+export { findDuplicatePairs } from './dedup/duplicateRules';
 export {
   classifyRiskReason,
   summarizeRiskFactors,

@@ -614,3 +614,78 @@ frontend `inspections` / `audit` service + page tests. Also repaired a
 pre-existing `AuthUserSeederTest` failure touched by the `WebRole` change.
 **Not yet verified:** the Pinata call against a real account (awaiting a
 `PINATA_JWT`).
+
+## D35 — De-duplication of Works (F7)
+
+Decision: F7 ("Duplicate / Similar Project Detection") means detecting
+duplicate/near-duplicate **ingested work records** — not duplicate
+field-inspection photos, which was the user's initial read of the
+competitor-inspired feature name. Confirmed against the exact requirements.md
+wording ("duplicate or highly similar **works** using project details,
+location and financial information") — it was always about project records.
+Photo-duplicate detection (perceptual hashing etc.) is explicitly out of scope
+here: the Flutter field app is camera-only (no gallery picker) and geotags
+every photo before uploading straight to IPFS, which already structurally
+prevents recycled/duplicate site-photo fraud — no additional code is needed to
+defend against something the upload path already rules out.
+
+F7 is P2/deferred in `docs/round1-scope.md`; building it now is a bonus
+feature for the nationals submission, not catching up on a missed item.
+
+**Implemented.** New `com.mpladsentinel.mplads.dedup` package, deliberately
+separate from `com.mpladsentinel.mplads.risk` — `RiskRuleSet`'s own javadoc and
+decision D22 explicitly declare duplicate-detection out of that class's scope,
+so this is a new engine following the *same style* (deterministic, explainable,
+rule-based, no ML), not a rule bolted onto D22's rule set.
+
+- `DuplicateWorkEngine` groups all ingested works by `(state, district,
+  category)` — comparing works in different locations or sectors isn't
+  meaningful — then `DuplicateRuleSet` scores every pair within a group.
+  Being in the same group alone never flags a pair (too many legitimate,
+  distinct works share a state/district/category); at least one real signal
+  must fire:
+  - **Near-identical `workDescription`** — Jaccard similarity over lowercase
+    word tokens (>2 chars) ≥ 0.6 → weight 60.
+  - **Overlapping `estimatedCost`** — relative difference ≤ 0.2 → weight 30.
+  - Score capped at 100; `HIGH` ≥ 60, `MEDIUM` ≥ 30, `LOW` otherwise. A pair is
+    only ever produced when at least one signal fired (score > 0).
+- Exposed at `GET /api/works/duplicates`, matched by the existing
+  `/api/works/**` authority-only rule in `SecurityConfig` (same role set as
+  risk: MoSPI/State/District/Auditor/MP) — simpler and consistent with every
+  other `/api/works/**` sub-route, rather than the narrower "MoSPI, District"
+  audience column in `docs/requirements.md`'s F7 row (a deliberate
+  simplification, since citizens — the only role actually excluded either
+  way — see neither).
+- No schema change and nothing persisted — computed live from the `work`
+  table, same as risk.
+- Frontend: `DataProvider.listDuplicateWorks()` on both providers;
+  `ApiDataProvider` calls `GET /api/works/duplicates`; `DemoDataProvider`
+  computes via `frontend/src/data/dedup/duplicateRules.ts`, a 1:1 port of the
+  backend engine (same grouping, thresholds and weights), following the same
+  "kept in sync by hand" convention as `risk/rules.ts` for D22. New
+  `/duplicates` page (Monitoring group, area `duplicates`, same
+  authority-only role set as `risk`) lists candidate pairs with confidence,
+  reasons, and links into each work's detail page.
+- The demo fixture set (14 hand-crafted works, each already shaped to
+  exercise one risk-rule outcome) has no two works sharing a state, district
+  and category, so it genuinely produces zero pairs — the demo build's
+  `/duplicates` page correctly shows an honest empty state. Adding fixture
+  works to force a demo example was tried and reverted: the demo project
+  count is hardcoded (`14`) across ~11 unrelated test files, so doing this
+  properly would need updating all of them for a purely cosmetic demo
+  concern — out of proportion for a bonus feature. Real ingested data (6,000+
+  works) will produce real pairs once connected.
+
+**Verified.** Backend: `DuplicateWorkEngineTest` (7 unit tests — grouping
+boundaries, each signal individually, combined scoring, missing-data
+skip-not-throw) + `DuplicateControllerTest` (2 integration tests over real
+Postgres — RBAC gating, a real near-duplicate pair found and an unrelated work
+excluded). Full backend suite: 253/253 pass. Frontend: `tsc -b --force` and
+`eslint` clean; `duplicateRules.test.ts` (7 tests, mirroring the backend unit
+tests) + `DuplicateWorks.test.tsx` (3 tests: renders pairs, filters by
+confidence, empty state) + `ApiDataProvider`/`DemoDataProvider` additions; full
+suite 340/342 pass (2 pre-existing unrelated failures). Real production
+`vite build` succeeds. Visually verified in-browser (demo build): nav item
+and route render correctly for an authority role and are inaccessible/hidden
+for Citizen; the empty state renders correctly given the demo fixture set's
+genuine absence of duplicates.

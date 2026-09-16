@@ -14,6 +14,7 @@ import {
   type WorkRecommendationInput,
   type WorkRecommendationsService,
 } from '../../data';
+import { getLocalPhoto, readFileAsDataUrl, setLocalPhoto } from '../../data/localPhotos';
 import { formatDate } from '../../format';
 import {
   Button,
@@ -24,6 +25,9 @@ import {
   Input,
   LoadingState,
   PageHeader,
+  EditablePhotoCell,
+  PhotoCell,
+  PhotoUploadField,
   SectionHeader,
   Select,
   StatusBadge,
@@ -32,7 +36,16 @@ import {
   type SelectOption,
   type StatusTone,
 } from '../../ui';
-import { CircleCheckIcon, InboxIcon, ListIcon, SendIcon } from '../../ui/icons';
+import {
+  CircleCheckIcon,
+  ClipboardListIcon,
+  InboxIcon,
+  InfoIcon,
+  ListIcon,
+  MapPinIcon,
+  SendIcon,
+  UserIcon,
+} from '../../ui/icons';
 import './recommend.css';
 
 const STATUS_TONE: Record<RecommendationStatus, StatusTone> = {
@@ -210,11 +223,20 @@ function CitizenRecommendations({
   service: WorkRecommendationsService;
 }) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [photo, setPhoto] = useState<File | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [added, setAdded] = useState<WorkRecommendation[]>([]);
   const [confirmed, setConfirmed] = useState<WorkRecommendation | null>(null);
+  // Bumped after a post-submission photo edit so the table re-reads
+  // localPhotos.ts — that store isn't React state, so nothing else forces it.
+  const [, refreshPhotos] = useState(0);
+
+  async function onPhotoSelected(id: string, file: File) {
+    setLocalPhoto('recommendation', id, await readFileAsDataUrl(file));
+    refreshPhotos((n) => n + 1);
+  }
 
   const addedIds = new Set(added.map((r) => r.id));
   const items = [...added, ...data.recommendations.filter((r) => !addedIds.has(r.id))];
@@ -235,8 +257,14 @@ function CitizenRecommendations({
     setSubmitError(null);
     try {
       const saved = await service.submit(toInput(form, selectedMp?.constituency ?? ''));
+      // Photo is frontend-only (no real upload path yet, see localPhotos.ts) —
+      // stash it before the row renders so the table picks it up immediately.
+      if (photo) {
+        setLocalPhoto('recommendation', saved.id, await readFileAsDataUrl(photo));
+      }
       setAdded((prev) => [saved, ...prev]);
       setForm(EMPTY_FORM);
+      setPhoto(null);
       setConfirmed(saved);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Could not submit the recommendation.');
@@ -252,6 +280,16 @@ function CitizenRecommendations({
     { key: 'mp', header: 'MP', render: (r) => `${r.mpName} (${r.constituency})` },
     { key: 'status', header: 'Status', render: (r) => <StatusBadgeFor status={r.status} /> },
     { key: 'note', header: 'Action note', render: (r) => r.actionNote ?? '—' },
+    {
+      key: 'photo',
+      header: 'Photo',
+      render: (r) => (
+        <EditablePhotoCell
+          url={getLocalPhoto('recommendation', r.id)}
+          onSelect={(file) => onPhotoSelected(r.id, file)}
+        />
+      ),
+    },
   ];
 
   if (confirmed) {
@@ -282,9 +320,22 @@ function CitizenRecommendations({
 
   return (
     <>
+      <div className="rec-guideline">
+        <InfoIcon aria-hidden />
+        <p>
+          <strong>Official Guideline:</strong> Under the revised e-SAKSHI procedure, citizens can
+          digitally recommend locally felt developmental works (drinking water, school buildings,
+          community centers, health centers) to their elected Member of Parliament.
+        </p>
+      </div>
+
       <Card>
         <SectionHeader title="Propose a work" icon={<SendIcon />} tone="warning" />
         <form className="rec-form" onSubmit={onSubmit} noValidate>
+          <div className="rec-subsection">
+            <UserIcon aria-hidden />
+            <span>Personal details</span>
+          </div>
           <div className="rec-form__grid">
             <Input
               label="Full name"
@@ -311,6 +362,10 @@ function CitizenRecommendations({
             />
           </div>
 
+          <div className="rec-subsection">
+            <MapPinIcon aria-hidden />
+            <span>Location</span>
+          </div>
           <div className="rec-form__grid">
             <Select
               label="State / UT"
@@ -362,6 +417,10 @@ function CitizenRecommendations({
             onChange={(e) => set('gpsCoordinatesLink', e.target.value)}
           />
 
+          <div className="rec-subsection">
+            <ClipboardListIcon aria-hidden />
+            <span>Work details</span>
+          </div>
           <div className="rec-form__grid">
             <Input
               label="Work title"
@@ -394,6 +453,13 @@ function CitizenRecommendations({
             onChange={(e) => set('description', e.target.value)}
           />
 
+          <PhotoUploadField
+            label="Site photo (optional)"
+            hint="A photo of the proposed site, if you have one."
+            file={photo}
+            onChange={setPhoto}
+          />
+
           <label className="rec-certify">
             <input
               type="checkbox"
@@ -419,7 +485,12 @@ function CitizenRecommendations({
           ) : null}
 
           <div>
-            <Button type="submit" disabled={submitting || !form.certified}>
+            <Button
+              type="submit"
+              variant="primary"
+              icon={<SendIcon />}
+              disabled={submitting || !form.certified}
+            >
               {submitting ? 'Submitting…' : 'Submit recommendation'}
             </Button>
           </div>
@@ -518,6 +589,11 @@ function ReviewQueue({
         ) : (
           <span className="rec-gps-link">{r.gpsCoordinatesLink}</span>
         ),
+    },
+    {
+      key: 'photo',
+      header: 'Photo',
+      render: (r) => <PhotoCell url={getLocalPhoto('recommendation', r.id)} />,
     },
     {
       key: 'status',

@@ -1,6 +1,7 @@
 import { readDemoSession } from '../../auth/demoAuth';
 import type { Role } from '../../auth/roles';
 import { workTitle } from '../../format';
+import { findDuplicatePairs } from '../dedup/duplicateRules';
 import { deriveRisk } from '../risk/rules';
 import type { DataProvider } from '../DataProvider';
 import { ProviderError } from '../errors';
@@ -306,6 +307,11 @@ export function createDemoDataProvider(): DataProvider {
         byWorkId[project.sourceWorkId] = deriveRisk(project, ctx);
       }
       return byWorkId;
+    },
+
+    async listDuplicateWorks(signal) {
+      ensureNotAborted(signal);
+      return findDuplicatePairs([...demoProjects]);
     },
 
     async getProjectPayments(sourceWorkId, signal) {

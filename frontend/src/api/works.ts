@@ -1,5 +1,11 @@
 import type { PublicProject } from '../data/publicProject';
-import type { PaymentInstallment, Project, ProjectRisk, ProjectSummary } from '../data/types';
+import type {
+  DuplicatePair,
+  PaymentInstallment,
+  Project,
+  ProjectRisk,
+  ProjectSummary,
+} from '../data/types';
 import { apiClient } from './client';
 
 /**
@@ -43,3 +49,9 @@ export const getWorkRisk = (
   sourceWorkId: number,
   signal?: AbortSignal,
 ): Promise<ProjectRisk> => apiClient.get(`/works/${sourceWorkId}/risk`, { signal });
+
+// --- de-duplication of works (F7, decision D35, authority-only) ----
+
+/** Every candidate duplicate pair across all ingested works. */
+export const getWorkDuplicates = (signal?: AbortSignal): Promise<DuplicatePair[]> =>
+  apiClient.get('/works/duplicates', { signal });

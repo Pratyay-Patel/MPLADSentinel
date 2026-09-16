@@ -12,6 +12,7 @@ export type Area =
   | 'overview'
   | 'projects'
   | 'risk'
+  | 'duplicates'
   | 'compare'
   | 'analytics'
   | 'assistant'
@@ -29,6 +30,7 @@ export const AREA_ROLES: Record<Area, Role[]> = {
   overview: AUTHORITIES,
   projects: AUTHORITIES,
   risk: AUTHORITIES,
+  duplicates: AUTHORITIES,
   compare: AUTHORITIES,
   analytics: AUTHORITIES,
   assistant: AUTHORITIES,

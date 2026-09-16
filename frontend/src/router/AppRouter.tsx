@@ -17,6 +17,7 @@ import { NotFoundPage } from '../pages/NotFoundPage';
 import { ProjectDetail } from '../pages/project-detail/ProjectDetail';
 import { ProjectRegister } from '../pages/projects/ProjectRegister';
 import { RiskAlerts } from '../pages/risk/RiskAlerts';
+import { DuplicateWorks } from '../pages/duplicates/DuplicateWorks';
 import { CompareMps } from '../pages/compare/CompareMps';
 import { IndexRedirect } from './IndexRedirect';
 
@@ -78,6 +79,14 @@ export const appRouter = createBrowserRouter([
         element: (
           <RequireRole area="risk">
             <RiskAlerts />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'duplicates',
+        element: (
+          <RequireRole area="duplicates">
+            <DuplicateWorks />
           </RequireRole>
         ),
       },

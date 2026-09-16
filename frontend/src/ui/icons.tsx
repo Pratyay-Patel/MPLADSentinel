@@ -249,3 +249,18 @@ export const SendIcon = (p: IconProps) => (
     <path d="M12.5 13.5 20 4" />
   </Base>
 );
+
+export const UploadIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M12 15V4" />
+    <path d="m7 8 5-5 5 5" />
+    <path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" />
+  </Base>
+);
+
+export const UserIcon = (p: IconProps) => (
+  <Base {...p}>
+    <circle cx="12" cy="8" r="3.5" />
+    <path d="M5 20c0-3.3 3.1-6 7-6s7 2.7 7 6" />
+  </Base>
+);

@@ -186,6 +186,40 @@ describe('ApiDataProvider', () => {
     expect(await provider.getProjectRisk(42)).toBeNull();
   });
 
+  // --- de-duplication of works (F7) ----------------------------------
+
+  it('listDuplicateWorks fetches /api/works/duplicates', async () => {
+    const pair = {
+      workA: {
+        sourceWorkId: 900000001,
+        workDescription: 'a',
+        state: 'Rajasthan',
+        district: 'Jaipur',
+        category: 'Roads',
+        estimatedCost: 1000000,
+      },
+      workB: {
+        sourceWorkId: 900000002,
+        workDescription: 'b',
+        state: 'Rajasthan',
+        district: 'Jaipur',
+        category: 'Roads',
+        estimatedCost: 1050000,
+      },
+      score: 90,
+      confidence: 'HIGH',
+      reasons: ['x'],
+    };
+    const fetchMock = stubFetch(jsonResponse([pair]));
+
+    const pairs = await provider.listDuplicateWorks();
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/works/duplicates');
+    expect(pairs).toHaveLength(1);
+    expect(pairs[0].confidence).toBe('HIGH');
+    expect(pairs[0].workA.sourceWorkId).toBe(900000001);
+  });
+
   it('maps a backend error status to a ProviderError of kind "unavailable"', async () => {
     stubFetch(jsonResponse({ error: 'down' }, { status: 503 }));
 

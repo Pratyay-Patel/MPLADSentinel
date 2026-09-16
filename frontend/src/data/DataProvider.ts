@@ -6,6 +6,7 @@ import type {
   AuditEvidence,
   BackendHealth,
   DataSource,
+  DuplicatePair,
   FieldOfficer,
   Grievance,
   GrievanceInput,
@@ -72,6 +73,13 @@ export interface DataProvider {
    * once instead of calling {@link getProjectRisk} per work.
    */
   listProjectRisks(signal?: AbortSignal): Promise<Record<number, ProjectRisk>>;
+
+  /**
+   * De-duplication of works (requirements F7, decision D35): every
+   * candidate duplicate pair across all ingested works, computed live —
+   * nothing is persisted.
+   */
+  listDuplicateWorks(signal?: AbortSignal): Promise<DuplicatePair[]>;
 
   /**
    * Payment installments for one work. Empty unless the work's

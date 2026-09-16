@@ -31,3 +31,6 @@ export { ViewProjectLink, type ViewProjectLinkProps } from './ViewProjectLink';
 export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog';
 export { Toast, type ToastProps } from './Toast';
 export { SendNoticeButton, type SendNoticeButtonProps } from './SendNoticeButton';
+export { PhotoUploadField, type PhotoUploadFieldProps } from './PhotoUploadField';
+export { PhotoCell } from './PhotoCell';
+export { EditablePhotoCell, type EditablePhotoCellProps } from './EditablePhotoCell';

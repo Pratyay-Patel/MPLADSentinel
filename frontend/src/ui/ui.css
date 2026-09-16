@@ -390,6 +390,151 @@
   color: var(--color-danger-fg);
 }
 
+/* ---- PhotoUploadField ------------------------------------------- */
+
+.ui-photo-dropzone {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px dashed var(--color-brand-500);
+  border-radius: var(--control-radius);
+  background: var(--color-brand-050);
+  color: var(--color-brand-700);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ui-photo-dropzone:hover {
+  background: var(--color-brand-100);
+}
+
+.ui-photo-dropzone:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+.ui-photo-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ui-photo-preview img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: var(--control-radius);
+  border: var(--border);
+}
+
+.ui-photo-preview__remove {
+  padding: 0;
+  font-size: var(--text-xs);
+  color: var(--color-link);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+/* Thumbnail shown in an authority/citizen table cell for an uploaded photo. */
+.ui-photo-cell {
+  display: inline-block;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.ui-photo-cell img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--control-radius);
+  border: var(--border);
+}
+
+/* Citizen-facing photo cell that can attach/replace a photo post-submission. */
+.ui-photo-cell-editable {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.ui-photo-cell-editable__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-link);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.ui-photo-cell-editable__trigger:hover {
+  color: var(--color-link-hover);
+}
+
+.ui-photo-cell-editable__trigger svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Full-size photo preview, opened from a PhotoCell thumbnail. */
+.ui-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: rgba(16, 24, 40, 0.7);
+}
+
+.ui-lightbox {
+  position: relative;
+  max-width: min(90vw, 720px);
+  max-height: 90vh;
+  line-height: 0;
+}
+
+.ui-lightbox img {
+  display: block;
+  min-width: 240px;
+  min-height: 240px;
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.ui-lightbox__close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: var(--border-strong);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
 .ui-control {
   height: var(--control-height-md);
   padding: 0 var(--space-3);

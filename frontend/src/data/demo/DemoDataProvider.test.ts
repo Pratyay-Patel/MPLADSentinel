@@ -100,6 +100,21 @@ describe('DemoDataProvider', () => {
     expect(byId[projects[0].sourceWorkId].level).toBe(single!.level);
   });
 
+  it('listDuplicateWorks flags real fixture pairs with a real signal, and every pair has a reason', async () => {
+    const pairs = await provider.listDuplicateWorks();
+
+    expect(Array.isArray(pairs)).toBe(true);
+    for (const pair of pairs) {
+      expect(pair.reasons.length).toBeGreaterThan(0);
+      expect(pair.score).toBeGreaterThan(0);
+      expect(['LOW', 'MEDIUM', 'HIGH']).toContain(pair.confidence);
+      // grouped by the same state, district and category
+      expect(pair.workA.state).toBe(pair.workB.state);
+      expect(pair.workA.district).toBe(pair.workB.district);
+      expect(pair.workA.category).toBe(pair.workB.category);
+    }
+  });
+
   it('returns installment rows for a payments-present work and none otherwise', async () => {
     const projects = await provider.listProjects();
     const present = projects.find((p) => p.paymentDataState === 'FETCHED_PRESENT')!;
