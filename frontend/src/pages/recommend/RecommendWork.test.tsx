@@ -40,22 +40,22 @@ async function seedRecommendation(provider: DataProvider) {
 const reviewList = () => screen.getByRole('table', { name: 'Work recommendation review queue' });
 
 function fillValidForm() {
-  fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'A Citizen' } });
-  fireEvent.change(screen.getByLabelText('Mobile number'), { target: { value: '9876543210' } });
-  fireEvent.change(screen.getByLabelText('State / UT'), { target: { value: 'Rajasthan' } });
-  fireEvent.change(screen.getByLabelText("Hon'ble MP & constituency"), {
+  fireEvent.change(screen.getByLabelText(/^Full name/), { target: { value: 'A Citizen' } });
+  fireEvent.change(screen.getByLabelText(/^Mobile number/), { target: { value: '9876543210' } });
+  fireEvent.change(screen.getByLabelText(/^State \/ UT/), { target: { value: 'Rajasthan' } });
+  fireEvent.change(screen.getByLabelText(/^Hon'ble MP & constituency/), {
     target: { value: 'A. K. Sharma' },
   });
-  fireEvent.change(screen.getByLabelText('Site GPS coordinates or maps link'), {
+  fireEvent.change(screen.getByLabelText(/^Site GPS coordinates or maps link/), {
     target: { value: '26.9124,75.7873' },
   });
-  fireEvent.change(screen.getByLabelText('Work title'), {
+  fireEvent.change(screen.getByLabelText(/^Work title/), {
     target: { value: 'RO drinking water plant' },
   });
-  fireEvent.change(screen.getByLabelText('Primary sector / category'), {
+  fireEvent.change(screen.getByLabelText(/^Primary sector \/ category/), {
     target: { value: 'Drinking Water & Sanitation' },
   });
-  fireEvent.change(screen.getByLabelText('Detailed description of community need'), {
+  fireEvent.change(screen.getByLabelText(/^Detailed description of community need/), {
     target: { value: 'There is no safe drinking water source within several kilometres.' },
   });
   fireEvent.click(screen.getByRole('checkbox'));
@@ -84,10 +84,10 @@ describe('RecommendWork — citizen view', () => {
     renderPage('CITIZEN');
     await screen.findByRole('button', { name: 'Submit recommendation' });
 
-    const mpSelect = screen.getByLabelText("Hon'ble MP & constituency") as HTMLSelectElement;
+    const mpSelect = screen.getByLabelText(/^Hon'ble MP & constituency/) as HTMLSelectElement;
     expect(mpSelect).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText('State / UT'), { target: { value: 'Rajasthan' } });
+    fireEvent.change(screen.getByLabelText(/^State \/ UT/), { target: { value: 'Rajasthan' } });
     expect(mpSelect).toBeEnabled();
     const labels = Array.from(mpSelect.options).map((o) => o.textContent);
     expect(labels.some((l) => l?.includes('A. K. Sharma'))).toBe(true);

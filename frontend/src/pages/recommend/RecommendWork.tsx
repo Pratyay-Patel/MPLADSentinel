@@ -251,6 +251,7 @@ function CitizenRecommendations({
     { key: 'title', header: 'Work', render: (r) => r.workTitle },
     { key: 'mp', header: 'MP', render: (r) => `${r.mpName} (${r.constituency})` },
     { key: 'status', header: 'Status', render: (r) => <StatusBadgeFor status={r.status} /> },
+    { key: 'note', header: 'Action note', render: (r) => r.actionNote ?? '—' },
   ];
 
   if (confirmed) {
@@ -287,12 +288,14 @@ function CitizenRecommendations({
           <div className="rec-form__grid">
             <Input
               label="Full name"
+              required
               value={form.fullName}
               error={errors.fullName}
               onChange={(e) => set('fullName', e.target.value)}
             />
             <Input
               label="Mobile number"
+              required
               type="tel"
               placeholder="10-digit mobile number"
               value={form.mobileNumber}
@@ -311,6 +314,7 @@ function CitizenRecommendations({
           <div className="rec-form__grid">
             <Select
               label="State / UT"
+              required
               value={form.state}
               error={errors.state}
               options={[
@@ -324,6 +328,7 @@ function CitizenRecommendations({
             />
             <Select
               label="Hon'ble MP & constituency"
+              required
               value={form.mpName}
               error={errors.mpName}
               disabled={!form.state}
@@ -349,6 +354,7 @@ function CitizenRecommendations({
 
           <Input
             label="Site GPS coordinates or maps link"
+            required
             placeholder="e.g. https://maps.google.com/?q=18.5204,73.8567 or 18.5204, 73.8567"
             value={form.gpsCoordinatesLink}
             error={errors.gpsCoordinatesLink}
@@ -359,6 +365,7 @@ function CitizenRecommendations({
           <div className="rec-form__grid">
             <Input
               label="Work title"
+              required
               placeholder="e.g. Construction of an RO drinking-water plant"
               value={form.workTitle}
               error={errors.workTitle}
@@ -366,6 +373,7 @@ function CitizenRecommendations({
             />
             <Select
               label="Primary sector / category"
+              required
               value={form.category}
               error={errors.category}
               options={[
@@ -378,6 +386,7 @@ function CitizenRecommendations({
 
           <Textarea
             label="Detailed description of community need"
+            required
             value={form.description}
             error={errors.description}
             rows={4}
@@ -493,6 +502,23 @@ function ReviewQueue({
     { key: 'category', header: 'Category', render: (r) => r.category },
     { key: 'mp', header: 'MP / constituency', render: (r) => `${r.mpName} (${r.constituency})` },
     { key: 'location', header: 'Location', render: (r) => `${r.state} · ${r.locationCategory}` },
+    {
+      key: 'gps',
+      header: 'Site GPS / maps link',
+      render: (r) =>
+        /^https?:\/\//i.test(r.gpsCoordinatesLink) ? (
+          <a
+            className="rec-gps-link"
+            href={r.gpsCoordinatesLink}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View location <span aria-hidden>↗</span>
+          </a>
+        ) : (
+          <span className="rec-gps-link">{r.gpsCoordinatesLink}</span>
+        ),
+    },
     {
       key: 'status',
       header: 'Status',

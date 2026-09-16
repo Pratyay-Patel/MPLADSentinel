@@ -38,8 +38,8 @@ describe('LoginPage', () => {
     renderLogin();
 
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Username or email')).toBeInTheDocument();
-    expect(screen.getByLabelText('Password')).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Username or email/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Password/)).toBeInTheDocument();
   });
 
   it('signs in and redirects an authority to the dashboard', async () => {
@@ -51,8 +51,8 @@ describe('LoginPage', () => {
     });
     renderLogin();
 
-    fireEvent.change(await screen.findByLabelText('Username or email'), { target: { value: 'mospi' } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Demo@12345' } });
+    fireEvent.change(await screen.findByLabelText(/^Username or email/), { target: { value: 'mospi' } });
+    fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: 'Demo@12345' } });
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 
     expect(await screen.findByText('dashboard screen')).toBeInTheDocument();
@@ -64,8 +64,8 @@ describe('LoginPage', () => {
     mockedAuth.login.mockResolvedValue({ username: 'citizen', role: 'CITIZEN', displayName: null });
     renderLogin();
 
-    fireEvent.change(await screen.findByLabelText('Username or email'), { target: { value: 'citizen' } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Demo@12345' } });
+    fireEvent.change(await screen.findByLabelText(/^Username or email/), { target: { value: 'citizen' } });
+    fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: 'Demo@12345' } });
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 
     expect(await screen.findByText('citizen portal screen')).toBeInTheDocument();
@@ -76,8 +76,8 @@ describe('LoginPage', () => {
     mockedAuth.login.mockRejectedValue(new ApiError('bad', 401, null));
     renderLogin();
 
-    fireEvent.change(await screen.findByLabelText('Username or email'), { target: { value: 'mospi' } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'wrong' } });
+    fireEvent.change(await screen.findByLabelText(/^Username or email/), { target: { value: 'mospi' } });
+    fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: 'wrong' } });
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Incorrect username or password.');

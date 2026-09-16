@@ -63,6 +63,19 @@
   color: var(--color-text-muted);
 }
 
+.rec-gps-link {
+  display: inline-block;
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+}
+
+a.rec-gps-link {
+  color: var(--color-link);
+}
+
 /* Confirmation panel shown in place of the form after a successful submit. */
 .rec-confirm {
   display: flex;

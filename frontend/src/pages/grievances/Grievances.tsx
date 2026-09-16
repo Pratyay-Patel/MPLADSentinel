@@ -216,6 +216,7 @@ function CitizenGrievances({
     { key: 'subject', header: 'Subject', render: (g) => g.subject },
     { key: 'work', header: 'About', render: (g) => workLabel(g.workReference) },
     { key: 'status', header: 'Status', render: (g) => <StatusBadgeFor status={g.status} /> },
+    { key: 'note', header: 'Action note', render: (g) => g.actionNote ?? '—' },
   ];
 
   return (
@@ -226,6 +227,7 @@ function CitizenGrievances({
           <div className="grv-form__grid">
             <Select
               label="Category"
+              required
               value={form.category}
               error={errors.category}
               options={[
@@ -247,6 +249,7 @@ function CitizenGrievances({
 
           <Input
             label="Subject"
+            required
             value={form.subject}
             error={errors.subject}
             maxLength={120}
@@ -256,6 +259,7 @@ function CitizenGrievances({
 
           <Textarea
             label="Description"
+            required
             value={form.description}
             error={errors.description}
             rows={5}

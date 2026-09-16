@@ -52,13 +52,13 @@ describe('Grievances — citizen view', () => {
     renderPage('CITIZEN');
     await screen.findByRole('button', { name: 'Submit grievance' });
 
-    fireEvent.change(screen.getByLabelText('Category'), {
+    fireEvent.change(screen.getByLabelText(/^Category/), {
       target: { value: 'Delay in execution' },
     });
-    fireEvent.change(screen.getByLabelText('Subject'), {
+    fireEvent.change(screen.getByLabelText(/^Subject/), {
       target: { value: 'Road work not started' },
     });
-    fireEvent.change(screen.getByLabelText('Description'), {
+    fireEvent.change(screen.getByLabelText(/^Description/), {
       target: {
         value: 'The approach road work has not begun despite being recommended last year.',
       },
@@ -76,9 +76,9 @@ describe('Grievances — citizen view', () => {
     renderPage('CITIZEN');
     await screen.findByRole('button', { name: 'Submit grievance' });
 
-    fireEvent.change(screen.getByLabelText('Category'), { target: { value: 'Other' } });
-    fireEvent.change(screen.getByLabelText('Subject'), { target: { value: 'Something' } });
-    fireEvent.change(screen.getByLabelText('Description'), {
+    fireEvent.change(screen.getByLabelText(/^Category/), { target: { value: 'Other' } });
+    fireEvent.change(screen.getByLabelText(/^Subject/), { target: { value: 'Something' } });
+    fireEvent.change(screen.getByLabelText(/^Description/), {
       target: { value: 'A description long enough to pass the minimum length check here.' },
     });
     fireEvent.change(screen.getByLabelText('Email (optional)'), {
