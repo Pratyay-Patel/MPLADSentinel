@@ -143,6 +143,9 @@ describe('GovernmentDashboard', () => {
       markAllNotificationsRead: vi.fn(),
       clearAllNotifications: vi.fn(),
       sendSlaNotice: vi.fn(),
+      listWorkRecommendations: vi.fn().mockResolvedValue([]),
+      submitWorkRecommendation: vi.fn(),
+      updateWorkRecommendationStatus: vi.fn(),
     };
     renderDashboard(emptyProvider);
     expect(await screen.findByText('No work data available')).toBeInTheDocument();
@@ -175,6 +178,9 @@ describe('GovernmentDashboard', () => {
       markAllNotificationsRead: vi.fn(),
       clearAllNotifications: vi.fn(),
       sendSlaNotice: vi.fn(),
+      listWorkRecommendations: vi.fn().mockResolvedValue([]),
+      submitWorkRecommendation: vi.fn(),
+      updateWorkRecommendationStatus: vi.fn(),
     };
     renderDashboard(failingProvider);
 

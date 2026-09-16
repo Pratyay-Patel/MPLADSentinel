@@ -53,6 +53,9 @@ describe('ProjectsService', () => {
       markAllNotificationsRead: vi.fn(),
       clearAllNotifications: vi.fn(),
       sendSlaNotice: vi.fn(),
+      listWorkRecommendations: vi.fn().mockResolvedValue([]),
+      submitWorkRecommendation: vi.fn(),
+      updateWorkRecommendationStatus: vi.fn(),
     };
     const service = createProjectsService(stub);
 

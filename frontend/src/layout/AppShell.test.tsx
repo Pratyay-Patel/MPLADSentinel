@@ -42,6 +42,7 @@ const NAV_LABELS = [
   'Assistant',
   'Audit',
   'Citizen Portal',
+  'Recommended Works',
   'Grievances',
 ];
 

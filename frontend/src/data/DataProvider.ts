@@ -17,6 +17,9 @@ import type {
   ProjectSummary,
   SignOffConfirmInput,
   SignOffRequestInput,
+  WorkRecommendation,
+  WorkRecommendationInput,
+  WorkRecommendationStatusPatch,
 } from './types';
 
 /**
@@ -162,4 +165,20 @@ export interface DataProvider {
    * per-district account yet (decision D31).
    */
   sendSlaNotice(sourceWorkId: number, signal?: AbortSignal): Promise<void>;
+
+  /** All work recommendations known to the provider, newest first. */
+  listWorkRecommendations(signal?: AbortSignal): Promise<WorkRecommendation[]>;
+
+  /** Record a new work recommendation and return the stored record (with its tracking number). */
+  submitWorkRecommendation(
+    input: WorkRecommendationInput,
+    signal?: AbortSignal,
+  ): Promise<WorkRecommendation>;
+
+  /** Advance a work recommendation's review status (authority action); returns the updated record. */
+  updateWorkRecommendationStatus(
+    id: string,
+    patch: WorkRecommendationStatusPatch,
+    signal?: AbortSignal,
+  ): Promise<WorkRecommendation>;
 }

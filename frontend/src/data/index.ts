@@ -28,6 +28,7 @@ export type {
   GrievanceStatusPatch,
   InspectionAssignment,
   LifecycleState,
+  LocationCategory,
   Money,
   NotificationCategory,
   PaymentDataState,
@@ -36,7 +37,11 @@ export type {
   ProjectHouse,
   ProjectRisk,
   ProjectSummary,
+  RecommendationStatus,
   RiskLevel,
+  WorkRecommendation,
+  WorkRecommendationInput,
+  WorkRecommendationStatusPatch,
 } from './types';
 
 export type { DataProvider } from './DataProvider';
@@ -175,6 +180,17 @@ export {
   type NotificationsService,
 } from './features/notifications';
 export { useNotificationsService } from './features/useNotificationsService';
+
+export {
+  createWorkRecommendationsService,
+  RECOMMENDATION_CATEGORIES,
+  RECOMMENDATION_STATUSES,
+  RECOMMENDATION_STATUS_LABEL,
+  type WorkRecommendationsService,
+  type RecommendationsData,
+  type MpOption,
+} from './features/workRecommendations';
+export { useWorkRecommendationsService } from './features/useWorkRecommendationsService';
 
 export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';
 export {

@@ -38,22 +38,25 @@ export function AppSidebar({ open, collapsed, onNavigate, id }: AppSidebarProps)
         >
           {group.caption ? <p className="app-nav__caption">{group.caption}</p> : null}
           <ul>
-            {group.items.map((item) => (
-              <li key={item.to}>
-                <NavLink
-                  to={item.to}
-                  end={item.end}
-                  className="app-nav__link"
-                  title={collapsed ? item.label : undefined}
-                  onClick={onNavigate}
-                >
-                  <span className="app-nav__icon" aria-hidden>
-                    {item.icon}
-                  </span>
-                  <span className="app-nav__label">{item.label}</span>
-                </NavLink>
-              </li>
-            ))}
+            {group.items.map((item) => {
+              const label = item.labelFor?.(role) ?? item.label;
+              return (
+                <li key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    end={item.end}
+                    className="app-nav__link"
+                    title={collapsed ? label : undefined}
+                    onClick={onNavigate}
+                  >
+                    <span className="app-nav__icon" aria-hidden>
+                      {item.icon}
+                    </span>
+                    <span className="app-nav__label">{label}</span>
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       ))}

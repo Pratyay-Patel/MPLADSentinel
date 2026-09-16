@@ -20,6 +20,9 @@ import type {
   Project,
   ProjectRisk,
   ProjectSummary,
+  WorkRecommendation,
+  WorkRecommendationInput,
+  WorkRecommendationStatusPatch,
 } from '../types';
 import { demoPaymentsByWorkId, demoProjects, RISK_REFERENCE_DATE } from './fixtures';
 
@@ -29,6 +32,18 @@ import { demoPaymentsByWorkId, demoProjects, RISK_REFERENCE_DATE } from './fixtu
  */
 const demoGrievances: Grievance[] = [];
 let grievanceSeq = 0;
+
+// --- work recommendations (session-only, like grievances) -------------------
+
+const demoWorkRecommendations: WorkRecommendation[] = [];
+let recommendationSeq = 0;
+
+/** {@code CIT-<year>-<6 digits>}, mirroring the real backend's format. */
+function generateTrackingNumber(): string {
+  const year = new Date().getFullYear();
+  const digits = String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0');
+  return `CIT-${year}-${digits}`;
+}
 
 // --- inspection assignments (session-only, like grievances) -----------------
 
@@ -332,6 +347,42 @@ export function createDemoDataProvider(): DataProvider {
       }
       grievance.updatedAt = new Date().toISOString();
       return { ...grievance };
+    },
+
+    async listWorkRecommendations(signal) {
+      ensureNotAborted(signal);
+      return demoWorkRecommendations.map((r) => ({ ...r }));
+    },
+
+    async submitWorkRecommendation(input: WorkRecommendationInput, signal) {
+      ensureNotAborted(signal);
+      recommendationSeq += 1;
+      const now = new Date().toISOString();
+      const recommendation: WorkRecommendation = {
+        ...input,
+        id: `demo-recommendation-${recommendationSeq}`,
+        trackingNumber: generateTrackingNumber(),
+        submittedAt: now,
+        status: 'SUBMITTED',
+        actionNote: null,
+        updatedAt: now,
+      };
+      demoWorkRecommendations.unshift(recommendation);
+      return { ...recommendation };
+    },
+
+    async updateWorkRecommendationStatus(id: string, patch: WorkRecommendationStatusPatch, signal) {
+      ensureNotAborted(signal);
+      const recommendation = demoWorkRecommendations.find((r) => r.id === id);
+      if (!recommendation) {
+        throw new ProviderError('unknown', `No work recommendation with id ${id}.`);
+      }
+      recommendation.status = patch.status;
+      if (patch.actionNote !== undefined) {
+        recommendation.actionNote = patch.actionNote;
+      }
+      recommendation.updatedAt = new Date().toISOString();
+      return { ...recommendation };
     },
 
     async listFieldOfficers(signal) {

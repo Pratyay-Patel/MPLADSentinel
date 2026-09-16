@@ -38,6 +38,7 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 5b. Human-in-the-loop approve/reject UI + dual-authority sign-off (extends `AssignmentStatus`) — **DONE, verified (written-confirmation gate, plus the full real dual-authority sign-off backend + frontend, see Feature 6 below)**
 6. RBAC dropdown-only login modal (no real auth flow needed behind it) — **DONE, verified** (see "Feature 6b" below; real-mode signs out + redirects to `/login` rather than skipping auth)
 7. Alerts and Notifications UI (send-notice action for high-risk projects) — **DONE, verified, full backend + frontend** (see below)
+7.5. Recommend a Work — citizen e-SAKSHI-style work recommendation — **DONE, verified, full backend + frontend** (added mid-session, not in the original 8; see below)
 8. De-duplication of works UI/flow
 9. National "Works across India" dashboard bubble map → replaced with a real Leaflet/OSM map — **DONE, verified** (added mid-session, not in the original 8; see below)
 
@@ -271,3 +272,25 @@ Prioritize building attractive, working **frontend** UI for each feature below. 
 **Also found and fixed:** the frontend's `tsc --noEmit` had been silently checking nothing all along — `tsconfig.json` uses project references (`"files": []` + `references`), which requires `tsc -b` (build mode) to actually resolve and check anything; bare `--noEmit` was a no-op. Running `tsc -b --force` for real surfaced pre-existing gaps unrelated to this feature (two test files' hand-written `DataProvider` mocks were missing the dual-authority sign-off methods from a previous feature, and one pre-existing `StatusTone`/`MetricCard` type mismatch in `RiskAlerts.tsx`) — all fixed. `npm run build` (the real `tsc -b && vite build`) now succeeds.
 
 **Verified:** real `tsc -b` build clean, `eslint` clean, real production `vite build` succeeds. Backend: 212/212 pass. Frontend: 307/309 vitest pass (2 pre-existing unrelated failures). Visually verified in-browser end-to-end: opened the bell as MoSPI and saw 5 real HIGH-risk-work alerts with real work titles/scores/reasons; clicked "Send Notice" on the Dashboard's "Projects requiring attention" table, button flipped to "Notice sent"; switched to District Authority via the persona picker and found the exact "Attention required: Multipurpose community centre" notice in their feed.
+
+## Feature 7.5 — Recommend a Work (citizen e-SAKSHI-style recommendation)
+
+**Status: DONE, verified. Real backend + real frontend.**
+
+A separate "Recommend a Work" tab (`/recommend`) on both the Citizen Portal and every authority's nav, modelled on e-SAKSHI's real citizen-recommendation form — but corrected on two points the reference form got wrong:
+- **No "Approximate Fund Estimate" field.** A citizen cannot reasonably price a proposed work; that estimate belongs to the sanctioning authority, not the requester.
+- **Site GPS coordinates / maps link instead of free-text "Details of Locality."** A written locality description can't be checked; a coordinates/maps link at least points at a real place.
+
+**The state → MP picker is real data, not invented:** derived client-side from `listPublicProjects()` — the same citizen-safe list the Citizen Portal already reads — so the MP/constituency options are real MPs actually attributed to real ingested works, filtered to the selected state, never a fabricated MP registry.
+
+**Confirmation screen** matches the reference: a checkmark, a real generated tracking number (`CIT-<year>-<6 digits>`, collision-checked server-side), and "Assigned to `<MP>` (`<constituency>`)" — reusing the same MP the citizen picked.
+
+**Real backend (Spring Boot), mirrors the grievance workflow exactly:**
+- `V12__work_recommendation.sql`: a `work_recommendation` table (citizen fields, `location_category` RURAL/URBAN, `gps_coordinates_link`, `category` CHECK-constrained to a fixed sector list, `tracking_number` UNIQUE, `status` SUBMITTED → UNDER_REVIEW → RECOMMENDED/REJECTED).
+- `WorkRecommendationService`: validates the category, generates the tracking number (retried on the astronomically unlikely collision), scopes reads (citizen sees own, everyone else sees all).
+- `WorkRecommendationController`: `GET` (any signed-in role, self-scoped for a citizen), `POST` (CITIZEN only), `PATCH` (MoSPI/State/District only) — identical RBAC shape to grievances.
+- Tests: `WorkRecommendationControllerTest` — 10 integration tests over real Postgres (tracking-number format and uniqueness, RBAC matrix, citizen-sees-own vs authority-sees-all, status workflow, validation, 404). **225/225 backend tests pass.**
+
+**Frontend:** `types.ts`/`DataProvider.ts` gain `WorkRecommendation`/`RecommendationStatus`/`LocationCategory` and the 3 provider methods; `ApiDataProvider` and `DemoDataProvider` both implement them (the demo provider generates the same tracking-number format client-side). `RecommendWork.tsx` mirrors `Grievances.tsx`'s citizen-form/authority-review-queue split exactly, reusing `access.ts`'s existing MoSPI/State/District admin role set (renamed from the grievance-specific `GRIEVANCE_ADMINS` to the neutral `CORE_AUTHORITIES` now that a third feature shares it). New nav item and `/recommend` route, area `recommendations` open to every role (matches grievances).
+
+**Verified:** real `tsc -b` build clean, `eslint` clean, real production `vite build` succeeds. Backend: 225/225 pass. Frontend: 320/322 vitest pass (2 pre-existing unrelated failures) — new coverage: `workRecommendations.test.ts` (3 tests: real state/MP derivation, tracking-number generation, status update) and `RecommendWork.test.tsx` (8 tests: validation, state-filtered MP dropdown, full submit-to-confirmation flow, authority review queue, RBAC-gated status control, error state). Visually verified in-browser end-to-end: submitted a real recommendation as a citizen with State=West Bengal (only the real West Bengal MP, "B. C. Das (Howrah)", appeared in the picker), got the confirmation screen with a real tracking number and "Assigned to B. C. Das (Howrah)"; switched to MoSPI and found the identical recommendation in the review queue; advanced it to Recommended and saw the update confirmed live.

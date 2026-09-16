@@ -105,6 +105,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/grievances").hasRole("CITIZEN")
                         .requestMatchers(HttpMethod.PATCH, "/api/grievances/**")
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT")
+                        // Work recommendations: a citizen proposes one; MoSPI/State/District
+                        // act on it; anyone signed in may read (the service scopes a
+                        // citizen to their own) — same shape as grievances.
+                        .requestMatchers(HttpMethod.POST, "/api/recommendations").hasRole("CITIZEN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/recommendations/**")
+                        .hasAnyRole("MOSPI", "STATE", "DISTRICT")
                         // Inspection assignments: MoSPI/State/District create and
                         // advance them; any government role reads. FIELD_OFFICER
                         // has no authority-facing endpoints and is excluded here.

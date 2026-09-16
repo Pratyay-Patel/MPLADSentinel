@@ -18,6 +18,11 @@ import {
   sendSlaNotice,
 } from '../../api/notifications';
 import {
+  getWorkRecommendations,
+  patchWorkRecommendationStatus,
+  postWorkRecommendation,
+} from '../../api/recommendations';
+import {
   getPublicWork,
   getPublicWorks,
   getWork,
@@ -302,6 +307,30 @@ export function createApiDataProvider(): DataProvider {
         await sendSlaNotice(sourceWorkId, signal);
       } catch (error) {
         throw toProviderError('sendSlaNotice', error);
+      }
+    },
+
+    async listWorkRecommendations(signal) {
+      try {
+        return await getWorkRecommendations(signal);
+      } catch (error) {
+        throw toProviderError('listWorkRecommendations', error);
+      }
+    },
+
+    async submitWorkRecommendation(input, signal) {
+      try {
+        return await postWorkRecommendation(input, signal);
+      } catch (error) {
+        throw toProviderError('submitWorkRecommendation', error);
+      }
+    },
+
+    async updateWorkRecommendationStatus(id, patch, signal) {
+      try {
+        return await patchWorkRecommendationStatus(id, patch, signal);
+      } catch (error) {
+        throw toProviderError('updateWorkRecommendationStatus', error);
       }
     },
   };

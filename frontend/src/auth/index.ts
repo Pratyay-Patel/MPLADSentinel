@@ -11,6 +11,8 @@ export {
   canAccess,
   reviewsGrievances,
   actionsGrievances,
+  reviewsRecommendations,
+  actionsRecommendations,
   assignsInspections,
   landingPathFor,
   type Area,

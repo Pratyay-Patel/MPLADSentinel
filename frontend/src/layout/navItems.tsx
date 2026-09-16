@@ -9,7 +9,7 @@
 
 import type { ReactNode } from 'react';
 
-import type { Area } from '../auth';
+import { reviewsRecommendations, type Area, type Role } from '../auth';
 import {
   AlertTriangleIcon,
   BarsIcon,
@@ -18,6 +18,7 @@ import {
   InboxIcon,
   LayoutGridIcon,
   ListIcon,
+  SendIcon,
   ShieldIcon,
   TrendingUpIcon,
   UsersIcon,
@@ -32,6 +33,10 @@ export interface NavItem {
   end?: boolean;
   /** Shown in the collapsed sidebar rail. */
   icon: ReactNode;
+  /** Overrides `label` for a given role, when the same screen reads differently
+   *  depending on who's looking (e.g. a citizen "recommends"; an authority
+   *  "reviews recommendations"). Falls back to `label` when omitted. */
+  labelFor?: (role: Role) => string;
 }
 
 export interface NavGroup {
@@ -63,6 +68,13 @@ export const NAV_GROUPS: NavGroup[] = [
     caption: 'Public',
     items: [
       { label: 'Citizen Portal', to: '/citizen', area: 'citizen', icon: <UsersIcon /> },
+      {
+        label: 'Recommend a Work',
+        labelFor: (role) => (reviewsRecommendations(role) ? 'Recommended Works' : 'Recommend a Work'),
+        to: '/recommend',
+        area: 'recommendations',
+        icon: <SendIcon />,
+      },
       { label: 'Grievances', to: '/grievances', area: 'grievances', icon: <InboxIcon /> },
     ],
   },

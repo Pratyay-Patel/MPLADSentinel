@@ -18,7 +18,8 @@ export type Area =
   | 'inspections'
   | 'audit'
   | 'citizen'
-  | 'grievances';
+  | 'grievances'
+  | 'recommendations';
 
 const ALL_ROLES: Role[] = [...ROLES];
 const AUTHORITIES: Role[] = ['MOSPI', 'STATE', 'DISTRICT', 'AUDITOR', 'MP'];
@@ -35,14 +36,19 @@ export const AREA_ROLES: Record<Area, Role[]> = {
   audit: AUTHORITIES,
   citizen: ALL_ROLES,
   grievances: ALL_ROLES,
+  recommendations: ALL_ROLES,
 };
 
 export function canAccess(role: Role, area: Area): boolean {
   return AREA_ROLES[area].includes(role);
 }
 
-/** Roles that administer grievances — they can change a grievance's status. */
-const GRIEVANCE_ADMINS: Role[] = ['MOSPI', 'STATE', 'DISTRICT'];
+/**
+ * Roles that administer citizen-submitted records (grievances, work
+ * recommendations) — they can change a record's review status. Same subset
+ * that assigns inspections.
+ */
+const CORE_AUTHORITIES: Role[] = ['MOSPI', 'STATE', 'DISTRICT'];
 
 /**
  * True when the role sees the grievance **review queue** rather than the citizen
@@ -54,7 +60,21 @@ export function reviewsGrievances(role: Role): boolean {
 
 /** True when the role may advance a grievance's review status / add an action note. */
 export function actionsGrievances(role: Role): boolean {
-  return GRIEVANCE_ADMINS.includes(role);
+  return CORE_AUTHORITIES.includes(role);
+}
+
+/**
+ * True when the role sees the work-recommendation **review queue** rather than
+ * the citizen submission form. Everyone except a citizen reviews (mirrors
+ * grievances).
+ */
+export function reviewsRecommendations(role: Role): boolean {
+  return role !== 'CITIZEN';
+}
+
+/** True when the role may advance a work recommendation's review status. */
+export function actionsRecommendations(role: Role): boolean {
+  return CORE_AUTHORITIES.includes(role);
 }
 
 /**
@@ -63,7 +83,7 @@ export function actionsGrievances(role: Role): boolean {
  * Auditor / MP see the Inspections screen read-only.
  */
 export function assignsInspections(role: Role): boolean {
-  return GRIEVANCE_ADMINS.includes(role);
+  return CORE_AUTHORITIES.includes(role);
 }
 
 /**

@@ -36,7 +36,7 @@ class FlywayMigrationTest extends AbstractPostgresIntegrationTest {
                 .map(Object::toString)
                 .toList();
 
-        assertThat(applied).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11");
+        assertThat(applied).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12");
         assertThat(flyway.info().current().getState()).isEqualTo(MigrationState.SUCCESS);
     }
 
@@ -55,6 +55,7 @@ class FlywayMigrationTest extends AbstractPostgresIntegrationTest {
         assertThat(tableExists("app_user")).isTrue();
         assertThat(tableExists("grievance")).isTrue();
         assertThat(tableExists("notification")).isTrue();
+        assertThat(tableExists("work_recommendation")).isTrue();
     }
 
     @Test
@@ -96,6 +97,17 @@ class FlywayMigrationTest extends AbstractPostgresIntegrationTest {
         assertThat(columnExists("notification", "is_read")).isTrue();
         assertThat(columnExists("notification", "dismissed")).isTrue();
         assertThat(constraintExists("ck_notification_category")).isTrue();
+    }
+
+    @Test
+    void workRecommendationTableFromV12Exists() {
+        assertThat(tableExists("work_recommendation")).isTrue();
+        assertThat(columnExists("work_recommendation", "gps_coordinates_link")).isTrue();
+        assertThat(columnExists("work_recommendation", "tracking_number")).isTrue();
+        assertThat(columnExists("work_recommendation", "location_category")).isTrue();
+        assertThat(constraintExists("uq_work_recommendation_tracking_number")).isTrue();
+        assertThat(constraintExists("ck_work_recommendation_category")).isTrue();
+        assertThat(constraintExists("ck_work_recommendation_status")).isTrue();
     }
 
     @Test

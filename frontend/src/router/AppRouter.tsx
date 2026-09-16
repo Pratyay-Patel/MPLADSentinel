@@ -9,6 +9,7 @@ import { CitizenPortal } from '../pages/citizen/CitizenPortal';
 import { CitizenProjectView } from '../pages/citizen/CitizenProjectView';
 import { AuditPage } from '../pages/audit/AuditPage';
 import { Grievances } from '../pages/grievances/Grievances';
+import { RecommendWork } from '../pages/recommend/RecommendWork';
 import { InspectionsPage } from '../pages/inspections/InspectionsPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
@@ -141,6 +142,14 @@ export const appRouter = createBrowserRouter([
         element: (
           <RequireRole area="grievances">
             <Grievances />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'recommend',
+        element: (
+          <RequireRole area="recommendations">
+            <RecommendWork />
           </RequireRole>
         ),
       },

@@ -174,6 +174,48 @@ export interface GrievanceStatusPatch {
   actionNote?: string | null;
 }
 
+/** Review lifecycle of a citizen work recommendation. Authorities advance it through these states. */
+export type RecommendationStatus = 'SUBMITTED' | 'UNDER_REVIEW' | 'RECOMMENDED' | 'REJECTED';
+
+/** Whether the proposed site is rural or urban. */
+export type LocationCategory = 'RURAL' | 'URBAN';
+
+/** What a citizen fills in on the "recommend a work" form (e-SAKSHI-style). */
+export interface WorkRecommendationInput {
+  fullName: string;
+  mobileNumber: string;
+  email: string | null;
+  state: string;
+  mpName: string;
+  constituency: string;
+  locationCategory: LocationCategory;
+  /** A maps link or lat,lng pair for the proposed site, in place of free-text locality. */
+  gpsCoordinatesLink: string;
+  workTitle: string;
+  category: string;
+  description: string;
+}
+
+/** A work recommendation record. `id` / `trackingNumber` / `submittedAt` / `status` are assigned on submit. */
+export interface WorkRecommendation extends WorkRecommendationInput {
+  id: string;
+  /** Citizen-facing acknowledgement code, e.g. `CIT-2026-000042`. */
+  trackingNumber: string;
+  /** ISO timestamp of submission. */
+  submittedAt: string;
+  status: RecommendationStatus;
+  /** Authority note recorded with the most recent status change, or null. */
+  actionNote: string | null;
+  /** ISO timestamp of the last status/note change (= `submittedAt` until acted on). */
+  updatedAt: string;
+}
+
+/** Fields an authority can change when reviewing a work recommendation. */
+export interface WorkRecommendationStatusPatch {
+  status: RecommendationStatus;
+  actionNote?: string | null;
+}
+
 /**
  * Lifecycle of an inspection assignment (backend `AssignmentStatus`).
  * `ASSIGNED → IN_PROGRESS → COMPLETED`, or `CANCELLED` from an open state.
