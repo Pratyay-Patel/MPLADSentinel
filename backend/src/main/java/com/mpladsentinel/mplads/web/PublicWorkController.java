@@ -35,4 +35,11 @@ public class PublicWorkController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/{reference}/payments")
+    public ResponseEntity<List<WorkPaymentResponse>> payments(@PathVariable long reference) {
+        return queryService.getPayments(reference)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }

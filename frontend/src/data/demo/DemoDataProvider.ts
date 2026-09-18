@@ -460,6 +460,12 @@ export function createDemoDataProvider(): DataProvider {
       return rows.map((row) => ({ ...row }));
     },
 
+    async getPublicProjectPayments(reference, signal) {
+      ensureNotAborted(signal);
+      const rows = demoPaymentsByWorkId.get(reference) ?? [];
+      return rows.map((row) => ({ ...row }));
+    },
+
     async listGrievances(signal) {
       ensureNotAborted(signal);
       return demoGrievances.map((g) => ({ ...g }));

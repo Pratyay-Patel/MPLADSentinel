@@ -39,6 +39,11 @@ export const getPublicWork = (
   signal?: AbortSignal,
 ): Promise<PublicProject> => apiClient.get(`/public/works/${reference}`, { signal });
 
+export const getPublicWorkPayments = (
+  reference: number,
+  signal?: AbortSignal,
+): Promise<PaymentInstallment[]> => apiClient.get(`/public/works/${reference}/payments`, { signal });
+
 // --- risk (Phase B3, authority-only) --------------------------------
 
 /** Every work's risk assessment — the list screens call this once. */

@@ -90,6 +90,16 @@ export interface DataProvider {
    */
   getProjectPayments(sourceWorkId: number, signal?: AbortSignal): Promise<PaymentInstallment[]>;
 
+  /**
+   * The same recorded-payment installments as {@link getProjectPayments}, but
+   * on the public track (no session beyond "any authenticated user" required).
+   * The rows themselves carry no risk/internal fields either way — this is a
+   * separate method (mirroring `listPublicProjects`/`getPublicProject`) so the
+   * RBAC boundary between the authority and citizen data paths stays explicit
+   * at the call site, per D33.
+   */
+  getPublicProjectPayments(reference: number, signal?: AbortSignal): Promise<PaymentInstallment[]>;
+
   /** All grievances known to the provider, newest first. */
   listGrievances(signal?: AbortSignal): Promise<Grievance[]>;
 

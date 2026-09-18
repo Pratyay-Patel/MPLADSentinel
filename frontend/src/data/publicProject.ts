@@ -1,14 +1,18 @@
-import type { LifecycleState, Money, Project, ProjectHouse } from './types';
+import type { LifecycleState, Money, PaymentDataState, Project, ProjectHouse } from './types';
 
 /**
  * The publicly releasable view of an MPLADS work — the only project shape a
  * citizen ever receives.
  *
- * It deliberately does not carry risk scores, data-quality flags,
- * payment-retrieval internals or source-provenance framing. In `api` mode this
- * is enforced server-side (`GET /api/public/works` returns only these fields);
- * in `demo` mode {@link toPublicProject} narrows a `Project` to the same shape.
- * A component cannot leak what it never receives.
+ * It deliberately does not carry risk scores, data-quality flags, or
+ * source-provenance framing. It does carry the **recorded-payment summary**
+ * (`paymentDataState`, `recordedPayments`, `paymentInstallments`) — plain
+ * public expenditure data, not a risk signal — so the Citizen Portal can show
+ * where the money went (the individual installment rows come from the
+ * separate {@link DataProvider.getPublicProjectPayments} call). In `api` mode
+ * this is enforced server-side (`GET /api/public/works` returns only these
+ * fields); in `demo` mode {@link toPublicProject} narrows a `Project` to the
+ * same shape. A component cannot leak what it never receives.
  */
 export interface PublicProject {
   /** Source work id — used only to address the public detail route. Never shown as an official id. */
@@ -31,6 +35,11 @@ export interface PublicProject {
   recommendedYear: number | null;
   completedOn: string | null;
   completionYear: number | null;
+  /** Whether payment records were retrieved for this work, and their availability. */
+  paymentDataState: PaymentDataState;
+  /** Total recorded via the payments endpoint; null unless `paymentDataState === 'FETCHED_PRESENT'`. */
+  recordedPayments: Money | null;
+  paymentInstallments: number | null;
 }
 
 /** Narrows a full {@link Project} to the publicly releasable {@link PublicProject}. */
@@ -55,5 +64,8 @@ export function toPublicProject(project: Project): PublicProject {
     recommendedYear: project.recommendedYear,
     completedOn: project.completedOn,
     completionYear: project.completionYear,
+    paymentDataState: project.paymentDataState,
+    recordedPayments: project.recordedPayments,
+    paymentInstallments: project.paymentInstallments,
   };
 }

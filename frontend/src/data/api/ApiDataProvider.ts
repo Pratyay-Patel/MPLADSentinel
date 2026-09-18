@@ -30,6 +30,7 @@ import {
 } from '../../api/recommendations';
 import {
   getPublicWork,
+  getPublicWorkPayments,
   getPublicWorks,
   getWork,
   getWorkDuplicates,
@@ -155,6 +156,15 @@ export function createApiDataProvider(): DataProvider {
       } catch (error) {
         if (isNotFound(error)) return [];
         throw toProviderError('getProjectPayments', error);
+      }
+    },
+
+    async getPublicProjectPayments(reference, signal) {
+      try {
+        return await getPublicWorkPayments(reference, signal);
+      } catch (error) {
+        if (isNotFound(error)) return [];
+        throw toProviderError('getPublicProjectPayments', error);
       }
     },
 

@@ -1,6 +1,7 @@
 import { hasReadableDescription, workTitle } from '../../format';
 import type { DataProvider } from '../DataProvider';
 import type { PublicProject } from '../publicProject';
+import type { PaymentInstallment } from '../types';
 
 /**
  * Feature service for the Citizen Portal (`/citizen`) — a read-only, public view
@@ -24,6 +25,9 @@ export interface CitizenListData {
 export interface CitizenService {
   list(signal?: AbortSignal): Promise<CitizenListData>;
   get(reference: number, signal?: AbortSignal): Promise<PublicProject | null>;
+  /** Recorded payment installments for one work — same public expenditure data
+   *  as the authority Payments section, no risk/internal fields either way. */
+  getPayments(reference: number, signal?: AbortSignal): Promise<PaymentInstallment[]>;
 }
 
 function uniqSorted(values: (string | null | undefined)[]): string[] {
@@ -52,6 +56,9 @@ export function createCitizenService(provider: DataProvider): CitizenService {
     },
     get(reference, signal) {
       return provider.getPublicProject(reference, signal);
+    },
+    getPayments(reference, signal) {
+      return provider.getPublicProjectPayments(reference, signal);
     },
   };
 }

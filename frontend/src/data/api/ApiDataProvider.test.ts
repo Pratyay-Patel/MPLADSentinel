@@ -159,6 +159,18 @@ describe('ApiDataProvider', () => {
     expect(await provider.getPublicProject(42)).toBeNull();
   });
 
+  it('getPublicProjectPayments fetches the public payments sub-resource and returns [] on 404', async () => {
+    const rows = [
+      { ordinal: 0, amount: { amount: 900000, currency: 'INR' }, paidOn: '2026-04-01', vendorName: 'V', statusRaw: 'Payment Success', implementingAuthorityText: null },
+    ];
+    const fetchMock = stubFetch(jsonResponse(rows));
+    expect(await provider.getPublicProjectPayments(900000001)).toEqual(rows);
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/public/works/900000001/payments');
+
+    stubFetch(jsonResponse({}, { status: 404 }));
+    expect(await provider.getPublicProjectPayments(42)).toEqual([]);
+  });
+
   // --- risk (Phase B3) --------------------------------------------
 
   it('listProjectRisks fetches /api/works/risk and keys it by sourceWorkId', async () => {
