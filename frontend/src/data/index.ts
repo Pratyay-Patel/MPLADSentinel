@@ -94,6 +94,13 @@ export {
 export { useAnalyticsService } from './features/useAnalyticsService';
 
 export {
+  createCitizenAnalyticsService,
+  buildCitizenAnalytics,
+  type CitizenAnalyticsService,
+} from './features/citizenAnalytics';
+export { useCitizenAnalyticsService } from './features/useCitizenAnalyticsService';
+
+export {
   createAssistantService,
   type AssistantService,
   type AssistantData,
