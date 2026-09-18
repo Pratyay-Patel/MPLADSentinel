@@ -7,9 +7,12 @@ export interface MapRegion {
   /** State/UT name as it appears in the data. */
   state: string;
   works: number;
-  high: number;
-  medium: number;
-  low: number;
+  /** Risk-level split for the tooltip. Omit entirely where the viewer's role
+   *  isn't permitted to see risk (e.g. the Citizen Portal) — the tooltip then
+   *  shows only the work count, never a misleading "0 high / 0 medium / 0 low". */
+  high?: number;
+  medium?: number;
+  low?: number;
 }
 
 export interface IndiaLeafletMapProps {
@@ -69,9 +72,11 @@ export function IndiaLeafletMap({ regions, ariaLabel }: IndiaLeafletMapProps) {
               <span className="india-map__tip-body">
                 <span className="india-map__tip-name">{coord.name}</span>
                 <span className="india-map__tip-total">{region.works} works</span>
-                <span className="india-map__tip-mix">
-                  <b>{region.high}</b> high · <b>{region.medium}</b> medium · <b>{region.low}</b> low
-                </span>
+                {region.high != null && region.medium != null && region.low != null && (
+                  <span className="india-map__tip-mix">
+                    <b>{region.high}</b> high · <b>{region.medium}</b> medium · <b>{region.low}</b> low
+                  </span>
+                )}
               </span>
             </Tooltip>
           </CircleMarker>

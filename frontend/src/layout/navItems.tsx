@@ -90,6 +90,12 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Citizen Portal', to: '/citizen', area: 'citizen', icon: <UsersIcon /> },
       {
+        label: 'Transparency Overview',
+        to: '/citizen/overview',
+        area: 'citizen',
+        icon: <LayoutGridIcon />,
+      },
+      {
         label: 'Recommend a Work',
         labelFor: (role) => (reviewsRecommendations(role) ? 'Recommended Works' : 'Recommend a Work'),
         to: '/recommend',

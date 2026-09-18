@@ -160,6 +160,15 @@ export {
 export { useCitizenService } from './features/useCitizenService';
 
 export {
+  createCitizenOverviewService,
+  buildCitizenOverview,
+  type CitizenOverviewService,
+  type CitizenOverviewData,
+  type CitizenStateCount,
+} from './features/citizenOverview';
+export { useCitizenOverviewService } from './features/useCitizenOverviewService';
+
+export {
   createGrievancesService,
   GRIEVANCE_CATEGORIES,
   GRIEVANCE_STATUSES,
