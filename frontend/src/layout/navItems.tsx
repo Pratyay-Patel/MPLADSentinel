@@ -108,6 +108,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: <TrendingUpIcon />,
       },
       {
+        label: 'Assistant (Public)',
+        to: '/citizen/assistant',
+        area: 'citizen',
+        icon: <ChatIcon />,
+      },
+      {
         label: 'Recommend a Work',
         labelFor: (role) => (reviewsRecommendations(role) ? 'Recommended Works' : 'Recommend a Work'),
         to: '/recommend',

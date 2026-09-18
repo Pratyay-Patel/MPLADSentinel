@@ -112,6 +112,17 @@ export {
 export { useAssistantService } from './features/useAssistantService';
 
 export {
+  createCitizenAssistantService,
+  type CitizenAssistantService,
+  type CitizenAssistantData,
+  type CitizenAssistantWork,
+  type CitizenAssistantMp,
+  type CitizenAssistantState,
+  type CitizenAssistantCategory,
+} from './features/citizenAssistant';
+export { useCitizenAssistantService } from './features/useCitizenAssistantService';
+
+export {
   createProjectDetailService,
   type ProjectDetailService,
   type ProjectDetailData,
