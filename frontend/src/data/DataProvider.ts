@@ -1,11 +1,15 @@
 import type { PublicProject } from './publicProject';
 import type {
+  AppNotification,
   AssignmentInput,
   AssignmentPatch,
   AuditEvidence,
   BackendHealth,
   DataSource,
+  DuplicatePairsResult,
   FieldOfficer,
+  FundRequest,
+  FundRequestInput,
   Grievance,
   GrievanceInput,
   GrievanceStatusPatch,
@@ -14,6 +18,11 @@ import type {
   Project,
   ProjectRisk,
   ProjectSummary,
+  SignOffConfirmInput,
+  SignOffRequestInput,
+  WorkRecommendation,
+  WorkRecommendationInput,
+  WorkRecommendationStatusPatch,
 } from './types';
 
 /**
@@ -68,10 +77,28 @@ export interface DataProvider {
   listProjectRisks(signal?: AbortSignal): Promise<Record<number, ProjectRisk>>;
 
   /**
+   * De-duplication of works (requirements F7, decision D35): the
+   * highest-scoring candidate duplicate pairs across all ingested works
+   * (capped for responsiveness) plus the true count found, computed live —
+   * nothing is persisted.
+   */
+  listDuplicateWorks(signal?: AbortSignal): Promise<DuplicatePairsResult>;
+
+  /**
    * Payment installments for one work. Empty unless the work's
    * `paymentDataState === 'FETCHED_PRESENT'`.
    */
   getProjectPayments(sourceWorkId: number, signal?: AbortSignal): Promise<PaymentInstallment[]>;
+
+  /**
+   * The same recorded-payment installments as {@link getProjectPayments}, but
+   * on the public track (no session beyond "any authenticated user" required).
+   * The rows themselves carry no risk/internal fields either way — this is a
+   * separate method (mirroring `listPublicProjects`/`getPublicProject`) so the
+   * RBAC boundary between the authority and citizen data paths stays explicit
+   * at the call site, per D33.
+   */
+  getPublicProjectPayments(reference: number, signal?: AbortSignal): Promise<PaymentInstallment[]>;
 
   /** All grievances known to the provider, newest first. */
   listGrievances(signal?: AbortSignal): Promise<Grievance[]>;
@@ -95,10 +122,34 @@ export interface DataProvider {
   /** Request an inspection of a work by a field officer; returns the stored record. */
   createAssignment(input: AssignmentInput, signal?: AbortSignal): Promise<InspectionAssignment>;
 
-  /** Advance an assignment's status / edit it (authority action); returns the updated record. */
+  /** Advance an assignment's status / edit it (authority action); returns the updated record.
+   * `patch.status` may only be `IN_PROGRESS` — completing/cancelling goes through the
+   * dual-authority sign-off methods below. */
   updateAssignment(
     id: string,
     patch: AssignmentPatch,
+    signal?: AbortSignal,
+  ): Promise<InspectionAssignment>;
+
+  /**
+   * Dual-authority sign-off, step 1: an authority requests completing or
+   * cancelling an open assignment. Does not change the real status — a second,
+   * different authority must call {@link confirmAssignmentSignOff}.
+   */
+  requestAssignmentSignOff(
+    id: string,
+    input: SignOffRequestInput,
+    signal?: AbortSignal,
+  ): Promise<InspectionAssignment>;
+
+  /**
+   * Dual-authority sign-off, step 2: a second, different authority confirms a
+   * pending sign-off, finalising the real status. Rejects if the confirming
+   * user is the one who made the request.
+   */
+  confirmAssignmentSignOff(
+    id: string,
+    input: SignOffConfirmInput,
     signal?: AbortSignal,
   ): Promise<InspectionAssignment>;
 
@@ -113,4 +164,63 @@ export interface DataProvider {
     limit?: number,
     signal?: AbortSignal,
   ): Promise<AuditEvidence>;
+
+  /** The signed-in user's active (non-cleared) notifications, newest first. */
+  listNotifications(signal?: AbortSignal): Promise<AppNotification[]>;
+
+  /** Marks one of the caller's own notifications read; returns the updated record. */
+  markNotificationRead(id: string, signal?: AbortSignal): Promise<AppNotification>;
+
+  /** Marks every active notification of the caller's read. */
+  markAllNotificationsRead(signal?: AbortSignal): Promise<void>;
+
+  /**
+   * "Clear all" — hides every active notification from {@link listNotifications}.
+   * The records are not deleted server-side, only dismissed.
+   */
+  clearAllNotifications(signal?: AbortSignal): Promise<void>;
+
+  /**
+   * An authority flags a work as needing attention. Always lands in the single
+   * seeded District Authority account's notifications for now — there is no
+   * per-district account yet (decision D31).
+   */
+  sendSlaNotice(sourceWorkId: number, signal?: AbortSignal): Promise<void>;
+
+  /** All work recommendations known to the provider, newest first. */
+  listWorkRecommendations(signal?: AbortSignal): Promise<WorkRecommendation[]>;
+
+  /** Record a new work recommendation and return the stored record (with its tracking number). */
+  submitWorkRecommendation(
+    input: WorkRecommendationInput,
+    signal?: AbortSignal,
+  ): Promise<WorkRecommendation>;
+
+  /** Advance a work recommendation's review status (authority action); returns the updated record. */
+  updateWorkRecommendationStatus(
+    id: string,
+    patch: WorkRecommendationStatusPatch,
+    signal?: AbortSignal,
+  ): Promise<WorkRecommendation>;
+
+  /**
+   * Escrow & Fund Control. A District Officer sees only their own requests
+   * (server-scoped); MoSPI sees all.
+   */
+  listFundRequests(signal?: AbortSignal): Promise<FundRequest[]>;
+
+  /** One fund request by id, or `null` if unknown (or not the caller's own). */
+  getFundRequest(id: string, signal?: AbortSignal): Promise<FundRequest | null>;
+
+  /**
+   * District Officer only. Decided `APPROVED`/`REJECTED` immediately by the
+   * eligibility engine — the returned record already carries the decision.
+   */
+  createFundRequest(input: FundRequestInput, signal?: AbortSignal): Promise<FundRequest>;
+
+  /**
+   * MoSPI only. Records that an approved request's release notice was sent
+   * to the bank — a database flag only, never a real bank transaction.
+   */
+  sendFundReleaseNotice(id: string, signal?: AbortSignal): Promise<FundRequest>;
 }

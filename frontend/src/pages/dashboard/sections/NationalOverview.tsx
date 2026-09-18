@@ -16,25 +16,28 @@ import { formatCount, formatINRCompact } from '../../../format';
 export function NationalOverview({ data }: { data: DashboardData }) {
   return (
     <section aria-label="National overview">
-      <SectionHeader title="National overview" />
+      <SectionHeader title="National overview" icon={<LayoutGridIcon />} tone="info" />
       <div className="ui-metric-grid">
         <MetricCard
           icon={<LayoutGridIcon />}
           label="Total works"
           value={formatCount(data.totalWorks)}
           hint="MPLADS works tracked"
+          tone="info"
         />
         <MetricCard
           icon={<ClipboardListIcon />}
           label="Recommended works"
           value={formatCount(data.recommendedWorks)}
           hint="Works at the recommended stage"
+          tone="warning"
         />
         <MetricCard
           icon={<CircleCheckIcon />}
           label="Completed works"
           value={formatCount(data.completedWorks)}
           hint="Works at the completed stage"
+          tone="success"
         />
         <MetricCard
           icon={<RupeeIcon />}

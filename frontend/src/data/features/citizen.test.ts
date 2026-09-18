@@ -5,16 +5,7 @@ import { createDemoDataProvider } from '../demo/DemoDataProvider';
 import { ProviderError } from '../errors';
 import { createCitizenService, toPublicProject } from './citizen';
 
-const INTERNAL_KEYS = [
-  'sourceName',
-  'dataQualityFlags',
-  'paymentDataState',
-  'recordedPayments',
-  'paymentInstallments',
-  'seenInRecommended',
-  'seenInCompleted',
-  'risk',
-];
+const INTERNAL_KEYS = ['sourceName', 'dataQualityFlags', 'seenInRecommended', 'seenInCompleted', 'risk'];
 
 describe('toPublicProject', () => {
   it('carries only publicly releasable fields', async () => {
@@ -27,6 +18,15 @@ describe('toPublicProject', () => {
     expect(publicProject.reference).toBe(project.sourceWorkId);
     expect(publicProject.memberOfParliament).toBe(project.mpName);
     expect(publicProject.estimatedCost).toEqual(project.estimatedCost);
+  });
+
+  it('carries the recorded-payment summary (public expenditure data, not a risk signal)', async () => {
+    const [project] = await createDemoDataProvider().listProjects();
+    const publicProject = toPublicProject(project);
+
+    expect(publicProject.paymentDataState).toBe(project.paymentDataState);
+    expect(publicProject.recordedPayments).toEqual(project.recordedPayments);
+    expect(publicProject.paymentInstallments).toBe(project.paymentInstallments);
   });
 });
 
@@ -51,6 +51,13 @@ describe('createCitizenService', () => {
     expect('dataQualityFlags' in (found ?? {})).toBe(false);
 
     expect(await service.get(-1)).toBeNull();
+  });
+
+  it('gets payment installments for a work via the public track', async () => {
+    const service = createCitizenService(createDemoDataProvider());
+    const [project] = await createDemoDataProvider().listProjects();
+    const payments = await service.getPayments(project.sourceWorkId);
+    expect(Array.isArray(payments)).toBe(true);
   });
 
   it('propagates a listPublicProjects failure', async () => {

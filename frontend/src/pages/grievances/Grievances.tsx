@@ -13,6 +13,7 @@ import {
   type GrievancesData,
   type GrievancesService,
 } from '../../data';
+import { getLocalPhoto, readFileAsDataUrl, setLocalPhoto } from '../../data/localPhotos';
 import { formatDate } from '../../format';
 import {
   Button,
@@ -23,6 +24,9 @@ import {
   Input,
   LoadingState,
   PageHeader,
+  EditablePhotoCell,
+  PhotoCell,
+  PhotoUploadField,
   SectionHeader,
   Select,
   StatusBadge,
@@ -31,6 +35,7 @@ import {
   type SelectOption,
   type StatusTone,
 } from '../../ui';
+import { ClipboardListIcon, InboxIcon, ListIcon, SendIcon } from '../../ui/icons';
 
 const STATUS_TONE: Record<GrievanceStatus, StatusTone> = {
   SUBMITTED: 'info',
@@ -172,12 +177,21 @@ function CitizenGrievances({
   service: GrievancesService;
 }) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [photo, setPhoto] = useState<File | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [added, setAdded] = useState<Grievance[]>([]);
   const [confirmation, setConfirmation] = useState<string | null>(null);
+  // Bumped after a post-submission photo edit so the table re-reads
+  // localPhotos.ts — that store isn't React state, so nothing else forces it.
+  const [, refreshPhotos] = useState(0);
   const workLabel = useWorkLabel(data);
+
+  async function onPhotoSelected(id: string, file: File) {
+    setLocalPhoto('grievance', id, await readFileAsDataUrl(file));
+    refreshPhotos((n) => n + 1);
+  }
 
   // Rows derive from the provider list (so a re-fetch flows through) plus any
   // grievances submitted in this view, pinned on top without duplication.
@@ -198,8 +212,14 @@ function CitizenGrievances({
     setConfirmation(null);
     try {
       const saved = await service.submit(toInput(form));
+      // Photo is frontend-only (no real upload path yet, see localPhotos.ts) —
+      // stash it before the row renders so the table picks it up immediately.
+      if (photo) {
+        setLocalPhoto('grievance', saved.id, await readFileAsDataUrl(photo));
+      }
       setAdded((prev) => [saved, ...prev]);
       setForm(EMPTY_FORM);
+      setPhoto(null);
       setConfirmation(`Grievance recorded — reference ${saved.id}.`);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Could not submit the grievance.');
@@ -215,16 +235,28 @@ function CitizenGrievances({
     { key: 'subject', header: 'Subject', render: (g) => g.subject },
     { key: 'work', header: 'About', render: (g) => workLabel(g.workReference) },
     { key: 'status', header: 'Status', render: (g) => <StatusBadgeFor status={g.status} /> },
+    { key: 'note', header: 'Action note', render: (g) => g.actionNote ?? '—' },
+    {
+      key: 'photo',
+      header: 'Photo',
+      render: (g) => (
+        <EditablePhotoCell
+          url={getLocalPhoto('grievance', g.id)}
+          onSelect={(file) => onPhotoSelected(g.id, file)}
+        />
+      ),
+    },
   ];
 
   return (
     <>
       <Card>
-        <SectionHeader title="Raise a grievance" />
+        <SectionHeader title="Raise a grievance" icon={<ClipboardListIcon />} tone="warning" />
         <form className="grv-form" onSubmit={onSubmit} noValidate>
           <div className="grv-form__grid">
             <Select
               label="Category"
+              required
               value={form.category}
               error={errors.category}
               options={[
@@ -246,6 +278,7 @@ function CitizenGrievances({
 
           <Input
             label="Subject"
+            required
             value={form.subject}
             error={errors.subject}
             maxLength={120}
@@ -255,6 +288,7 @@ function CitizenGrievances({
 
           <Textarea
             label="Description"
+            required
             value={form.description}
             error={errors.description}
             rows={5}
@@ -277,6 +311,13 @@ function CitizenGrievances({
             />
           </div>
 
+          <PhotoUploadField
+            label="Photo of the issue (optional)"
+            hint="A photo showing the problem, if you have one."
+            file={photo}
+            onChange={setPhoto}
+          />
+
           {submitError ? (
             <p className="ui-field__error" role="alert">
               {submitError}
@@ -289,7 +330,7 @@ function CitizenGrievances({
           ) : null}
 
           <div>
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" variant="primary" icon={<SendIcon />} disabled={submitting}>
               {submitting ? 'Submitting…' : 'Submit grievance'}
             </Button>
           </div>
@@ -297,7 +338,7 @@ function CitizenGrievances({
       </Card>
 
       <Card>
-        <SectionHeader title="Grievances you have raised" />
+        <SectionHeader title="Grievances you have raised" icon={<ListIcon />} tone="info" />
         <DataTable
           caption="Grievances you have raised"
           columns={columns}
@@ -375,6 +416,7 @@ function ReviewQueue({
       ),
     },
     { key: 'work', header: 'About', render: (g) => workLabel(g.workReference) },
+    { key: 'photo', header: 'Photo', render: (g) => <PhotoCell url={getLocalPhoto('grievance', g.id)} /> },
     {
       key: 'status',
       header: 'Status',
@@ -426,6 +468,8 @@ function ReviewQueue({
     <Card>
       <SectionHeader
         title="Review queue"
+        icon={<InboxIcon />}
+        tone="danger"
         description={
           canAction
             ? 'Move each grievance through Submitted → Under review → Actioned → Closed and note the action taken.'

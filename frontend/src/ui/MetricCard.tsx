@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import type { StatusTone } from './StatusBadge';
+
 export interface MetricCardProps {
   label: string;
   /** Pre-formatted value — this component does no number formatting. */
@@ -10,15 +12,17 @@ export interface MetricCardProps {
   aside?: ReactNode;
   /** Optional decorative leading icon (line icon from `ui/icons`). */
   icon?: ReactNode;
+  /** Icon-chip accent, reusing the shared semantic tones. Defaults to the brand tint. */
+  tone?: Extract<StatusTone, 'info' | 'success' | 'warning' | 'danger' | 'neutral'>;
 }
 
 /** A single KPI tile. Presentation only — the caller supplies formatted values. */
-export function MetricCard({ label, value, hint, aside, icon }: MetricCardProps) {
+export function MetricCard({ label, value, hint, aside, icon, tone }: MetricCardProps) {
   return (
-    <div className="ui-metric">
+    <div className="ui-metric" data-tone={tone}>
       <div className="ui-metric__head">
         {icon && (
-          <span className="ui-metric__icon" aria-hidden>
+          <span className="ui-metric__icon" data-tone={tone} aria-hidden>
             {icon}
           </span>
         )}

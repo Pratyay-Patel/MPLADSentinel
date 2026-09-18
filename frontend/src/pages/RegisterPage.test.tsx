@@ -28,10 +28,10 @@ function renderRegister() {
 }
 
 function fillValidForm() {
-  fireEvent.change(screen.getByLabelText('Your name'), { target: { value: 'Jane Citizen' } });
-  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'jane@example.com' } });
-  fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'goodpassword' } });
-  fireEvent.change(screen.getByLabelText('Confirm password'), { target: { value: 'goodpassword' } });
+  fireEvent.change(screen.getByLabelText(/^Your name/), { target: { value: 'Jane Citizen' } });
+  fireEvent.change(screen.getByLabelText(/^Email/), { target: { value: 'jane@example.com' } });
+  fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: 'goodpassword' } });
+  fireEvent.change(screen.getByLabelText(/^Confirm password/), { target: { value: 'goodpassword' } });
 }
 
 afterEach(() => {
@@ -44,7 +44,7 @@ describe('RegisterPage', () => {
     renderRegister();
 
     expect(await screen.findByRole('button', { name: 'Create account' })).toBeInTheDocument();
-    for (const label of ['Your name', 'Email', 'Password', 'Confirm password']) {
+    for (const label of [/^Your name/, /^Email/, /^Password/, /^Confirm password/]) {
       expect(screen.getByLabelText(label)).toBeInTheDocument();
     }
     expect(screen.getByRole('link', { name: 'Sign in' })).toBeInTheDocument();
@@ -73,10 +73,10 @@ describe('RegisterPage', () => {
     await screen.findByRole('button', { name: 'Create account' });
 
     // mismatched passwords
-    fireEvent.change(screen.getByLabelText('Your name'), { target: { value: 'Jane' } });
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'jane@example.com' } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'goodpassword' } });
-    fireEvent.change(screen.getByLabelText('Confirm password'), { target: { value: 'different' } });
+    fireEvent.change(screen.getByLabelText(/^Your name/), { target: { value: 'Jane' } });
+    fireEvent.change(screen.getByLabelText(/^Email/), { target: { value: 'jane@example.com' } });
+    fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: 'goodpassword' } });
+    fireEvent.change(screen.getByLabelText(/^Confirm password/), { target: { value: 'different' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('passwords do not match');

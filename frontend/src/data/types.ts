@@ -136,6 +136,57 @@ export interface ProjectRisk {
   assessedAt: string | null;
 }
 
+/** Confidence banding for a {@link DuplicatePair} match. Mirrors backend `DuplicateConfidence`. */
+export type DuplicateConfidence = 'LOW' | 'MEDIUM' | 'HIGH';
+
+/**
+ * A lightweight view of one side of a {@link DuplicatePair} — enough to
+ * display without a second fetch per work.
+ *
+ * `estimatedCost` here is a plain rupee amount (not {@link Money}) because
+ * that's what `GET /api/works/duplicates` actually returns — the backend
+ * `WorkSummary` record serialises `estimatedCost` as a bare number, unlike
+ * `Project.estimatedCost`, which the works DTOs wrap with a currency.
+ */
+export interface DuplicateWorkSummary {
+  sourceWorkId: number;
+  workDescription: string | null;
+  state: string | null;
+  district: string | null;
+  category: string | null;
+  estimatedCost: number | null;
+}
+
+/**
+ * A candidate duplicate: two ingested works in the same state, district and
+ * category whose description text and/or estimated cost look like the same
+ * physical work listed or sanctioned more than once (requirements F7,
+ * decision D35). Rule-based and deterministic, same style as
+ * {@link ProjectRisk} (decision D22) — an investigation indicator, never
+ * proof that two records are actually the same work.
+ */
+export interface DuplicatePair {
+  workA: DuplicateWorkSummary;
+  workB: DuplicateWorkSummary;
+  /** 0–100, capped. */
+  score: number;
+  confidence: DuplicateConfidence;
+  /** Human-readable contributing signals — never empty. */
+  reasons: string[];
+}
+
+/**
+ * `GET /api/works/duplicates` response shape. Across the full ingested
+ * dataset the engine can surface tens of thousands of candidate pairs, so the
+ * backend returns only the highest-scoring ones — `totalFound` is the true
+ * count before that cap, so the UI can say "top N of total" honestly instead
+ * of silently truncating.
+ */
+export interface DuplicatePairsResult {
+  pairs: DuplicatePair[];
+  totalFound: number;
+}
+
 /** Minimal backend connectivity signal, mapped from `GET /api/health`. */
 export interface BackendHealth {
   status: string;
@@ -171,6 +222,48 @@ export interface Grievance extends GrievanceInput {
 /** Fields an authority can change when reviewing a grievance. */
 export interface GrievanceStatusPatch {
   status: GrievanceStatus;
+  actionNote?: string | null;
+}
+
+/** Review lifecycle of a citizen work recommendation. Authorities advance it through these states. */
+export type RecommendationStatus = 'SUBMITTED' | 'UNDER_REVIEW' | 'RECOMMENDED' | 'REJECTED';
+
+/** Whether the proposed site is rural or urban. */
+export type LocationCategory = 'RURAL' | 'URBAN';
+
+/** What a citizen fills in on the "recommend a work" form (e-SAKSHI-style). */
+export interface WorkRecommendationInput {
+  fullName: string;
+  mobileNumber: string;
+  email: string | null;
+  state: string;
+  mpName: string;
+  constituency: string;
+  locationCategory: LocationCategory;
+  /** A maps link or lat,lng pair for the proposed site, in place of free-text locality. */
+  gpsCoordinatesLink: string;
+  workTitle: string;
+  category: string;
+  description: string;
+}
+
+/** A work recommendation record. `id` / `trackingNumber` / `submittedAt` / `status` are assigned on submit. */
+export interface WorkRecommendation extends WorkRecommendationInput {
+  id: string;
+  /** Citizen-facing acknowledgement code, e.g. `CIT-2026-000042`. */
+  trackingNumber: string;
+  /** ISO timestamp of submission. */
+  submittedAt: string;
+  status: RecommendationStatus;
+  /** Authority note recorded with the most recent status change, or null. */
+  actionNote: string | null;
+  /** ISO timestamp of the last status/note change (= `submittedAt` until acted on). */
+  updatedAt: string;
+}
+
+/** Fields an authority can change when reviewing a work recommendation. */
+export interface WorkRecommendationStatusPatch {
+  status: RecommendationStatus;
   actionNote?: string | null;
 }
 
@@ -221,9 +314,32 @@ export interface InspectionAssignment {
   assignedAt: string;
   /** ISO timestamp of the last status/detail change. */
   updatedAt: string;
+  /** Target status (COMPLETED/CANCELLED) awaiting a second, different authority's
+   * dual-sign-off confirmation. Null when nothing is pending. */
+  pendingStatus: AssignmentStatus | null;
+  /** The requesting authority's username — compare against the current session's
+   * username to know whether "you" may confirm this (a different user must). */
+  pendingRequestedByUsername: string | null;
+  pendingRequestedByName: string | null;
+  pendingJustification: string | null;
+  /** ISO timestamp, or null when nothing is pending. */
+  pendingRequestedAt: string | null;
 }
 
-/** Fields an authority can change on an assignment. A non-null value is applied. */
+/** Body of the first dual-authority sign-off request (completing or cancelling). */
+export interface SignOffRequestInput {
+  targetStatus: AssignmentStatus;
+  justification: string;
+}
+
+/** Body of the second, different authority's sign-off confirmation. */
+export interface SignOffConfirmInput {
+  justification: string;
+}
+
+/** Fields an authority can change on an assignment. A non-null value is applied.
+ * `status` may only be set to `IN_PROGRESS` here — completing/cancelling requires
+ * dual-authority sign-off (see {@link SignOffRequestInput}). */
 export interface AssignmentPatch {
   status?: AssignmentStatus;
   dueDate?: string | null;
@@ -246,4 +362,105 @@ export interface AuditPhoto {
 export interface AuditEvidence {
   photos: AuditPhoto[];
   configured: boolean;
+}
+
+/**
+ * What generated a {@link AppNotification}: a real HIGH-risk work seeded from
+ * the rule-based risk engine, or an authority's explicit "Send Notice" action.
+ */
+export type NotificationCategory = 'HIGH_RISK_WORK' | 'SLA_NOTICE';
+
+/**
+ * An in-app notification (the header bell). "Clearing" a notification hides it
+ * from this list but does not delete it server-side — see {@link DataProvider}.
+ */
+export interface AppNotification {
+  id: string;
+  category: NotificationCategory;
+  title: string;
+  message: string;
+  /** The work this notification is about, or null for a general one. */
+  sourceWorkId: number | null;
+  read: boolean;
+  /** ISO timestamp. */
+  createdAt: string;
+}
+
+/**
+ * Escrow decision for a {@link FundRequest}. Mirrors backend
+ * `FundRequestStatus`. Decided automatically at creation — there is no
+ * `PENDING`/`UNDER_REVIEW` state and no manual approve/reject action.
+ */
+export type FundRequestStatus = 'APPROVED' | 'REJECTED';
+
+/**
+ * One entry in a fund request's permanent chronological history. Mirrors
+ * backend `FundRequestEventType`; also the exact event list the feature spec
+ * names as future blockchain-mappable events.
+ */
+export type FundRequestEventType = 'CREATED' | 'APPROVED' | 'REJECTED' | 'RELEASE_NOTICE_SENT';
+
+export interface FundRequestEvent {
+  eventType: FundRequestEventType;
+  /** ISO timestamp. */
+  occurredAt: string;
+  /** Who caused this event, or null for the automatic decision events. */
+  actorName: string | null;
+  detail: string | null;
+}
+
+/** What a District Officer fills in to request an installment. */
+export interface FundRequestInput {
+  sourceWorkId: number;
+  requestedAmount: number;
+  remarks: string | null;
+}
+
+/**
+ * A District Officer's installment/fund-release request (Escrow & Fund
+ * Control). Decided `APPROVED`/`REJECTED` automatically at creation by a
+ * rule-based eligibility engine (same style as {@link ProjectRisk}, decision
+ * D22) — there is no manual approve/reject step. Rejected requests are never
+ * deleted or hidden.
+ *
+ * `sanctionedAmount`/`alreadyReleased`/`remaining*` reflect the work's
+ * *current* figures — computed live, not frozen at request time, same as how
+ * risk is always assessed against current data rather than a snapshot.
+ */
+export interface FundRequest {
+  id: string;
+  sourceWorkId: number;
+  workTitle: string;
+  district: string | null;
+
+  requestedByUsername: string | null;
+  requestedByName: string | null;
+  requestedAmount: number;
+  remarks: string | null;
+  /** ISO timestamp. */
+  createdAt: string;
+
+  sanctionedAmount: number | null;
+  alreadyReleased: number | null;
+  remainingBeforeRequest: number | null;
+  remainingAfterRequest: number | null;
+
+  /** The work's current risk assessment (D22) — shown for context. */
+  riskLevel: RiskLevel | null;
+  riskReasons: string[];
+
+  status: FundRequestStatus;
+  decisionReason: string;
+  /** ISO timestamp. */
+  decidedAt: string;
+
+  /** "Send Release Notice to Bank" — a database flag only, never a real bank call. */
+  releaseNoticeSent: boolean;
+  releaseNoticeByName: string | null;
+  /** ISO timestamp, or null if not sent yet. */
+  releaseNoticeAt: string | null;
+
+  /** ISO timestamp. */
+  updatedAt: string;
+  history: FundRequestEvent[];
 }

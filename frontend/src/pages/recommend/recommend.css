@@ -1,0 +1,179 @@
+/**
+ * Recommend a Work (`/recommend`) — layout only. Reuses the shared tokens and
+ * primitives (Input, Textarea, Select, Button, DataTable, Card, StatusBadge),
+ * mirroring the Grievances screen's structure.
+ */
+
+.rec-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.rec-form__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
+.rec-form__ok {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-success-fg);
+}
+
+.rec-certify {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.rec-certify input {
+  margin-top: 3px;
+  flex: none;
+}
+
+.rec-subsection {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--color-brand-100);
+  color: var(--color-brand-700);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+}
+
+.rec-subsection:not(:first-child) {
+  margin-top: var(--space-2);
+}
+
+.rec-guideline {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
+  border-radius: var(--radius-md);
+  color: var(--color-info-fg);
+}
+
+.rec-guideline svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.rec-guideline p {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.rec-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.rec-filters__count {
+  padding-bottom: var(--space-2);
+}
+
+.rec-subject {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 28rem;
+}
+
+.rec-subject__title {
+  font-weight: var(--weight-semibold);
+}
+
+.rec-subject__desc {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.rec-gps-link {
+  display: inline-block;
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+}
+
+a.rec-gps-link {
+  color: var(--color-link);
+}
+
+/* Confirmation panel shown in place of the form after a successful submit. */
+.rec-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.rec-confirm__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-success-bg);
+  color: var(--color-success-fg);
+}
+
+.rec-confirm__icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.rec-confirm__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+}
+
+.rec-confirm__lede {
+  margin: 0;
+  max-width: 32rem;
+  color: var(--color-text-secondary);
+}
+
+.rec-confirm__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-brand-050);
+  border: var(--border);
+  border-radius: var(--radius-md);
+}
+
+.rec-confirm__box-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.rec-confirm__box-value {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  font-family: var(--font-mono, monospace);
+  color: var(--color-brand-800);
+}
+
+.rec-confirm__box-sub {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}

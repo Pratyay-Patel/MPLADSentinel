@@ -614,3 +614,174 @@ frontend `inspections` / `audit` service + page tests. Also repaired a
 pre-existing `AuthUserSeederTest` failure touched by the `WebRole` change.
 **Not yet verified:** the Pinata call against a real account (awaiting a
 `PINATA_JWT`).
+
+## D35 — De-duplication of Works (F7)
+
+Decision: F7 ("Duplicate / Similar Project Detection") means detecting
+duplicate/near-duplicate **ingested work records** — not duplicate
+field-inspection photos, which was the user's initial read of the
+competitor-inspired feature name. Confirmed against the exact requirements.md
+wording ("duplicate or highly similar **works** using project details,
+location and financial information") — it was always about project records.
+Photo-duplicate detection (perceptual hashing etc.) is explicitly out of scope
+here: the Flutter field app is camera-only (no gallery picker) and geotags
+every photo before uploading straight to IPFS, which already structurally
+prevents recycled/duplicate site-photo fraud — no additional code is needed to
+defend against something the upload path already rules out.
+
+F7 is P2/deferred in `docs/round1-scope.md`; building it now is a bonus
+feature for the nationals submission, not catching up on a missed item.
+
+**Implemented.** New `com.mpladsentinel.mplads.dedup` package, deliberately
+separate from `com.mpladsentinel.mplads.risk` — `RiskRuleSet`'s own javadoc and
+decision D22 explicitly declare duplicate-detection out of that class's scope,
+so this is a new engine following the *same style* (deterministic, explainable,
+rule-based, no ML), not a rule bolted onto D22's rule set.
+
+- `DuplicateWorkEngine` groups all ingested works by `(state, district,
+  category)` — comparing works in different locations or sectors isn't
+  meaningful — then `DuplicateRuleSet` scores every pair within a group.
+  Being in the same group alone never flags a pair (too many legitimate,
+  distinct works share a state/district/category); at least one real signal
+  must fire:
+  - **Near-identical `workDescription`** — Jaccard similarity over lowercase
+    word tokens (>2 chars) ≥ 0.6 → weight 60.
+  - **Overlapping `estimatedCost`** — relative difference ≤ 0.2 → weight 30.
+  - Score capped at 100; `HIGH` ≥ 60, `MEDIUM` ≥ 30, `LOW` otherwise. A pair is
+    only ever produced when at least one signal fired (score > 0).
+- Exposed at `GET /api/works/duplicates`, matched by the existing
+  `/api/works/**` authority-only rule in `SecurityConfig` (same role set as
+  risk: MoSPI/State/District/Auditor/MP) — simpler and consistent with every
+  other `/api/works/**` sub-route, rather than the narrower "MoSPI, District"
+  audience column in `docs/requirements.md`'s F7 row (a deliberate
+  simplification, since citizens — the only role actually excluded either
+  way — see neither).
+- No schema change and nothing persisted — computed live from the `work`
+  table, same as risk.
+- Frontend: `DataProvider.listDuplicateWorks()` on both providers;
+  `ApiDataProvider` calls `GET /api/works/duplicates`; `DemoDataProvider`
+  computes via `frontend/src/data/dedup/duplicateRules.ts`, a 1:1 port of the
+  backend engine (same grouping, thresholds and weights), following the same
+  "kept in sync by hand" convention as `risk/rules.ts` for D22. New
+  `/duplicates` page (Monitoring group, area `duplicates`, same
+  authority-only role set as `risk`) lists candidate pairs with confidence,
+  reasons, and links into each work's detail page.
+- The demo fixture set (14 hand-crafted works, each already shaped to
+  exercise one risk-rule outcome) has no two works sharing a state, district
+  and category, so it genuinely produces zero pairs — the demo build's
+  `/duplicates` page correctly shows an honest empty state. Adding fixture
+  works to force a demo example was tried and reverted: the demo project
+  count is hardcoded (`14`) across ~11 unrelated test files, so doing this
+  properly would need updating all of them for a purely cosmetic demo
+  concern — out of proportion for a bonus feature. Real ingested data (6,000+
+  works) will produce real pairs once connected.
+
+**Verified.** Backend: `DuplicateWorkEngineTest` (7 unit tests — grouping
+boundaries, each signal individually, combined scoring, missing-data
+skip-not-throw) + `DuplicateControllerTest` (2 integration tests over real
+Postgres — RBAC gating, a real near-duplicate pair found and an unrelated work
+excluded). Full backend suite: 253/253 pass. Frontend: `tsc -b --force` and
+`eslint` clean; `duplicateRules.test.ts` (7 tests, mirroring the backend unit
+tests) + `DuplicateWorks.test.tsx` (3 tests: renders pairs, filters by
+confidence, empty state) + `ApiDataProvider`/`DemoDataProvider` additions; full
+suite 340/342 pass (2 pre-existing unrelated failures). Real production
+`vite build` succeeds. Visually verified in-browser (demo build): nav item
+and route render correctly for an authority role and are inaccessible/hidden
+for Citizen; the empty state renders correctly given the demo fixture set's
+genuine absence of duplicates.
+
+## D36 — Escrow & Fund Control
+
+Decision: a bonus feature (outside `docs/requirements.md`'s numbered list,
+same status as F7/D35) built to a fully-specified user request. A District
+Officer requests an installment against a work; the request is decided
+**immediately and automatically** — `APPROVED` or `REJECTED` — by a
+deterministic, two-rule eligibility engine. MoSPI / Ministry Authority sees
+every request (including rejected ones, kept permanently visible) and can
+record a "release notice to bank" on an approved one.
+
+There is deliberately **no manual approve/reject step and no
+`PENDING`/`UNDER_REVIEW` state.** The user's own spec never gives MoSPI an
+approve/reject action (only "Send Release Notice to Bank"), and confirmed
+directly: the rule engine's result "should be either approved or rejected...
+immediately," considering not just risk but also fund sufficiency, since the
+spec's own rejection example ("Requested amount exceeds the remaining
+sanctioned project funds") is about funds, not risk.
+
+Per the explicit exclusion list, this is **frontend + database only**: no
+Hyperledger Fabric, chaincode, smart contracts, blockchain transactions,
+wallets, cryptocurrency, bank APIs, or real INR transfers. "Send Release
+Notice to Bank" sets a boolean + timestamp in Postgres — nothing else. A
+`fund_request_event` history table records every transition
+(`CREATED`/`APPROVED`/`REJECTED`/`RELEASE_NOTICE_SENT`) so a future blockchain
+integration could map each row to a ledger transaction without any schema
+change — not built now, per the spec's own "Future Blockchain Concept — DO NOT
+IMPLEMENT NOW" section.
+
+**Implemented.**
+
+- New `com.mpladsentinel.escrow` package (mirrors `grievance`/`recommendation`
+  /`inspection` as a top-level feature package, distinct from
+  `com.mpladsentinel.mplads.*` core/risk/dedup logic). `FundEligibilityEngine`
+  runs two independent checks at request-creation time, either capable of
+  rejecting alone:
+  1. **Funds check** — `requestedAmount` must not exceed the work's remaining
+     sanctioned funds (`estimatedCost − alreadyReleased`, where
+     `alreadyReleased` only counts once `paymentDataState ==
+     FETCHED_PRESENT`). No `estimatedCost` → reject (eligibility can't be
+     verified).
+  2. **Risk check** — reuses the existing `RiskEngine` (D22); the work's
+     current risk must not be `HIGH`.
+  `APPROVED` only when both pass. `Work` gets no new column — it deliberately
+  has no "sanctioned amount" field (guarded by an existing test,
+  `FlywayMigrationTest.speculativeColumnsAreAbsentFromWork`); all money fields
+  live on the new `fund_request` table instead.
+- `V13__fund_request.sql` adds `fund_request` (one row per installment
+  request, status `APPROVED`/`REJECTED`, decision reason, release-notice
+  fields) and `fund_request_event` (append-only history — deliberately a
+  dedicated table, not `InspectionAssignment`'s single-`updated_at` reuse,
+  since the spec requires a full chronological trail).
+- `POST /api/fund-requests` → `hasRole("DISTRICT")`; `POST
+  /api/fund-requests/*/release-notice` → `hasRole("MOSPI")`; `GET
+  /api/fund-requests, /api/fund-requests/**` → `hasAnyRole("DISTRICT",
+  "MOSPI")` — the first 2-role-only RBAC block in `SecurityConfig` (every
+  prior block was 3+ roles). District additionally only sees its own requests
+  (scoped in the service layer; a District Officer requesting someone else's
+  request id gets 404, not 403, to avoid leaking existence).
+- Frontend: `frontend/src/auth/access.ts` gets the first 2-role-only `Area`
+  (`FUND_CONTROL_ROLES = ['DISTRICT', 'MOSPI']`). New `/escrow` (list,
+  role-aware District/Ministry views) and `/escrow/:id` (detail) pages, nav
+  item "Escrow & Fund Control" in the Monitoring group.
+  `frontend/src/data/escrow/fundEligibility.ts` is a 1:1 TypeScript port of
+  the backend engine (same two checks, same order), following the "kept in
+  sync by hand" convention from `risk/rules.ts` (D22) and
+  `dedup/duplicateRules.ts` (D35) — used both by `DemoDataProvider` and by
+  every provider's create-request screen to preview the likely decision
+  before submitting.
+- `FundRequest`'s money fields are plain `number`, not `Money`-wrapped
+  (matches the backend DTO, which serializes `BigDecimal` as a bare JSON
+  number) — same asymmetry already established for `DuplicateWorkSummary`
+  (D35); screens wrap them inline (`{ amount, currency: 'INR' }`) before
+  calling the shared `formatINRCompact`/`formatINRExact` formatters.
+
+**Verified.** Backend: `FundEligibilityEngineTest` (7 unit tests — unknown
+sanctioned amount, funds exceeded, already-released payments accounted for,
+unfetched payment data not counted, HIGH risk rejects, approves when funds
+sufficient and risk not HIGH, approves when risk unknown) +
+`FundRequestControllerTest` (6 integration tests over real Postgres — RBAC
+gating, a real approval with full history, a real rejection that stays
+visible, release notice sent once and rejected on a second attempt or on a
+rejected request, District-sees-only-its-own vs. MoSPI-sees-all). Full
+backend suite: 248/248 pass. Frontend: `tsc -b --force` and `eslint` clean;
+`fundEligibility.test.ts` (11 tests, mirrors the backend unit tests) +
+`escrow.test.ts` (5 tests — summary tallies, provider delegation, a demo
+request rejected on funds, an unknown-work error) +
+`EscrowFundControl.test.tsx` (4 tests — District empty state, submitting a
+request and seeing the decision, a funds-exceeded rejection, the Ministry
+view sending a release notice) + `FundRequestDetail.test.tsx` (4 tests — not
+found, every required section renders plus a release notice send, a rejected
+request stays visible with its reason, a District Officer never sees the
+release-notice action) + `ApiDataProvider`/`DemoDataProvider`/`projects.test.ts`
+/`GovernmentDashboard.test.tsx` stub additions; full suite 364/366 pass (the
+same 2 pre-existing, unrelated failures as D35). Real production `vite build`
+succeeds.

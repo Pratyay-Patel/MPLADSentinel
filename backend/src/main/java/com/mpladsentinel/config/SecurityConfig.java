@@ -105,6 +105,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/grievances").hasRole("CITIZEN")
                         .requestMatchers(HttpMethod.PATCH, "/api/grievances/**")
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT")
+                        // Work recommendations: a citizen proposes one; MoSPI/State/District
+                        // act on it; anyone signed in may read (the service scopes a
+                        // citizen to their own) — same shape as grievances.
+                        .requestMatchers(HttpMethod.POST, "/api/recommendations").hasRole("CITIZEN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/recommendations/**")
+                        .hasAnyRole("MOSPI", "STATE", "DISTRICT")
                         // Inspection assignments: MoSPI/State/District create and
                         // advance them; any government role reads. FIELD_OFFICER
                         // has no authority-facing endpoints and is excluded here.
@@ -112,11 +118,33 @@ public class SecurityConfig {
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT")
                         .requestMatchers(HttpMethod.PATCH, "/api/assignments/**")
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT")
+                        // Dual-authority sign-off (completing/cancelling requires a second,
+                        // different authority to confirm) — same role set as PATCH; the
+                        // "different user" check itself is enforced in the service layer.
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/assignments/*/sign-off/request", "/api/assignments/*/sign-off/confirm")
+                        .hasAnyRole("MOSPI", "STATE", "DISTRICT")
                         .requestMatchers(HttpMethod.GET,
                                 "/api/assignments", "/api/assignments/**", "/api/officers")
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT", "AUDITOR", "MP")
                         // Audit Trail evidence (Pinata-backed) — any government role.
                         .requestMatchers(HttpMethod.GET, "/api/audit/**")
+                        .hasAnyRole("MOSPI", "STATE", "DISTRICT", "AUDITOR", "MP")
+                        // Escrow & Fund Control: only these two roles are involved. A
+                        // District Officer requests an installment; the eligibility
+                        // engine decides APPROVED/REJECTED automatically (no manual
+                        // approve/reject endpoint exists); MoSPI reads everything and
+                        // records a release notice on an approved request. GET is
+                        // scoped in the service layer (District sees only their own).
+                        .requestMatchers(HttpMethod.POST, "/api/fund-requests").hasRole("DISTRICT")
+                        .requestMatchers(HttpMethod.POST, "/api/fund-requests/*/release-notice")
+                        .hasRole("MOSPI")
+                        .requestMatchers(HttpMethod.GET, "/api/fund-requests", "/api/fund-requests/**")
+                        .hasAnyRole("DISTRICT", "MOSPI")
+                        // Notifications: any signed-in role reads/marks their own (matched
+                        // by anyRequest below); only the roles that see the Dashboard /
+                        // Risk & Alerts pages may send an attention notice.
+                        .requestMatchers(HttpMethod.POST, "/api/notifications/send-notice")
                         .hasAnyRole("MOSPI", "STATE", "DISTRICT", "AUDITOR", "MP")
                         // Everything else requires a signed-in session.
                         .anyRequest().authenticated());

@@ -6,6 +6,8 @@ import type {
   AssignmentStatus,
   FieldOfficer,
   InspectionAssignment,
+  SignOffConfirmInput,
+  SignOffRequestInput,
 } from '../types';
 
 /**
@@ -70,6 +72,18 @@ export interface InspectionsService {
     patch: AssignmentPatch,
     signal?: AbortSignal,
   ): Promise<InspectionAssignment>;
+  /** Dual-authority sign-off, step 1 — request completing/cancelling. */
+  requestSignOff(
+    id: string,
+    input: SignOffRequestInput,
+    signal?: AbortSignal,
+  ): Promise<InspectionAssignment>;
+  /** Dual-authority sign-off, step 2 — a different authority confirms. */
+  confirmSignOff(
+    id: string,
+    input: SignOffConfirmInput,
+    signal?: AbortSignal,
+  ): Promise<InspectionAssignment>;
 }
 
 export function createInspectionsService(provider: DataProvider): InspectionsService {
@@ -91,5 +105,7 @@ export function createInspectionsService(provider: DataProvider): InspectionsSer
     },
     assign: (input, signal) => provider.createAssignment(input, signal),
     updateAssignment: (id, patch, signal) => provider.updateAssignment(id, patch, signal),
+    requestSignOff: (id, input, signal) => provider.requestAssignmentSignOff(id, input, signal),
+    confirmSignOff: (id, input, signal) => provider.confirmAssignmentSignOff(id, input, signal),
   };
 }

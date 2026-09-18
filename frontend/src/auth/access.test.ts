@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   actionsGrievances,
+  actionsRecommendations,
   AREA_ROLES,
   assignsInspections,
   canAccess,
   reviewsGrievances,
+  reviewsRecommendations,
 } from './access';
 import { ROLES } from './roles';
 
@@ -14,6 +16,7 @@ describe('canAccess', () => {
     for (const role of ROLES) {
       expect(canAccess(role, 'citizen')).toBe(true);
       expect(canAccess(role, 'grievances')).toBe(true);
+      expect(canAccess(role, 'recommendations')).toBe(true);
     }
   });
 
@@ -58,6 +61,24 @@ describe('grievance role split', () => {
     }
     for (const role of ['AUDITOR', 'MP', 'CITIZEN'] as const) {
       expect(actionsGrievances(role)).toBe(false);
+    }
+  });
+});
+
+describe('work recommendation role split', () => {
+  it('sends only the Citizen role to the submission form', () => {
+    expect(reviewsRecommendations('CITIZEN')).toBe(false);
+    for (const role of ['MOSPI', 'STATE', 'DISTRICT', 'AUDITOR', 'MP'] as const) {
+      expect(reviewsRecommendations(role)).toBe(true);
+    }
+  });
+
+  it('lets only MoSPI / State / District change a recommendation status', () => {
+    for (const role of ['MOSPI', 'STATE', 'DISTRICT'] as const) {
+      expect(actionsRecommendations(role)).toBe(true);
+    }
+    for (const role of ['AUDITOR', 'MP', 'CITIZEN'] as const) {
+      expect(actionsRecommendations(role)).toBe(false);
     }
   });
 });

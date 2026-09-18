@@ -106,6 +106,13 @@ public class InspectionAssignmentService {
     public Optional<AssignmentResponse> update(long id, UpdateAssignmentRequest request) {
         return assignments.findById(id).map(assignment -> {
             if (request.status() != null && request.status() != assignment.getStatus()) {
+                if (request.status() == AssignmentStatus.COMPLETED
+                        || request.status() == AssignmentStatus.CANCELLED) {
+                    throw new IllegalArgumentException(
+                            "Completing or cancelling an assignment requires dual-authority sign-off "
+                                    + "(POST /api/assignments/" + id + "/sign-off/request, then "
+                                    + "/sign-off/confirm by a different authority) — it cannot be set directly.");
+                }
                 if (!assignment.getStatus().canTransitionTo(request.status())) {
                     throw new IllegalArgumentException("Cannot move an assignment from "
                             + assignment.getStatus() + " to " + request.status());
@@ -121,6 +128,73 @@ public class InspectionAssignmentService {
             if (request.requiredPhotos() != null) {
                 assignment.setRequiredPhotos(clampRequiredPhotos(request.requiredPhotos()));
             }
+            assignment.touchUpdatedAt();
+            return single(assignments.save(assignment));
+        });
+    }
+
+    // --- dual-authority sign-off (migration V10) -------------------------
+
+    /**
+     * First authority: requests completing or cancelling an open assignment.
+     * Records the pending target status + justification; does not change the
+     * real status.
+     */
+    public Optional<AssignmentResponse> requestSignOff(long id, RequestSignOffRequest request,
+                                                       Long requestedByUserId) {
+        return assignments.findById(id).map(assignment -> {
+            if (!assignment.getStatus().isOpen()) {
+                throw new SignOffException(
+                        "This assignment is already " + assignment.getStatus() + ".");
+            }
+            AssignmentStatus target = request.targetStatus();
+            if (target != AssignmentStatus.COMPLETED && target != AssignmentStatus.CANCELLED) {
+                throw new IllegalArgumentException("targetStatus must be COMPLETED or CANCELLED.");
+            }
+            if (!assignment.getStatus().canTransitionTo(target)) {
+                throw new IllegalArgumentException("Cannot move an assignment from "
+                        + assignment.getStatus() + " to " + target);
+            }
+            if (assignment.getPendingStatus() != null) {
+                throw new SignOffException(
+                        "A sign-off is already pending for this assignment.");
+            }
+            assignment.requestSignOff(target, requestedByUserId, request.justification().trim());
+            assignment.touchUpdatedAt();
+            return single(assignments.save(assignment));
+        });
+    }
+
+    /**
+     * Second, different authority: confirms a pending sign-off. Rejects the
+     * same {@code app_user} who made the request — the core anti-corruption
+     * check. On success, finalises the real status and merges both written
+     * justifications into {@code note}.
+     */
+    public Optional<AssignmentResponse> confirmSignOff(long id, ConfirmSignOffRequest request,
+                                                       Long confirmingUserId, String confirmingUserName) {
+        return assignments.findById(id).map(assignment -> {
+            AssignmentStatus target = assignment.getPendingStatus();
+            if (target == null) {
+                throw new SignOffException("No sign-off is pending for this assignment.");
+            }
+            if (assignment.getPendingRequestedByUserId().equals(confirmingUserId)) {
+                throw new SignOffException(
+                        "A different authority must confirm this sign-off — the officer who "
+                                + "requested it cannot also confirm it.");
+            }
+            String requestedByName = users.findById(assignment.getPendingRequestedByUserId())
+                    .map(AppUser::getDisplayName)
+                    .orElse("an authority");
+            String label = target == AssignmentStatus.COMPLETED ? "Completion" : "Cancellation";
+            String combinedNote = label + " requested by " + requestedByName + ": "
+                    + assignment.getPendingJustification()
+                    + "\n" + label + " confirmed by " + confirmingUserName + ": "
+                    + request.justification().trim();
+
+            assignment.setStatus(target);
+            assignment.setNote(combinedNote);
+            assignment.clearPendingSignOff();
             assignment.touchUpdatedAt();
             return single(assignments.save(assignment));
         });
@@ -144,6 +218,9 @@ public class InspectionAssignmentService {
         for (InspectionAssignment row : rows) {
             ids.add(row.getOfficerId());
             ids.add(row.getAssignedByUserId());
+            if (row.getPendingRequestedByUserId() != null) {
+                ids.add(row.getPendingRequestedByUserId());
+            }
         }
         Map<Long, AppUser> byId = new LinkedHashMap<>();
         for (AppUser user : users.findAllById(ids)) {
@@ -176,6 +253,8 @@ public class InspectionAssignmentService {
                                                  Map<Long, String> titles) {
         AppUser officer = usersById.get(row.getOfficerId());
         AppUser assignedBy = usersById.get(row.getAssignedByUserId());
+        AppUser pendingRequestedBy = row.getPendingRequestedByUserId() == null ? null
+                : usersById.get(row.getPendingRequestedByUserId());
         return new AssignmentResponse(
                 String.valueOf(row.getId()),
                 row.getSourceWorkId(),
@@ -188,7 +267,12 @@ public class InspectionAssignmentService {
                 row.getNote(),
                 row.getRequiredPhotos(),
                 row.getAssignedAt(),
-                row.getUpdatedAt());
+                row.getUpdatedAt(),
+                row.getPendingStatus(),
+                pendingRequestedBy != null ? pendingRequestedBy.getUsername() : null,
+                pendingRequestedBy != null ? pendingRequestedBy.getDisplayName() : null,
+                row.getPendingJustification(),
+                row.getPendingRequestedAt());
     }
 
     private static String trimToNull(String value) {

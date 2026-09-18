@@ -1,17 +1,39 @@
 import {
+  confirmSignOff,
   getAssignments,
   getFieldOfficers,
   patchAssignment,
   postAssignment,
+  requestSignOff,
 } from '../../api/assignments';
 import { getAuditPhotos } from '../../api/audit';
 import { ApiError } from '../../api/client';
+import {
+  getFundRequest,
+  getFundRequests,
+  postFundReleaseNotice,
+  postFundRequest,
+} from '../../api/fundRequests';
 import { getGrievances, patchGrievanceStatus, postGrievance } from '../../api/grievances';
 import { getHealth } from '../../api/health';
 import {
+  clearAllNotifications,
+  getNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  sendSlaNotice,
+} from '../../api/notifications';
+import {
+  getWorkRecommendations,
+  patchWorkRecommendationStatus,
+  postWorkRecommendation,
+} from '../../api/recommendations';
+import {
   getPublicWork,
+  getPublicWorkPayments,
   getPublicWorks,
   getWork,
+  getWorkDuplicates,
   getWorkPayments,
   getWorkRisk,
   getWorks,
@@ -28,6 +50,14 @@ import type { BackendHealth, Project, ProjectRisk } from '../types';
  * debugging; the `_operation` label documents the call site but is never
  * surfaced to the user.
  */
+/** Extracts `message` from a parsed `ApiErrorResponse` body, if present. */
+function backendMessage(body: unknown): string | null {
+  if (body && typeof body === 'object' && 'message' in body && typeof body.message === 'string') {
+    return body.message;
+  }
+  return null;
+}
+
 function toProviderError(_operation: string, error: unknown): ProviderError {
   if (error instanceof ApiError) {
     if (error.status === 0) {
@@ -42,6 +72,14 @@ function toProviderError(_operation: string, error: unknown): ProviderError {
     }
     if (error.status === 403) {
       return new ProviderError('unavailable', 'You do not have access to this information.', {
+        cause: error,
+      });
+    }
+    if (error.status === 409 || error.status === 400) {
+      // Conflicts/validation failures (e.g. dual-authority sign-off rules, the
+      // open-assignment-already-exists check) carry a real, actionable message
+      // from the backend — worth showing instead of a generic one.
+      return new ProviderError('unavailable', backendMessage(error.body) ?? 'That action is not allowed right now.', {
         cause: error,
       });
     }
@@ -121,6 +159,15 @@ export function createApiDataProvider(): DataProvider {
       }
     },
 
+    async getPublicProjectPayments(reference, signal) {
+      try {
+        return await getPublicWorkPayments(reference, signal);
+      } catch (error) {
+        if (isNotFound(error)) return [];
+        throw toProviderError('getPublicProjectPayments', error);
+      }
+    },
+
     async listPublicProjects(signal) {
       try {
         return await getPublicWorks(signal);
@@ -157,6 +204,14 @@ export function createApiDataProvider(): DataProvider {
         return byWorkId;
       } catch (error) {
         throw toProviderError('listProjectRisks', error);
+      }
+    },
+
+    async listDuplicateWorks(signal) {
+      try {
+        return await getWorkDuplicates(signal);
+      } catch (error) {
+        throw toProviderError('listDuplicateWorks', error);
       }
     },
 
@@ -216,11 +271,124 @@ export function createApiDataProvider(): DataProvider {
       }
     },
 
+    async requestAssignmentSignOff(id, input, signal) {
+      try {
+        return await requestSignOff(id, input, signal);
+      } catch (error) {
+        throw toProviderError('requestAssignmentSignOff', error);
+      }
+    },
+
+    async confirmAssignmentSignOff(id, input, signal) {
+      try {
+        return await confirmSignOff(id, input, signal);
+      } catch (error) {
+        throw toProviderError('confirmAssignmentSignOff', error);
+      }
+    },
+
     async getAuditPhotos(sourceWorkId, limit, signal) {
       try {
         return await getAuditPhotos(sourceWorkId, limit, signal);
       } catch (error) {
         throw toProviderError('getAuditPhotos', error);
+      }
+    },
+
+    async listNotifications(signal) {
+      try {
+        return await getNotifications(signal);
+      } catch (error) {
+        throw toProviderError('listNotifications', error);
+      }
+    },
+
+    async markNotificationRead(id, signal) {
+      try {
+        return await markNotificationRead(id, signal);
+      } catch (error) {
+        throw toProviderError('markNotificationRead', error);
+      }
+    },
+
+    async markAllNotificationsRead(signal) {
+      try {
+        await markAllNotificationsRead(signal);
+      } catch (error) {
+        throw toProviderError('markAllNotificationsRead', error);
+      }
+    },
+
+    async clearAllNotifications(signal) {
+      try {
+        await clearAllNotifications(signal);
+      } catch (error) {
+        throw toProviderError('clearAllNotifications', error);
+      }
+    },
+
+    async sendSlaNotice(sourceWorkId, signal) {
+      try {
+        await sendSlaNotice(sourceWorkId, signal);
+      } catch (error) {
+        throw toProviderError('sendSlaNotice', error);
+      }
+    },
+
+    async listWorkRecommendations(signal) {
+      try {
+        return await getWorkRecommendations(signal);
+      } catch (error) {
+        throw toProviderError('listWorkRecommendations', error);
+      }
+    },
+
+    async submitWorkRecommendation(input, signal) {
+      try {
+        return await postWorkRecommendation(input, signal);
+      } catch (error) {
+        throw toProviderError('submitWorkRecommendation', error);
+      }
+    },
+
+    async updateWorkRecommendationStatus(id, patch, signal) {
+      try {
+        return await patchWorkRecommendationStatus(id, patch, signal);
+      } catch (error) {
+        throw toProviderError('updateWorkRecommendationStatus', error);
+      }
+    },
+
+    async listFundRequests(signal) {
+      try {
+        return await getFundRequests(signal);
+      } catch (error) {
+        throw toProviderError('listFundRequests', error);
+      }
+    },
+
+    async getFundRequest(id, signal) {
+      try {
+        return await getFundRequest(id, signal);
+      } catch (error) {
+        if (isNotFound(error)) return null;
+        throw toProviderError('getFundRequest', error);
+      }
+    },
+
+    async createFundRequest(input, signal) {
+      try {
+        return await postFundRequest(input, signal);
+      } catch (error) {
+        throw toProviderError('createFundRequest', error);
+      }
+    },
+
+    async sendFundReleaseNotice(id, signal) {
+      try {
+        return await postFundReleaseNotice(id, signal);
+      } catch (error) {
+        throw toProviderError('sendFundReleaseNotice', error);
       }
     },
   };

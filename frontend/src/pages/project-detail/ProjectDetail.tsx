@@ -11,13 +11,17 @@ import {
   KeyValueList,
   LoadingState,
   PageHeader,
+  ProjectLocationMap,
   SectionHeader,
   StatusBadge,
 } from '../../ui';
+import { CalendarIcon, InfoIcon, MapPinIcon, NetworkIcon, RupeeIcon, ShieldIcon } from '../../ui/icons';
 import { DetailTimeline } from './DetailTimeline';
 import { flagLabel, houseLabel, LIFECYCLE_LABEL, LIFECYCLE_TONE } from './labels';
 import { PaymentsSection } from './PaymentsSection';
 import { RiskInsights } from './RiskInsights';
+import { computeVendorConcentration } from './vendorConcentration';
+import { VendorConcentrationGraph } from './VendorConcentrationGraph';
 
 /**
  * Project Details (`/projects/:id`) — the full record for a single MPLADS work,
@@ -112,11 +116,12 @@ export function ProjectDetail() {
 
 function ProjectDetailView({ data, showRisk }: { data: ProjectDetailData; showRisk: boolean }) {
   const { project, payments, risk } = data;
+  const vendorConcentration = computeVendorConcentration(payments);
 
   return (
     <>
       <Card>
-        <SectionHeader title="Overview" />
+        <SectionHeader title="Overview" icon={<InfoIcon />} tone="info" />
         <KeyValueList
           items={[
             {
@@ -142,7 +147,7 @@ function ProjectDetailView({ data, showRisk }: { data: ProjectDetailData; showRi
       </Card>
 
       <Card>
-        <SectionHeader title="Location" />
+        <SectionHeader title="Location" icon={<MapPinIcon />} tone="warning" />
         <KeyValueList
           items={[
             { label: 'State', value: project.state ?? '—' },
@@ -150,16 +155,19 @@ function ProjectDetailView({ data, showRisk }: { data: ProjectDetailData; showRi
             { label: 'Location', value: project.locationRaw ?? '—' },
           ]}
         />
-        <p className="detail-note">
-          Location is recorded as a free-text description. Map coordinates are not maintained for
-          MPLADS works.
-        </p>
+        <ProjectLocationMap
+          state={project.state}
+          district={project.district}
+          riskLevel={showRisk ? risk?.level : undefined}
+        />
       </Card>
 
       <Card>
         <SectionHeader
           title="Financials"
           description="The recommended estimate and the final cost are separate figures; they are never merged."
+          icon={<RupeeIcon />}
+          tone="success"
         />
         <KeyValueList
           items={[
@@ -173,16 +181,34 @@ function ProjectDetailView({ data, showRisk }: { data: ProjectDetailData; showRi
 
       <PaymentsSection project={project} payments={payments} />
 
+      {showRisk && vendorConcentration && (
+        <Card>
+          <SectionHeader
+            title="Vendor concentration (HHI)"
+            description="How this work's recorded payments are split across vendors — computed live from the payment installments above."
+            icon={<NetworkIcon />}
+            tone={vendorConcentration.concentrationLabel === 'Highly concentrated' ? 'danger' : 'warning'}
+          />
+          <VendorConcentrationGraph
+            data={vendorConcentration}
+            workTitle={workTitle(project.workDescription, project.sourceWorkId)}
+            riskScore={risk?.score}
+          />
+        </Card>
+      )}
+
       <Card>
         <SectionHeader
           title="Timeline"
           description="Key dates recorded for this work, in chronological order."
+          icon={<CalendarIcon />}
+          tone="neutral"
         />
         <DetailTimeline project={project} payments={payments} />
       </Card>
 
       <Card>
-        <SectionHeader title="Data source & quality" />
+        <SectionHeader title="Data source & quality" icon={<ShieldIcon />} tone="neutral" />
         <KeyValueList
           items={[
             { label: 'Data source', value: 'MPLADS works data' },

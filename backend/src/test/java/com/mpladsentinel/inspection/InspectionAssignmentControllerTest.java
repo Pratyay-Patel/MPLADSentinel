@@ -209,7 +209,7 @@ class InspectionAssignmentControllerTest extends AbstractPostgresIntegrationTest
 
     @Test
     @SuppressWarnings("unchecked")
-    void statusAdvancesAssignedToInProgressToCompletedButNotBackwards() {
+    void statusAdvancesAssignedToInProgressButNotBackwardsAndNotDirectlyToCompleted() {
         long workId = newWork("Library block");
         String id = (String) createAssignment(workId, "OFF104", "mospi").get("id");
 
@@ -218,14 +218,98 @@ class InspectionAssignmentControllerTest extends AbstractPostgresIntegrationTest
         assertThat(toInProgress.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(toInProgress.getBody().get("status")).isEqualTo("IN_PROGRESS");
 
-        ResponseEntity<Map> toCompleted = rest.exchange("/api/assignments/" + id, HttpMethod.PATCH,
-                body(Map.of("status", "COMPLETED"), "district"), Map.class);
-        assertThat(toCompleted.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(toCompleted.getBody().get("status")).isEqualTo("COMPLETED");
+        // Completing/cancelling directly via PATCH is no longer allowed — dual-authority
+        // sign-off (below) is required instead.
+        ResponseEntity<String> directToCompleted = rest.exchange("/api/assignments/" + id, HttpMethod.PATCH,
+                body(Map.of("status", "COMPLETED"), "district"), String.class);
+        assertThat(directToCompleted.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 
         ResponseEntity<String> backwards = rest.exchange("/api/assignments/" + id, HttpMethod.PATCH,
                 body(Map.of("status", "ASSIGNED"), "district"), String.class);
         assertThat(backwards.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    // --- dual-authority sign-off -------------------------------------
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void requestingSignOffDoesNotChangeStatusUntilADifferentAuthorityConfirms() {
+        long workId = newWork("Overhead water tank");
+        String id = (String) createAssignment(workId, "OFF101", "mospi").get("id");
+
+        ResponseEntity<Map> requested = rest.exchange("/api/assignments/" + id + "/sign-off/request",
+                HttpMethod.POST,
+                body(Map.of("targetStatus", "COMPLETED", "justification", "Verified on-site."), "mospi"),
+                Map.class);
+        assertThat(requested.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(requested.getBody().get("status")).isEqualTo("ASSIGNED");
+        assertThat(requested.getBody().get("pendingStatus")).isEqualTo("COMPLETED");
+        assertThat(requested.getBody().get("pendingRequestedByUsername")).isEqualTo("mospi");
+        assertThat(requested.getBody().get("pendingJustification")).isEqualTo("Verified on-site.");
+
+        ResponseEntity<Map> confirmed = rest.exchange("/api/assignments/" + id + "/sign-off/confirm",
+                HttpMethod.POST,
+                body(Map.of("justification", "Independently reviewed, concur."), "district"),
+                Map.class);
+        assertThat(confirmed.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(confirmed.getBody().get("status")).isEqualTo("COMPLETED");
+        assertThat(confirmed.getBody().get("pendingStatus")).isNull();
+        assertThat((String) confirmed.getBody().get("note"))
+                .contains("Verified on-site.")
+                .contains("Independently reviewed, concur.");
+    }
+
+    @Test
+    void theSameAuthorityCannotConfirmItsOwnSignOffRequest() {
+        long workId = newWork("Solar streetlight installation");
+        String id = (String) createAssignment(workId, "OFF102", "state").get("id");
+
+        rest.exchange("/api/assignments/" + id + "/sign-off/request", HttpMethod.POST,
+                body(Map.of("targetStatus", "CANCELLED", "justification", "Site inaccessible."), "state"),
+                Map.class);
+
+        ResponseEntity<String> selfConfirm = rest.exchange("/api/assignments/" + id + "/sign-off/confirm",
+                HttpMethod.POST,
+                body(Map.of("justification", "Confirming my own call."), "state"),
+                String.class);
+        assertThat(selfConfirm.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void confirmingWithNoPendingSignOffIsRejected() {
+        long workId = newWork("Community toilet block");
+        String id = (String) createAssignment(workId, "OFF103", "mospi").get("id");
+
+        ResponseEntity<String> confirm = rest.exchange("/api/assignments/" + id + "/sign-off/confirm",
+                HttpMethod.POST, body(Map.of("justification", "n/a"), "district"), String.class);
+        assertThat(confirm.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void requestingASecondSignOffWhileOnePendingIsRejected() {
+        long workId = newWork("Panchayat office repair");
+        String id = (String) createAssignment(workId, "OFF104", "mospi").get("id");
+
+        rest.exchange("/api/assignments/" + id + "/sign-off/request", HttpMethod.POST,
+                body(Map.of("targetStatus", "COMPLETED", "justification", "First pass."), "mospi"), Map.class);
+
+        ResponseEntity<String> second = rest.exchange("/api/assignments/" + id + "/sign-off/request",
+                HttpMethod.POST,
+                body(Map.of("targetStatus", "COMPLETED", "justification", "Second pass."), "district"),
+                String.class);
+        assertThat(second.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void auditorAndMpCannotRequestOrConfirmSignOff() {
+        long workId = newWork("Health sub-centre upgrade");
+        String id = (String) createAssignment(workId, "OFF105", "mospi").get("id");
+
+        for (String role : new String[] {"auditor", "mp"}) {
+            assertThat(rest.exchange("/api/assignments/" + id + "/sign-off/request", HttpMethod.POST,
+                    body(Map.of("targetStatus", "COMPLETED", "justification", "x"), role), String.class)
+                    .getStatusCode()).as(role).isEqualTo(HttpStatus.FORBIDDEN);
+        }
     }
 
     @Test

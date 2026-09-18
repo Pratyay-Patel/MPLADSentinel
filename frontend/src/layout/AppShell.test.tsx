@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 
 import { SessionProvider } from '../auth';
 import type { Role } from '../auth';
+import { DataProviderProvider } from '../data';
+import { createDemoDataProvider } from '../data/demo/DemoDataProvider';
 import { AppShell } from './AppShell';
 
 function renderAt(path: string, role: Role = 'MOSPI') {
@@ -23,7 +25,9 @@ function renderAt(path: string, role: Role = 'MOSPI') {
   );
   return render(
     <SessionProvider initialRole={role}>
-      <RouterProvider router={router} />
+      <DataProviderProvider provider={createDemoDataProvider()}>
+        <RouterProvider router={router} />
+      </DataProviderProvider>
     </SessionProvider>,
   );
 }
@@ -32,12 +36,14 @@ const NAV_LABELS = [
   'Overview',
   'Projects',
   'Risk & Alerts',
+  'Duplicate Works',
   'Compare MPs',
   'Inspections',
   'Analytics',
   'Assistant',
   'Audit',
   'Citizen Portal',
+  'Recommended Works',
   'Grievances',
 ];
 
@@ -65,6 +71,7 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Grievances' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Overview' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Risk & Alerts' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Duplicate Works' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Inspections' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Audit' })).not.toBeInTheDocument();
   });

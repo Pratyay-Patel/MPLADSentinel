@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 
-import { assignsInspections, useCurrentRole } from '../../auth';
+import { assignsInspections, useCurrentRole, useSession } from '../../auth';
 import {
   ASSIGNMENT_STATUS_LABEL,
   ASSIGNMENT_STATUSES,
@@ -21,6 +21,7 @@ import { formatDate } from '../../format';
 import {
   Button,
   Card,
+  ConfirmDialog,
   DataTable,
   EmptyState,
   ErrorState,
@@ -32,9 +33,11 @@ import {
   Select,
   StatusBadge,
   Textarea,
+  Toast,
   type Column,
   type StatusTone,
 } from '../../ui';
+import { CameraIcon, ClipboardListIcon } from '../../ui/icons';
 import './inspections.css';
 
 const STATUS_TONE: Record<AssignmentStatus, StatusTone> = {
@@ -132,11 +135,21 @@ function InspectionsBody({
   service: InspectionsService;
   canAssign: boolean;
 }) {
+  const { user } = useSession();
   const [added, setAdded] = useState<InspectionAssignment[]>([]);
   const [overrides, setOverrides] = useState<Record<string, InspectionAssignment>>({});
   const [statusFilter, setStatusFilter] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** Step 1 of dual-authority sign-off: requesting COMPLETED/CANCELLED. */
+  const [signOffRequestTarget, setSignOffRequestTarget] = useState<{
+    assignment: InspectionAssignment;
+    status: AssignmentStatus;
+  } | null>(null);
+  /** Step 2: a different authority confirms the pending request. */
+  const [signOffConfirmTarget, setSignOffConfirmTarget] = useState<InspectionAssignment | null>(
+    null,
+  );
 
   const addedIds = new Set(added.map((a) => a.id));
   const rows = [...added, ...data.assignments.filter((a) => !addedIds.has(a.id))].map(
@@ -153,6 +166,50 @@ function InspectionsBody({
       setNotice(`Assignment ${saved.id} → ${ASSIGNMENT_STATUS_LABEL[saved.status]}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not update the assignment.');
+    }
+  }
+
+  /** Step 1 of dual-authority sign-off — request completing/cancelling. */
+  async function requestSignOff(
+    assignment: InspectionAssignment,
+    status: AssignmentStatus,
+    justification: string,
+  ) {
+    setError(null);
+    setNotice(null);
+    try {
+      const saved = await service.requestSignOff(assignment.id, { targetStatus: status, justification });
+      setOverrides((prev) => ({ ...prev, [saved.id]: saved }));
+      setNotice(
+        `Assignment ${saved.id}: sign-off requested for ${ASSIGNMENT_STATUS_LABEL[status]} — a different authority must confirm.`,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not request sign-off.');
+    }
+  }
+
+  /** Step 2 — a different authority confirms the pending sign-off. */
+  async function confirmSignOff(assignment: InspectionAssignment, justification: string) {
+    setError(null);
+    setNotice(null);
+    try {
+      const saved = await service.confirmSignOff(assignment.id, { justification });
+      setOverrides((prev) => ({ ...prev, [saved.id]: saved }));
+      setNotice(`Assignment ${saved.id} → ${ASSIGNMENT_STATUS_LABEL[saved.status]} (dual sign-off complete).`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not confirm sign-off.');
+    }
+  }
+
+  /** COMPLETED / CANCELLED are consequential — they close the assignment out and
+   * feed the real Audit Trail, so they require dual-authority sign-off: this
+   * officer's written request, then a *different* authority's written
+   * confirmation. IN_PROGRESS is just a routine step and applies immediately. */
+  function requestStatusChange(assignment: InspectionAssignment, status: AssignmentStatus) {
+    if (status === 'COMPLETED' || status === 'CANCELLED') {
+      setSignOffRequestTarget({ assignment, status });
+    } else {
+      void advance(assignment, status);
     }
   }
 
@@ -198,6 +255,26 @@ function InspectionsBody({
       key: 'status',
       header: 'Status',
       render: (a) => {
+        if (a.pendingStatus) {
+          const canConfirm =
+            canAssign && (!user?.username || user.username !== a.pendingRequestedByUsername);
+          return (
+            <div className="insp-cell">
+              <StatusBadgeFor status={a.status} />
+              <span className="insp-cell__sub">
+                Awaiting sign-off for {ASSIGNMENT_STATUS_LABEL[a.pendingStatus]} — requested by{' '}
+                {a.pendingRequestedByName ?? a.pendingRequestedByUsername ?? 'an authority'}
+              </span>
+              {canConfirm ? (
+                <Button type="button" size="sm" onClick={() => setSignOffConfirmTarget(a)}>
+                  Confirm sign-off
+                </Button>
+              ) : canAssign ? (
+                <span className="insp-cell__sub">A different authority must confirm.</span>
+              ) : null}
+            </div>
+          );
+        }
         const next = nextAssignmentStatuses(a.status);
         if (!canAssign || next.length === 0) {
           return <StatusBadgeFor status={a.status} />;
@@ -213,7 +290,7 @@ function InspectionsBody({
             ]}
             onChange={(e) => {
               const value = e.target.value as AssignmentStatus;
-              if (value !== a.status) advance(a, value);
+              if (value !== a.status) requestStatusChange(a, value);
             }}
           />
         );
@@ -273,6 +350,8 @@ function InspectionsBody({
       <Card>
         <SectionHeader
           title="Assignments"
+          icon={<ClipboardListIcon />}
+          tone="info"
           description={
             canAssign
               ? 'Advance each assignment as the officer works. A completed assignment appears on that work’s Audit Trail.'
@@ -300,11 +379,7 @@ function InspectionsBody({
             {error}
           </p>
         ) : null}
-        {notice ? (
-          <p className="insp-form__ok" role="status">
-            {notice}
-          </p>
-        ) : null}
+        {notice ? <Toast key={notice} message={notice} onDismiss={() => setNotice(null)} /> : null}
 
         <DataTable
           caption="Inspection assignments"
@@ -323,6 +398,52 @@ function InspectionsBody({
           }
         />
       </Card>
+
+      <ConfirmDialog
+        open={signOffRequestTarget != null}
+        title={
+          signOffRequestTarget
+            ? `Request sign-off: mark assignment ${signOffRequestTarget.assignment.id} as ${ASSIGNMENT_STATUS_LABEL[signOffRequestTarget.status]}?`
+            : ''
+        }
+        description="This is only step one — a different authority must independently confirm before the assignment actually closes and this is recorded on the Audit Trail. Type the word below and give a reason to request it."
+        confirmWord={signOffRequestTarget?.status === 'COMPLETED' ? 'COMPLETE' : 'CANCEL'}
+        confirmLabel={
+          signOffRequestTarget
+            ? `Request ${ASSIGNMENT_STATUS_LABEL[signOffRequestTarget.status]}`
+            : 'Request'
+        }
+        tone={signOffRequestTarget?.status === 'CANCELLED' ? 'danger' : 'success'}
+        onCancel={() => setSignOffRequestTarget(null)}
+        onConfirm={(justification) => {
+          if (!signOffRequestTarget) return;
+          void requestSignOff(signOffRequestTarget.assignment, signOffRequestTarget.status, justification);
+          setSignOffRequestTarget(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={signOffConfirmTarget != null}
+        title={
+          signOffConfirmTarget?.pendingStatus
+            ? `Confirm sign-off: mark assignment ${signOffConfirmTarget.id} as ${ASSIGNMENT_STATUS_LABEL[signOffConfirmTarget.pendingStatus]}?`
+            : ''
+        }
+        description={
+          signOffConfirmTarget
+            ? `Requested by ${signOffConfirmTarget.pendingRequestedByName ?? signOffConfirmTarget.pendingRequestedByUsername ?? 'another authority'}: “${signOffConfirmTarget.pendingJustification ?? ''}”. As a different authority, give your own written justification to independently confirm.`
+            : ''
+        }
+        confirmWord={signOffConfirmTarget?.pendingStatus === 'COMPLETED' ? 'COMPLETE' : 'CANCEL'}
+        confirmLabel="Finalize sign-off"
+        tone={signOffConfirmTarget?.pendingStatus === 'CANCELLED' ? 'danger' : 'success'}
+        onCancel={() => setSignOffConfirmTarget(null)}
+        onConfirm={(justification) => {
+          if (!signOffConfirmTarget) return;
+          void confirmSignOff(signOffConfirmTarget, justification);
+          setSignOffConfirmTarget(null);
+        }}
+      />
     </>
   );
 }
@@ -385,7 +506,7 @@ function AssignCard({
 
   return (
     <Card>
-      <SectionHeader title="Request an inspection" />
+      <SectionHeader title="Request an inspection" icon={<CameraIcon />} tone="warning" />
       <form className="insp-form" onSubmit={onSubmit} noValidate>
         <SearchInput
           label="Find a work"

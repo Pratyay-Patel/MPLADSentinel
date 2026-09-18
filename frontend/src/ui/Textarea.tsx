@@ -7,7 +7,8 @@ export interface TextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaE
   error?: string;
 }
 
-/** A labelled multi-line text input. Mirrors {@link ./Input#Input}. */
+/** A labelled multi-line text input. Mirrors {@link ./Input#Input}. Pass
+ *  `required` to also mark the label with a red asterisk. */
 export function Textarea({
   label,
   hideLabel,
@@ -15,6 +16,7 @@ export function Textarea({
   error,
   className,
   rows = 4,
+  required,
   ...rest
 }: TextareaProps) {
   const id = useId();
@@ -25,6 +27,12 @@ export function Textarea({
     <div className="ui-field">
       <label className={hideLabel ? 'visually-hidden' : 'ui-field__label'} htmlFor={id}>
         {label}
+        {required ? (
+          <span className="ui-field__required" aria-hidden>
+            {' '}
+            *
+          </span>
+        ) : null}
       </label>
       <textarea
         id={id}
@@ -32,6 +40,7 @@ export function Textarea({
         className={['ui-control', className].filter(Boolean).join(' ')}
         aria-invalid={error ? true : undefined}
         aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
+        required={required}
         {...rest}
       />
       {hint ? (
