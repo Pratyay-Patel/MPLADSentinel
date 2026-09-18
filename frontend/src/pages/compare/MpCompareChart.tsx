@@ -11,18 +11,23 @@ import {
   YAxis,
 } from 'recharts';
 
-import type { MpStat } from '../../data';
 import { MP_SERIES_VARS, type Metric } from './metrics';
 
 function truncate(s: string, n: number): string {
   return s.length > n ? `${s.slice(0, n - 1)}…` : s;
 }
 
-export interface MpCompareChartProps {
-  selected: MpStat[];
+/** Minimal shape this chart needs — either `MpStat` or the citizen-safe `CitizenMpStat`. */
+export interface MpLike {
+  id: string;
+  mpName: string;
+}
+
+export interface MpCompareChartProps<T extends MpLike> {
+  selected: T[];
   /** Every MP, for the "all-MP average" reference line. */
-  allMps: MpStat[];
-  metric: Metric;
+  allMps: T[];
+  metric: Metric<T>;
 }
 
 /**
@@ -30,8 +35,11 @@ export interface MpCompareChartProps {
  * all-MP-average reference line. Identity is carried by the x-axis MP name and
  * the value label on each bar (never colour alone); the detailed table below is
  * the accessible fallback. dataviz palette slots 1–4, theme-swapped in CSS.
+ *
+ * Generic over `T` so the citizen-safe Compare MPs page can reuse this exact
+ * chart with `CitizenMpStat` — no risk-specific code lives here either way.
  */
-export function MpCompareChart({ selected, allMps, metric }: MpCompareChartProps) {
+export function MpCompareChart<T extends MpLike>({ selected, allMps, metric }: MpCompareChartProps<T>) {
   const rows = selected.map((m, i) => ({
     key: m.id,
     name: truncate(m.mpName, 18),

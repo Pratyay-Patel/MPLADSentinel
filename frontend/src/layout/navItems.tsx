@@ -96,6 +96,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: <LayoutGridIcon />,
       },
       {
+        label: 'Compare MPs (Public)',
+        to: '/citizen/compare',
+        area: 'citizen',
+        icon: <BarsIcon />,
+      },
+      {
         label: 'Recommend a Work',
         labelFor: (role) => (reviewsRecommendations(role) ? 'Recommended Works' : 'Recommend a Work'),
         to: '/recommend',

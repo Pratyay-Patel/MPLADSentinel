@@ -5,6 +5,7 @@ import { AppShell } from '../layout/AppShell';
 import { AnalyticsPage } from '../pages/analytics/AnalyticsPage';
 import { AssistantPage } from '../pages/assistant/AssistantPage';
 import { GovernmentDashboard } from '../pages/dashboard/GovernmentDashboard';
+import { CitizenCompareMps } from '../pages/citizen/CitizenCompareMps';
 import { CitizenOverview } from '../pages/citizen/CitizenOverview';
 import { CitizenPortal } from '../pages/citizen/CitizenPortal';
 import { CitizenProjectView } from '../pages/citizen/CitizenProjectView';
@@ -171,6 +172,14 @@ export const appRouter = createBrowserRouter([
         element: (
           <RequireRole area="citizen">
             <CitizenOverview />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'citizen/compare',
+        element: (
+          <RequireRole area="citizen">
+            <CitizenCompareMps />
           </RequireRole>
         ),
       },

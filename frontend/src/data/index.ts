@@ -142,6 +142,15 @@ export {
 export { useMpComparisonService } from './features/useMpComparisonService';
 
 export {
+  createCitizenMpComparisonService,
+  aggregateCitizenMps,
+  type CitizenMpComparisonService,
+  type CitizenMpComparisonData,
+  type CitizenMpStat,
+} from './features/citizenMpComparison';
+export { useCitizenMpComparisonService } from './features/useCitizenMpComparisonService';
+
+export {
   createProjectRegisterService,
   type ProjectRegisterService,
   type ProjectRegisterData,

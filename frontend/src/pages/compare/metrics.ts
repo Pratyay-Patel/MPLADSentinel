@@ -8,15 +8,19 @@ export function pct(n: number | null): string {
 
 const inr = (n: number) => formatINRCompact({ amount: n, currency: 'INR' });
 
-export interface Metric {
+/** `T` defaults to the authority {@link MpStat}; the citizen-safe compare page
+ *  reuses this same shape with `T = CitizenMpStat` instead (see
+ *  `pages/citizen/citizenMpMetrics.ts`) so {@link MpCompareChart} works for
+ *  both without touching risk-specific code. */
+export interface Metric<T = MpStat> {
   key: string;
   label: string;
   /** Numeric value for the bar / axis; a `null` underlying value contributes 0. */
-  value: (m: MpStat) => number;
+  value: (m: T) => number;
   /** Format a raw number (axis ticks, reference line). */
   fmt: (n: number) => string;
   /** Format for one MP (bar label, table) — shows an em dash when undefined. */
-  format: (m: MpStat) => string;
+  format: (m: T) => string;
   /** Higher is "better" — drives the key-insight wording and bar tone. */
   higherIsBetter: boolean;
 }
