@@ -207,6 +207,15 @@ export const NetworkIcon = (p: IconProps) => (
   </Base>
 );
 
+export const ScaleIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M12 3v18M8 21h8" />
+    <path d="M12 5 4 8l4 6M12 5l8 3-4 6" />
+    <path d="M2 8h6M16 8h6" />
+    <path d="M2 8a2.5 4 0 0 0 6 0M16 8a2.5 4 0 0 0 6 0" />
+  </Base>
+);
+
 export const CameraIcon = (p: IconProps) => (
   <Base {...p}>
     <path d="M4 8h3l1.5-2h7L17 8h3v11H4V8Z" />

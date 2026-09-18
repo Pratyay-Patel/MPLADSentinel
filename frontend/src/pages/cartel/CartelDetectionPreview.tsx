@@ -65,7 +65,7 @@ export function CartelDetectionPreview() {
             <span className="cartel-diagram__dot" data-legend="director" /> Common director
           </li>
           <li>
-            <span className="cartel-diagram__dot" data-legend="work" /> Public work 
+            <span className="cartel-diagram__dot" data-legend="work" /> Public work
           </li>
         </ul>
 
@@ -101,7 +101,7 @@ export function CartelDetectionPreview() {
           >
             <span className="cartel-diagram__node-name">V. K. Sharma</span>
             <span className="cartel-diagram__node-tag">Common director</span>
-            <span className="cartel-diagram__node-badge">95% COLLUSION</span>
+            <span className="cartel-diagram__node-badge">92% COLLUSION</span>
           </div>
 
           {CONTRACTORS.map((c, i) => (
