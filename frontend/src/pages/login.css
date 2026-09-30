@@ -63,6 +63,16 @@
   cursor: default;
 }
 
+.persona-card__icon {
+  display: inline-flex;
+  color: var(--persona-accent, var(--color-text-muted));
+}
+
+.persona-card__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
 .persona-card__label {
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
@@ -110,6 +120,25 @@
   margin: 0;
   font-size: var(--text-sm);
   color: var(--color-danger-700, #b42318);
+}
+
+.demo-accounts {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: var(--border);
+}
+
+.demo-accounts__caption {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.demo-accounts__hint {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
 }
 
 .login-card__alt {

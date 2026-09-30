@@ -55,6 +55,17 @@ const STATUS_TONE: Record<RecommendationStatus, StatusTone> = {
   REJECTED: 'danger',
 };
 
+/** A proposed site's GPS entry: a clickable link when it's a URL, otherwise the raw coordinates. */
+function SiteLink({ value }: { value: string }) {
+  return /^https?:\/\//i.test(value) ? (
+    <a className="rec-gps-link" href={value} target="_blank" rel="noopener noreferrer">
+      View location <span aria-hidden>↗</span>
+    </a>
+  ) : (
+    <span className="rec-gps-link">{value}</span>
+  );
+}
+
 function StatusBadgeFor({ status }: { status: RecommendationStatus }) {
   return (
     <StatusBadge tone={STATUS_TONE[status]} srLabel="Status">
@@ -278,6 +289,11 @@ function CitizenRecommendations({
     { key: 'submitted', header: 'Submitted', render: (r) => formatDate(r.submittedAt) },
     { key: 'title', header: 'Work', render: (r) => r.workTitle },
     { key: 'mp', header: 'MP', render: (r) => `${r.mpName} (${r.constituency})` },
+    {
+      key: 'gps',
+      header: 'Site GPS / maps link',
+      render: (r) => <SiteLink value={r.gpsCoordinatesLink} />,
+    },
     { key: 'status', header: 'Status', render: (r) => <StatusBadgeFor status={r.status} /> },
     { key: 'note', header: 'Action note', render: (r) => r.actionNote ?? '—' },
     {
@@ -576,19 +592,7 @@ function ReviewQueue({
     {
       key: 'gps',
       header: 'Site GPS / maps link',
-      render: (r) =>
-        /^https?:\/\//i.test(r.gpsCoordinatesLink) ? (
-          <a
-            className="rec-gps-link"
-            href={r.gpsCoordinatesLink}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            View location <span aria-hidden>↗</span>
-          </a>
-        ) : (
-          <span className="rec-gps-link">{r.gpsCoordinatesLink}</span>
-        ),
+      render: (r) => <SiteLink value={r.gpsCoordinatesLink} />,
     },
     {
       key: 'photo',

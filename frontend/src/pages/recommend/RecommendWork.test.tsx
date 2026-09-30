@@ -115,6 +115,32 @@ describe('RecommendWork — citizen view', () => {
 
     const table = screen.getByRole('table', { name: 'Recommendations you have made' });
     expect(within(table).getByText('RO drinking water plant')).toBeInTheDocument();
+    // the site GPS the citizen entered is shown back to them (raw coordinates here)
+    expect(within(table).getByRole('columnheader', { name: 'Site GPS / maps link' })).toBeInTheDocument();
+    expect(within(table).getByText('26.9124,75.7873')).toBeInTheDocument();
+  });
+
+  it('shows a clickable location link in the citizen table when the GPS entry is a URL', async () => {
+    const provider = createDemoDataProvider();
+    await provider.submitWorkRecommendation({
+      fullName: 'Link Citizen',
+      mobileNumber: '9876543210',
+      email: null,
+      state: 'Rajasthan',
+      mpName: 'A. K. Sharma',
+      constituency: 'Jaipur Rural',
+      locationCategory: 'RURAL',
+      gpsCoordinatesLink: 'https://maps.google.com/?q=26.9124,75.7873',
+      workTitle: 'Link work',
+      category: 'Community & Public Buildings',
+      description: 'A recommendation whose GPS entry is a full maps URL for the link test.',
+    });
+    renderPage('CITIZEN', provider);
+
+    const table = await screen.findByRole('table', { name: 'Recommendations you have made' });
+    const link = await within(table).findByRole('link', { name: /View location/ });
+    expect(link).toHaveAttribute('href', 'https://maps.google.com/?q=26.9124,75.7873');
+    expect(link).toHaveAttribute('target', '_blank');
   });
 
   it('shows an uploaded photo thumbnail, visible to an authority in the same tab', async () => {

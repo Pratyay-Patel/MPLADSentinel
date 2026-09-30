@@ -2,8 +2,17 @@ import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 
 import { ApiError } from '../api/client';
-import { DEMO_PERSONAS, demoAuthEnabled, landingPathFor, useSession } from '../auth';
+import { DEMO_PERSONAS, demoAuthEnabled, landingPathFor, useSession, type Role } from '../auth';
+import { accentStyle, PERSONA_ACCENT, PERSONA_ICON } from '../layout/personaVisuals';
 import { Button, Card, Input } from '../ui';
+
+/**
+ * Shared password for the seeded backend demo accounts (`AuthUserSeeder`,
+ * default `mplads.auth.seed-password`). Not a secret — these are clearly
+ * labelled evaluation-only accounts on a public demo deployment. If the
+ * deployed backend overrides `MPLADS_AUTH_SEED_PASSWORD`, update this to match.
+ */
+const SEED_PASSWORD = 'Demo@12345';
 
 interface LoginLocationState {
   from?: string;
@@ -44,7 +53,7 @@ export function LoginPage() {
 
   return (
     <main className="login-page">
-      <Card className={demo ? 'login-card login-card--wide' : 'login-card'}>
+      <Card className="login-card login-card--wide">
         <div className="login-card__head">
           <span className="login-card__brand">MPLADSentinel</span>
           <h1 className="login-card__title">{demo ? 'Choose a role to explore' : 'Sign in'}</h1>
@@ -78,7 +87,10 @@ export function LoginPage() {
             ) : null}
           </>
         ) : (
-          <CredentialForm />
+          <>
+            <CredentialForm />
+            <DemoAccountsSection />
+          </>
         )}
 
         {!demo ? (
@@ -145,5 +157,66 @@ function CredentialForm() {
         {submitting ? 'Signing in…' : 'Sign in'}
       </Button>
     </form>
+  );
+}
+
+/**
+ * "Demo Accounts (Quick Login)" — one click per seeded role against the real
+ * backend (decision D31's seeded accounts), so a judge or reviewer never has
+ * to know a username or password to explore every role. Visible by default,
+ * not tucked behind a disclosure toggle — the whole point is that nobody
+ * misses it. Reuses the same icons/colours as the in-app "Role:" switcher
+ * ({@link PersonaSwitcher}) so the two feel like one design.
+ */
+function DemoAccountsSection() {
+  const { login } = useSession();
+  const [pendingRole, setPendingRole] = useState<Role | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const pick = async (role: Role) => {
+    setError(null);
+    setPendingRole(role);
+    try {
+      await login(role.toLowerCase(), SEED_PASSWORD);
+      // Redirect happens via the <Navigate> guard in LoginPage once the
+      // session context reports `authenticated`.
+    } catch {
+      setError('Could not sign in to that demo account. Please try again.');
+      setPendingRole(null);
+    }
+  };
+
+  return (
+    <div className="demo-accounts">
+      <p className="demo-accounts__caption">Demo Accounts (Quick Login)</p>
+      <p className="demo-accounts__hint">
+        For evaluation — one click signs you in as that role on the live portal.
+      </p>
+      <div className="persona-grid">
+        {DEMO_PERSONAS.map((persona) => (
+          <button
+            key={persona.role}
+            type="button"
+            className="persona-card"
+            style={accentStyle(PERSONA_ACCENT[persona.role])}
+            onClick={() => void pick(persona.role)}
+            disabled={pendingRole !== null}
+          >
+            <span className="persona-card__icon" aria-hidden>
+              {PERSONA_ICON[persona.role]}
+            </span>
+            <span className="persona-card__label">
+              {pendingRole === persona.role ? 'Signing in…' : persona.label}
+            </span>
+            <span className="persona-card__blurb">{persona.blurb}</span>
+          </button>
+        ))}
+      </div>
+      {error ? (
+        <p className="login-form__error" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
   );
 }
