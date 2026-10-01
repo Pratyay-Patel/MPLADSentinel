@@ -66,7 +66,7 @@ mplads:
     # Evidence" section. `jwt` is a SECRET: backend-only, never in the frontend /
     # Vercel / git / source. Blank (the default) => GET /api/audit/{id}/photos
     # returns an empty list with "configured": false and the page still renders.
-    jwt: ${PINATA_JWT:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIzMDhiZmNjNC04MmM0LTQ0ODMtOTY4OC03ZjUzMGQ5Njk0ZmIiLCJlbWFpbCI6Imtpd2lpaTIzNjIzNkBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiZjg2MzliYTRhNjQxMmMxZTQ5OGYiLCJzY29wZWRLZXlTZWNyZXQiOiI2ZmE2MjQ2MjZjNjJhYTJiNzdmMDA2MmJhN2M1Mzc2ODVjYzczNWRkZjJmODIxZjRlZTAyN2YxYzVhYTYwMzM5IiwiZXhwIjoxODE5NDczODA0fQ.w79fHhz8DXbtIFNeONiKO4Tf2FunDB8gz5vnqo3fm2A}
+    jwt: ${PINATA_JWT}
     api-base-url: ${PINATA_API_BASE_URL:https://api.pinata.cloud}
     # Files API "network" segment: public (pinFileToIPFS uploads) or private.
     network: ${PINATA_NETWORK:public}
