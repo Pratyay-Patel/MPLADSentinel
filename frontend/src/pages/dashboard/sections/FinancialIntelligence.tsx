@@ -1,5 +1,6 @@
 import type { DashboardData } from '../../../data';
 import { BarList, Card, SectionHeader } from '../../../ui';
+import { RupeeIcon } from '../../../ui/icons';
 import { formatINRCompact, formatPercent } from '../../../format';
 
 /**
@@ -17,6 +18,8 @@ export function FinancialIntelligence({ data }: { data: DashboardData }) {
       <SectionHeader
         title="Financial intelligence"
         description="Estimated cost and recorded payments across these works."
+        icon={<RupeeIcon />}
+        tone="warning"
       />
       <BarList
         caption="Estimated cost versus recorded payments"

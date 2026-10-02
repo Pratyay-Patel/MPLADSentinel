@@ -159,6 +159,18 @@ describe('ApiDataProvider', () => {
     expect(await provider.getPublicProject(42)).toBeNull();
   });
 
+  it('getPublicProjectPayments fetches the public payments sub-resource and returns [] on 404', async () => {
+    const rows = [
+      { ordinal: 0, amount: { amount: 900000, currency: 'INR' }, paidOn: '2026-04-01', vendorName: 'V', statusRaw: 'Payment Success', implementingAuthorityText: null },
+    ];
+    const fetchMock = stubFetch(jsonResponse(rows));
+    expect(await provider.getPublicProjectPayments(900000001)).toEqual(rows);
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/public/works/900000001/payments');
+
+    stubFetch(jsonResponse({}, { status: 404 }));
+    expect(await provider.getPublicProjectPayments(42)).toEqual([]);
+  });
+
   // --- risk (Phase B3) --------------------------------------------
 
   it('listProjectRisks fetches /api/works/risk and keys it by sourceWorkId', async () => {
@@ -184,6 +196,41 @@ describe('ApiDataProvider', () => {
 
     stubFetch(jsonResponse({}, { status: 404 }));
     expect(await provider.getProjectRisk(42)).toBeNull();
+  });
+
+  // --- de-duplication of works (F7) ----------------------------------
+
+  it('listDuplicateWorks fetches /api/works/duplicates', async () => {
+    const pair = {
+      workA: {
+        sourceWorkId: 900000001,
+        workDescription: 'a',
+        state: 'Rajasthan',
+        district: 'Jaipur',
+        category: 'Roads',
+        estimatedCost: 1000000,
+      },
+      workB: {
+        sourceWorkId: 900000002,
+        workDescription: 'b',
+        state: 'Rajasthan',
+        district: 'Jaipur',
+        category: 'Roads',
+        estimatedCost: 1050000,
+      },
+      score: 90,
+      confidence: 'HIGH',
+      reasons: ['x'],
+    };
+    const fetchMock = stubFetch(jsonResponse({ pairs: [pair], totalFound: 1 }));
+
+    const result = await provider.listDuplicateWorks();
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/works/duplicates');
+    expect(result.totalFound).toBe(1);
+    expect(result.pairs).toHaveLength(1);
+    expect(result.pairs[0].confidence).toBe('HIGH');
+    expect(result.pairs[0].workA.sourceWorkId).toBe(900000001);
   });
 
   it('maps a backend error status to a ProviderError of kind "unavailable"', async () => {

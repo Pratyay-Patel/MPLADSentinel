@@ -224,7 +224,9 @@ function AuditTimeline({ group, service }: { group: AuditWorkGroup; service: Aud
           </StatusBadge>
           {a.dueDate ? ` · Due ${formatDate(a.dueDate)}` : ''}
         </p>
-        {a.note ? <p className="aud-card__note">“{a.note}”</p> : null}
+        {(a.status === 'ASSIGNED' || a.status === 'IN_PROGRESS') && a.note ? (
+          <p className="aud-card__note">“{a.note}”</p>
+        ) : null}
       </EventCard>
 
       {a.status === 'IN_PROGRESS' && (
@@ -236,11 +238,17 @@ function AuditTimeline({ group, service }: { group: AuditWorkGroup; service: Aud
       {a.status === 'CANCELLED' && (
         <EventCard kind="cancelled" date={a.updatedAt}>
           <p className="aud-card__meta">The assignment was withdrawn before completion.</p>
+          {a.note ? (
+            <p className="aud-card__note">Reason given at cancellation: “{a.note}”</p>
+          ) : null}
         </EventCard>
       )}
 
       {a.status === 'COMPLETED' && (
         <EventCard kind="completed" date={a.updatedAt}>
+          {a.note ? (
+            <p className="aud-card__note">Reason given at completion: “{a.note}”</p>
+          ) : null}
           <ul className="aud-findings">
             {DEMO_INSPECTION_FINDINGS.map((f) => (
               <li key={f.label}>

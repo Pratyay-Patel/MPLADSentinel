@@ -5,6 +5,7 @@ import {
   classifyRiskReason,
   riskFactorFromSlug,
   useAsyncData,
+  useNotificationsService,
   useRiskService,
   type RiskFactorCategory,
   type RiskListData,
@@ -29,13 +30,23 @@ import {
   RiskLevelBadge,
   SearchInput,
   Select,
+  SendNoticeButton,
   StatusBadge,
+  Toast,
   ViewProjectLink,
   type Column,
   type StatusTone,
 } from '../../ui';
 
 const LEVELS: RiskLevel[] = ['HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'];
+
+/** Mirrors RiskLevelBadge's tone mapping so the summary tiles and the badges agree. */
+const LEVEL_TONE: Record<RiskLevel, Extract<StatusTone, 'info' | 'success' | 'warning' | 'danger' | 'neutral'>> = {
+  HIGH: 'danger',
+  MEDIUM: 'warning',
+  LOW: 'success',
+  UNKNOWN: 'neutral',
+};
 
 const LIFECYCLE_TONE: Record<RiskRow['project']['lifecycleState'], StatusTone> = {
   RECOMMENDED: 'info',
@@ -128,58 +139,6 @@ function IndicatorList({ row }: { row: RiskRow }) {
   );
 }
 
-const columns: Column<RiskRow>[] = [
-  {
-    key: 'project',
-    header: 'Project',
-    render: ({ project }) => (
-      <div className="dash-cell-primary">
-        <span className="dash-cell-primary__title">
-          {workTitle(project.workDescription, project.sourceWorkId)}
-        </span>
-        <span className="dash-cell-primary__sub">
-          {[project.state, project.district].filter(Boolean).join(' · ')} · #{project.sourceWorkId}
-        </span>
-      </div>
-    ),
-  },
-  { key: 'category', header: 'Category', render: ({ project }) => project.category ?? '—' },
-  {
-    key: 'estimated',
-    header: 'Est. cost',
-    align: 'right',
-    render: ({ project }) => formatINRCompact(project.estimatedCost),
-  },
-  {
-    key: 'status',
-    header: 'Status',
-    render: ({ project }) => (
-      <StatusBadge tone={LIFECYCLE_TONE[project.lifecycleState]} srLabel="Status">
-        {LIFECYCLE_LABEL[project.lifecycleState]}
-      </StatusBadge>
-    ),
-  },
-  {
-    key: 'risk',
-    header: 'Risk',
-    render: ({ risk }) => (
-      <span className="risk-cell">
-        <RiskLevelBadge level={risk.level} />
-        {risk.score != null ? <span className="risk-cell__score">score {risk.score}</span> : null}
-      </span>
-    ),
-  },
-  { key: 'indicators', header: 'Indicators', render: (row) => <IndicatorList row={row} /> },
-  {
-    key: 'action',
-    header: 'Action',
-    align: 'right',
-    render: ({ project }) => (
-      <ViewProjectLink id={project.sourceWorkId} label={workTitle(project.workDescription, project.sourceWorkId)} />
-    ),
-  },
-];
-
 /**
  * Risk & Alerts (`/risk`) — the triage queue. By default it lists only the works
  * flagged HIGH or MEDIUM risk, most severe first, with the factors behind each
@@ -240,6 +199,98 @@ function RiskBody({ data }: { data: RiskListData }) {
   const { filters: globalFilters } = useGlobalFilters();
   const [filters, setFilters] = useState<RiskFilters>(() => filtersFromParams(searchParams));
 
+  const notificationsService = useNotificationsService();
+  const [sendingId, setSendingId] = useState<number | null>(null);
+  const [sentIds, setSentIds] = useState<Set<number>>(new Set());
+  const [notice, setNotice] = useState<{ message: string; tone: 'success' | 'danger' } | null>(
+    null,
+  );
+
+  const sendNotice = async (sourceWorkId: number, label: string) => {
+    setSendingId(sourceWorkId);
+    try {
+      await notificationsService.sendSlaNotice(sourceWorkId);
+      setSentIds((prev) => new Set(prev).add(sourceWorkId));
+      setNotice({
+        message: `Attention notice sent to the District Authority for ${label}.`,
+        tone: 'success',
+      });
+    } catch (err) {
+      setNotice({
+        message: err instanceof Error ? err.message : 'Could not send the notice.',
+        tone: 'danger',
+      });
+    } finally {
+      setSendingId(null);
+    }
+  };
+
+  const columns: Column<RiskRow>[] = useMemo(
+    () => [
+      {
+        key: 'project',
+        header: 'Project',
+        render: ({ project }) => (
+          <div className="dash-cell-primary">
+            <span className="dash-cell-primary__title">
+              {workTitle(project.workDescription, project.sourceWorkId)}
+            </span>
+            <span className="dash-cell-primary__sub">
+              {[project.state, project.district].filter(Boolean).join(' · ')} · #{project.sourceWorkId}
+            </span>
+          </div>
+        ),
+      },
+      { key: 'category', header: 'Category', render: ({ project }) => project.category ?? '—' },
+      {
+        key: 'estimated',
+        header: 'Est. cost',
+        align: 'right',
+        render: ({ project }) => formatINRCompact(project.estimatedCost),
+      },
+      {
+        key: 'status',
+        header: 'Status',
+        render: ({ project }) => (
+          <StatusBadge tone={LIFECYCLE_TONE[project.lifecycleState]} srLabel="Status">
+            {LIFECYCLE_LABEL[project.lifecycleState]}
+          </StatusBadge>
+        ),
+      },
+      {
+        key: 'risk',
+        header: 'Risk',
+        render: ({ risk }) => (
+          <span className="risk-cell">
+            <RiskLevelBadge level={risk.level} />
+            {risk.score != null ? <span className="risk-cell__score">score {risk.score}</span> : null}
+          </span>
+        ),
+      },
+      { key: 'indicators', header: 'Indicators', render: (row) => <IndicatorList row={row} /> },
+      {
+        key: 'action',
+        header: 'Action',
+        align: 'right',
+        render: ({ project }) => {
+          const label = workTitle(project.workDescription, project.sourceWorkId);
+          return (
+            <div className="dash-attention__actions">
+              <SendNoticeButton
+                sending={sendingId === project.sourceWorkId}
+                sent={sentIds.has(project.sourceWorkId)}
+                onClick={() => void sendNotice(project.sourceWorkId, label)}
+              />
+              <ViewProjectLink id={project.sourceWorkId} label={label} />
+            </div>
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sendingId, sentIds],
+  );
+
   const globalRows = useMemo(
     () => applyGlobalFiltersBy(data.rows, (r) => r.project, globalFilters),
     [data.rows, globalFilters],
@@ -283,7 +334,12 @@ function RiskBody({ data }: { data: RiskListData }) {
 
       <div className="ui-metric-grid">
         {LEVELS.map((level) => (
-          <MetricCard key={level} label={`${level} risk`} value={countsByLevel[level]} />
+          <MetricCard
+            key={level}
+            label={`${level} risk`}
+            value={countsByLevel[level]}
+            tone={LEVEL_TONE[level]}
+          />
         ))}
       </div>
 
@@ -393,6 +449,15 @@ function RiskBody({ data }: { data: RiskListData }) {
           />
         }
       />
+
+      {notice ? (
+        <Toast
+          key={notice.message}
+          message={notice.message}
+          tone={notice.tone}
+          onDismiss={() => setNotice(null)}
+        />
+      ) : null}
     </>
   );
 }

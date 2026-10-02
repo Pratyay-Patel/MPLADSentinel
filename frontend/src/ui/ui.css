@@ -76,6 +76,12 @@
   border: var(--border-strong);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.ui-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
 }
 
 .ui-card--pad {
@@ -90,6 +96,45 @@
   justify-content: space-between;
   gap: var(--space-4);
   margin-bottom: var(--space-4);
+}
+
+.ui-section-header__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.ui-section-header__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: var(--radius-md);
+  color: var(--color-brand-700);
+  background: var(--color-brand-050);
+}
+
+.ui-section-header__icon[data-tone='info'] {
+  color: var(--color-info-fg);
+  background: var(--color-info-bg);
+}
+.ui-section-header__icon[data-tone='success'] {
+  color: var(--color-success-fg);
+  background: var(--color-success-bg);
+}
+.ui-section-header__icon[data-tone='warning'] {
+  color: var(--color-warning-fg);
+  background: var(--color-warning-bg);
+}
+.ui-section-header__icon[data-tone='danger'] {
+  color: var(--color-danger-fg);
+  background: var(--color-danger-bg);
+}
+.ui-section-header__icon[data-tone='neutral'] {
+  color: var(--color-neutral-fg);
+  background: var(--color-neutral-bg);
 }
 
 .ui-section-header__title {
@@ -221,9 +266,31 @@
   gap: var(--space-2);
   padding: var(--space-4) var(--space-5);
   background: var(--color-surface);
-  border: var(--border-strong);
+  border: 2px solid var(--color-brand-700);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.ui-metric:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.ui-metric[data-tone='info'] {
+  border-color: var(--color-info-fg);
+}
+.ui-metric[data-tone='success'] {
+  border-color: var(--color-success-fg);
+}
+.ui-metric[data-tone='warning'] {
+  border-color: var(--color-warning-fg);
+}
+.ui-metric[data-tone='danger'] {
+  border-color: var(--color-danger-fg);
+}
+.ui-metric[data-tone='neutral'] {
+  border-color: var(--color-neutral-fg);
 }
 
 .ui-metric__head {
@@ -242,6 +309,27 @@
   border-radius: var(--radius-md);
   color: var(--color-brand-700);
   background: var(--color-brand-050);
+}
+
+.ui-metric__icon[data-tone='info'] {
+  color: var(--color-info-fg);
+  background: var(--color-info-bg);
+}
+.ui-metric__icon[data-tone='success'] {
+  color: var(--color-success-fg);
+  background: var(--color-success-bg);
+}
+.ui-metric__icon[data-tone='warning'] {
+  color: var(--color-warning-fg);
+  background: var(--color-warning-bg);
+}
+.ui-metric__icon[data-tone='danger'] {
+  color: var(--color-danger-fg);
+  background: var(--color-danger-bg);
+}
+.ui-metric__icon[data-tone='neutral'] {
+  color: var(--color-neutral-fg);
+  background: var(--color-neutral-bg);
 }
 
 .ui-metric__label {
@@ -264,6 +352,16 @@
   color: var(--color-text-secondary);
 }
 
+/* ---- ProjectLocationMap -------------------------------------- */
+
+.ui-project-map__container {
+  width: 100%;
+  height: 260px;
+  border-radius: var(--radius-md);
+  border: var(--border);
+  isolation: isolate;
+}
+
 /* ---- Input / Select / SearchInput -------------------------- */
 
 .ui-field {
@@ -278,6 +376,10 @@
   color: var(--color-text-secondary);
 }
 
+.ui-field__required {
+  color: var(--color-danger-fg);
+}
+
 .ui-field__hint {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
@@ -286,6 +388,151 @@
 .ui-field__error {
   font-size: var(--text-xs);
   color: var(--color-danger-fg);
+}
+
+/* ---- PhotoUploadField ------------------------------------------- */
+
+.ui-photo-dropzone {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px dashed var(--color-brand-500);
+  border-radius: var(--control-radius);
+  background: var(--color-brand-050);
+  color: var(--color-brand-700);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ui-photo-dropzone:hover {
+  background: var(--color-brand-100);
+}
+
+.ui-photo-dropzone:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+.ui-photo-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ui-photo-preview img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: var(--control-radius);
+  border: var(--border);
+}
+
+.ui-photo-preview__remove {
+  padding: 0;
+  font-size: var(--text-xs);
+  color: var(--color-link);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+/* Thumbnail shown in an authority/citizen table cell for an uploaded photo. */
+.ui-photo-cell {
+  display: inline-block;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.ui-photo-cell img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--control-radius);
+  border: var(--border);
+}
+
+/* Citizen-facing photo cell that can attach/replace a photo post-submission. */
+.ui-photo-cell-editable {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.ui-photo-cell-editable__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-link);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.ui-photo-cell-editable__trigger:hover {
+  color: var(--color-link-hover);
+}
+
+.ui-photo-cell-editable__trigger svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Full-size photo preview, opened from a PhotoCell thumbnail. */
+.ui-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: rgba(16, 24, 40, 0.7);
+}
+
+.ui-lightbox {
+  position: relative;
+  max-width: min(90vw, 720px);
+  max-height: 90vh;
+  line-height: 0;
+}
+
+.ui-lightbox img {
+  display: block;
+  min-width: 240px;
+  min-height: 240px;
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.ui-lightbox__close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: var(--border-strong);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
 }
 
 .ui-control {
@@ -836,4 +1083,99 @@ textarea.ui-control {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
   text-align: center;
+}
+
+/* IndiaLeafletMap — reuses the tip/caption text styles above */
+
+.india-leaflet-map__container {
+  width: 100%;
+  height: 340px;
+  border-radius: var(--radius-md);
+  border: var(--border);
+  isolation: isolate;
+}
+
+.india-map__tip-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* ---- ConfirmDialog -------------------------------------------- */
+
+.ui-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(16, 24, 40, 0.5);
+}
+
+.ui-confirm {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.ui-confirm__title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--color-text);
+}
+
+.ui-confirm__desc {
+  margin-top: calc(-1 * var(--space-2));
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.ui-confirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+/* ---- Toast ------------------------------------------------------ */
+
+.ui-toast {
+  position: fixed;
+  bottom: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-pill);
+  background: var(--color-success-fg);
+  color: var(--color-text-inverse);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  box-shadow: var(--shadow-lg);
+  animation: ui-toast-in 200ms ease;
+}
+
+@keyframes ui-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.ui-toast[data-tone='danger'] {
+  background: var(--color-danger-fg);
+}
+.ui-toast[data-tone='info'] {
+  background: var(--color-info-fg);
 }

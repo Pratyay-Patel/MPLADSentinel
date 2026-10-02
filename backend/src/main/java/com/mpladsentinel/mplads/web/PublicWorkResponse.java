@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.mpladsentinel.mplads.domain.House;
 import com.mpladsentinel.mplads.domain.LifecycleState;
+import com.mpladsentinel.mplads.domain.PaymentDataState;
 import com.mpladsentinel.mplads.domain.Work;
 
 /**
@@ -12,9 +13,13 @@ import com.mpladsentinel.mplads.domain.Work;
  * type.
  *
  * <p>It carries <strong>only</strong> fields safe to show to the public: no risk
- * information, no {@code dataQualityFlags}, no payment-retrieval internals, no
- * ingestion provenance. A caller of this endpoint never receives what this
- * record does not contain (CLAUDE.md §5, §14).
+ * information, no {@code dataQualityFlags}, no ingestion provenance. It does
+ * carry the recorded-payment summary ({@code paymentDataState},
+ * {@code recordedPayments}, {@code paymentInstallments}) — plain public
+ * expenditure data, not a risk signal; the individual installment rows are a
+ * separate call, {@code GET /api/public/works/{reference}/payments}. A caller
+ * of this endpoint never receives what this record does not contain
+ * (CLAUDE.md §5, §14).
  *
  * <p>{@code reference} is the secondary source's numeric id — used only to
  * address the public detail route. It must never be presented as an official
@@ -39,10 +44,17 @@ public record PublicWorkResponse(
         LocalDate recommendedOn,
         Integer recommendedYear,
         LocalDate completedOn,
-        Integer completionYear
+        Integer completionYear,
+        PaymentDataState paymentDataState,
+        MoneyView recordedPayments,
+        Integer paymentInstallments
 ) {
 
     public static PublicWorkResponse from(Work work) {
+        MoneyView recorded = work.getPaymentDataState() == PaymentDataState.FETCHED_PRESENT
+                ? MoneyView.of(work.getPaymentTotalPaid(), work.getCurrency())
+                : null;
+
         return new PublicWorkResponse(
                 work.getSourceWorkId(),
                 work.getWorkDescription(),
@@ -62,6 +74,9 @@ public record PublicWorkResponse(
                 work.getRecommendedOn(),
                 DtoSupport.box(work.getRecommendedYear()),
                 work.getCompletedOn(),
-                DtoSupport.box(work.getCompletionYear()));
+                DtoSupport.box(work.getCompletionYear()),
+                work.getPaymentDataState(),
+                recorded,
+                work.getPaymentInstallments());
     }
 }

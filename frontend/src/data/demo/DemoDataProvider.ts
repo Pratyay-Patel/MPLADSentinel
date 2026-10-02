@@ -1,12 +1,19 @@
+import { readDemoSession } from '../../auth/demoAuth';
+import type { Role } from '../../auth/roles';
 import { workTitle } from '../../format';
+import { capDuplicatePairs, findDuplicatePairs } from '../dedup/duplicateRules';
+import { alreadyReleasedAmount, evaluateFundEligibility, remainingFunds } from '../escrow/fundEligibility';
 import { deriveRisk } from '../risk/rules';
 import type { DataProvider } from '../DataProvider';
 import { ProviderError } from '../errors';
 import { toPublicProject } from '../publicProject';
 import type {
+  AppNotification,
   AssignmentStatus,
   BackendHealth,
   FieldOfficer,
+  FundRequest,
+  FundRequestEvent,
   Grievance,
   GrievanceInput,
   GrievanceStatusPatch,
@@ -17,6 +24,9 @@ import type {
   Project,
   ProjectRisk,
   ProjectSummary,
+  WorkRecommendation,
+  WorkRecommendationInput,
+  WorkRecommendationStatusPatch,
 } from '../types';
 import { demoPaymentsByWorkId, demoProjects, RISK_REFERENCE_DATE } from './fixtures';
 
@@ -26,6 +36,18 @@ import { demoPaymentsByWorkId, demoProjects, RISK_REFERENCE_DATE } from './fixtu
  */
 const demoGrievances: Grievance[] = [];
 let grievanceSeq = 0;
+
+// --- work recommendations (session-only, like grievances) -------------------
+
+const demoWorkRecommendations: WorkRecommendation[] = [];
+let recommendationSeq = 0;
+
+/** {@code CIT-<year>-<6 digits>}, mirroring the real backend's format. */
+function generateTrackingNumber(): string {
+  const year = new Date().getFullYear();
+  const digits = String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0');
+  return `CIT-${year}-${digits}`;
+}
 
 // --- inspection assignments (session-only, like grievances) -----------------
 
@@ -38,6 +60,70 @@ const demoFieldOfficers: FieldOfficer[] = [
 ];
 
 const OPEN_ASSIGNMENT_STATUSES: AssignmentStatus[] = ['ASSIGNED', 'IN_PROGRESS'];
+
+// --- fund requests / Escrow & Fund Control (session-only, like grievances) --
+
+const demoFundRequests: FundRequest[] = [];
+let fundRequestSeq = 0;
+
+function findDemoProject(sourceWorkId: number): Project | undefined {
+  return demoProjects.find((p) => p.sourceWorkId === sourceWorkId);
+}
+
+function buildFundRequest(
+  id: string,
+  project: Project,
+  requestedByUsername: string,
+  requestedByName: string,
+  requestedAmount: number,
+  remarks: string | null,
+): FundRequest {
+  const risk = deriveRisk(project, { allProjects: [...demoProjects], asOf: RISK_REFERENCE_DATE });
+  const decision = evaluateFundEligibility(project, requestedAmount, risk);
+  const now = new Date().toISOString();
+  const remainingBeforeRequest = remainingFunds(project);
+
+  const history: FundRequestEvent[] = [
+    {
+      eventType: 'CREATED',
+      occurredAt: now,
+      actorName: requestedByName,
+      detail: `Requested ₹${requestedAmount.toFixed(2)}${remarks ? ` — ${remarks}` : ''}`,
+    },
+    {
+      eventType: decision.status,
+      occurredAt: now,
+      actorName: null,
+      detail: decision.reason,
+    },
+  ];
+
+  return {
+    id,
+    sourceWorkId: project.sourceWorkId,
+    workTitle: workTitle(project.workDescription, project.sourceWorkId),
+    district: project.district,
+    requestedByUsername,
+    requestedByName,
+    requestedAmount,
+    remarks,
+    createdAt: now,
+    sanctionedAmount: project.estimatedCost?.amount ?? null,
+    alreadyReleased: alreadyReleasedAmount(project),
+    remainingBeforeRequest,
+    remainingAfterRequest: remainingBeforeRequest == null ? null : remainingBeforeRequest - requestedAmount,
+    riskLevel: risk.level,
+    riskReasons: risk.reasons,
+    status: decision.status,
+    decisionReason: decision.reason,
+    decidedAt: now,
+    releaseNoticeSent: false,
+    releaseNoticeByName: null,
+    releaseNoticeAt: null,
+    updatedAt: now,
+    history,
+  };
+}
 
 function isoAgo(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString();
@@ -87,6 +173,11 @@ function seedAssignments(): InspectionAssignment[] {
       requiredPhotos,
       assignedAt: isoAgo(assignedDaysAgo),
       updatedAt: isoAgo(updatedDaysAgo),
+      pendingStatus: null,
+      pendingRequestedByUsername: null,
+      pendingRequestedByName: null,
+      pendingJustification: null,
+      pendingRequestedAt: null,
     };
   };
   return [
@@ -98,6 +189,80 @@ function seedAssignments(): InspectionAssignment[] {
 
 let demoAssignments: InspectionAssignment[] = seedAssignments();
 let assignmentSeq = demoAssignments.length;
+
+// --- notifications (session-only, like grievances/assignments above) --------
+
+/** Caps the one-time high-risk-alert bootstrap — mirrors the real backend. */
+const MAX_SEEDED_HIGH_RISK_ALERTS = 5;
+
+interface DemoNotification extends AppNotification {
+  /** Who this notification is for — the demo has one persona per role, so this
+   * stands in for the real backend's `recipient_user_id`. */
+  recipientRole: Role;
+  /** "Clear all" sets this rather than removing the row — mirrors the real
+   * `notification.dismissed` column (migration V11). */
+  dismissed: boolean;
+}
+
+const demoNotifications: DemoNotification[] = [];
+let notificationSeq = 0;
+
+function currentDemoRole(): Role | null {
+  return readDemoSession()?.role ?? null;
+}
+
+function toAppNotification(n: DemoNotification): AppNotification {
+  return {
+    id: n.id,
+    category: n.category,
+    title: n.title,
+    message: n.message,
+    sourceWorkId: n.sourceWorkId,
+    read: n.read,
+    createdAt: n.createdAt,
+  };
+}
+
+/** Roles the high-risk-work alert bootstrap applies to — risk is not exposed to
+ * citizens (`ProjectRisk` is authority-only), mirrors the backend's `RISK_VISIBLE_ROLES`. */
+const RISK_VISIBLE_ROLES: readonly Role[] = ['MOSPI', 'STATE', 'DISTRICT', 'AUDITOR', 'MP'];
+
+/** One-time, per-role bootstrap from the real (demo-fixture) risk assessment —
+ * mirrors `NotificationService.seedHighRiskAlertsIfNeeded` on the backend. */
+function seedHighRiskAlertsIfNeeded(role: Role): void {
+  if (!RISK_VISIBLE_ROLES.includes(role)) {
+    return;
+  }
+  const alreadySeeded = demoNotifications.some(
+    (n) => n.recipientRole === role && n.category === 'HIGH_RISK_WORK',
+  );
+  if (alreadySeeded) {
+    return;
+  }
+  const ctx = { allProjects: [...demoProjects], asOf: RISK_REFERENCE_DATE };
+  const highRisk = demoProjects
+    .map((project) => ({ project, risk: deriveRisk(project, ctx) }))
+    .filter(({ risk }) => risk.level === 'HIGH')
+    .slice(0, MAX_SEEDED_HIGH_RISK_ALERTS);
+
+  for (const { project, risk } of highRisk) {
+    notificationSeq += 1;
+    const title = workTitle(project.workDescription, project.sourceWorkId);
+    const reasons = risk.reasons.join('; ');
+    demoNotifications.unshift({
+      id: `demo-notification-${notificationSeq}`,
+      category: 'HIGH_RISK_WORK',
+      title: `High-risk work flagged: ${title}`,
+      message:
+        risk.score != null ? `Assessed HIGH risk (score ${risk.score}). ${reasons}` : `Assessed HIGH risk. ${reasons}`,
+      sourceWorkId: project.sourceWorkId,
+      read: false,
+      createdAt: new Date().toISOString(),
+      recipientRole: role,
+      dismissed: false,
+    });
+  }
+}
 
 const LIFECYCLE_STATES: LifecycleState[] = [
   'RECOMMENDED',
@@ -211,9 +376,93 @@ export function createDemoDataProvider(): DataProvider {
       return byWorkId;
     },
 
+    async listDuplicateWorks(signal) {
+      ensureNotAborted(signal);
+      return capDuplicatePairs(findDuplicatePairs([...demoProjects]));
+    },
+
+    async listFundRequests(signal) {
+      ensureNotAborted(signal);
+      const session = readDemoSession();
+      const rows =
+        session?.role === 'DISTRICT'
+          ? demoFundRequests.filter((r) => r.requestedByUsername === session.username)
+          : demoFundRequests;
+      return rows.map((r) => ({ ...r }));
+    },
+
+    async getFundRequest(id, signal) {
+      ensureNotAborted(signal);
+      const found = demoFundRequests.find((r) => r.id === id);
+      if (!found) {
+        return null;
+      }
+      const session = readDemoSession();
+      if (session?.role === 'DISTRICT' && found.requestedByUsername !== session.username) {
+        return null;
+      }
+      return { ...found };
+    },
+
+    async createFundRequest(input, signal) {
+      ensureNotAborted(signal);
+      const project = findDemoProject(input.sourceWorkId);
+      if (!project) {
+        throw new ProviderError('unknown', `No work with source id ${input.sourceWorkId}.`);
+      }
+      const actor = readDemoSession();
+      fundRequestSeq += 1;
+      const request = buildFundRequest(
+        `demo-fund-request-${fundRequestSeq}`,
+        project,
+        actor?.username ?? 'district',
+        actor?.displayName ?? actor?.username ?? 'District Officer',
+        input.requestedAmount,
+        input.remarks?.trim() || null,
+      );
+      demoFundRequests.unshift(request);
+      return { ...request };
+    },
+
+    async sendFundReleaseNotice(id, signal) {
+      ensureNotAborted(signal);
+      const request = demoFundRequests.find((r) => r.id === id);
+      if (!request) {
+        throw new ProviderError('unknown', `No fund request with id ${id}.`);
+      }
+      if (request.status !== 'APPROVED') {
+        throw new ProviderError('unknown', 'Only an APPROVED request can have a release notice sent.');
+      }
+      if (request.releaseNoticeSent) {
+        throw new ProviderError('unknown', 'The release notice for this request has already been sent.');
+      }
+      const actor = readDemoSession();
+      const now = new Date().toISOString();
+      request.releaseNoticeSent = true;
+      request.releaseNoticeByName = actor?.displayName ?? actor?.username ?? 'MoSPI / Ministry';
+      request.releaseNoticeAt = now;
+      request.updatedAt = now;
+      request.history = [
+        ...request.history,
+        {
+          eventType: 'RELEASE_NOTICE_SENT',
+          occurredAt: now,
+          actorName: request.releaseNoticeByName,
+          detail: 'Release notice recorded for the bank. No actual bank transaction was performed.',
+        },
+      ];
+      return { ...request };
+    },
+
     async getProjectPayments(sourceWorkId, signal) {
       ensureNotAborted(signal);
       const rows = demoPaymentsByWorkId.get(sourceWorkId) ?? [];
+      return rows.map((row) => ({ ...row }));
+    },
+
+    async getPublicProjectPayments(reference, signal) {
+      ensureNotAborted(signal);
+      const rows = demoPaymentsByWorkId.get(reference) ?? [];
       return rows.map((row) => ({ ...row }));
     },
 
@@ -250,6 +499,42 @@ export function createDemoDataProvider(): DataProvider {
       }
       grievance.updatedAt = new Date().toISOString();
       return { ...grievance };
+    },
+
+    async listWorkRecommendations(signal) {
+      ensureNotAborted(signal);
+      return demoWorkRecommendations.map((r) => ({ ...r }));
+    },
+
+    async submitWorkRecommendation(input: WorkRecommendationInput, signal) {
+      ensureNotAborted(signal);
+      recommendationSeq += 1;
+      const now = new Date().toISOString();
+      const recommendation: WorkRecommendation = {
+        ...input,
+        id: `demo-recommendation-${recommendationSeq}`,
+        trackingNumber: generateTrackingNumber(),
+        submittedAt: now,
+        status: 'SUBMITTED',
+        actionNote: null,
+        updatedAt: now,
+      };
+      demoWorkRecommendations.unshift(recommendation);
+      return { ...recommendation };
+    },
+
+    async updateWorkRecommendationStatus(id: string, patch: WorkRecommendationStatusPatch, signal) {
+      ensureNotAborted(signal);
+      const recommendation = demoWorkRecommendations.find((r) => r.id === id);
+      if (!recommendation) {
+        throw new ProviderError('unknown', `No work recommendation with id ${id}.`);
+      }
+      recommendation.status = patch.status;
+      if (patch.actionNote !== undefined) {
+        recommendation.actionNote = patch.actionNote;
+      }
+      recommendation.updatedAt = new Date().toISOString();
+      return { ...recommendation };
     },
 
     async listFieldOfficers(signal) {
@@ -300,6 +585,11 @@ export function createDemoDataProvider(): DataProvider {
         requiredPhotos: clampPhotos(input.requiredPhotos),
         assignedAt: now,
         updatedAt: now,
+        pendingStatus: null,
+        pendingRequestedByUsername: null,
+        pendingRequestedByName: null,
+        pendingJustification: null,
+        pendingRequestedAt: null,
       };
       demoAssignments = [assignment, ...demoAssignments];
       return { ...assignment };
@@ -312,6 +602,13 @@ export function createDemoDataProvider(): DataProvider {
         throw new ProviderError('unknown', `No assignment with id ${id}.`);
       }
       if (patch.status && patch.status !== assignment.status) {
+        if (patch.status === 'COMPLETED' || patch.status === 'CANCELLED') {
+          throw new ProviderError(
+            'unknown',
+            'Completing or cancelling an assignment requires dual-authority sign-off — ' +
+              'request it, then have a different authority confirm.',
+          );
+        }
         if (!assignmentTransitionOk(assignment.status, patch.status)) {
           throw new ProviderError(
             'unknown',
@@ -331,6 +628,142 @@ export function createDemoDataProvider(): DataProvider {
       }
       assignment.updatedAt = new Date().toISOString();
       return { ...assignment };
+    },
+
+    // --- dual-authority sign-off (mirrors the real backend, migration V10) ---
+
+    async requestAssignmentSignOff(id, input, signal) {
+      ensureNotAborted(signal);
+      const assignment = demoAssignments.find((a) => a.id === id);
+      if (!assignment) {
+        throw new ProviderError('unknown', `No assignment with id ${id}.`);
+      }
+      if (!OPEN_ASSIGNMENT_STATUSES.includes(assignment.status)) {
+        throw new ProviderError('unknown', `This assignment is already ${assignment.status}.`);
+      }
+      if (input.targetStatus !== 'COMPLETED' && input.targetStatus !== 'CANCELLED') {
+        throw new ProviderError('unknown', 'targetStatus must be COMPLETED or CANCELLED.');
+      }
+      if (!assignmentTransitionOk(assignment.status, input.targetStatus)) {
+        throw new ProviderError(
+          'unknown',
+          `Cannot move an assignment from ${assignment.status} to ${input.targetStatus}.`,
+        );
+      }
+      if (assignment.pendingStatus) {
+        throw new ProviderError('unknown', 'A sign-off is already pending for this assignment.');
+      }
+      const actor = readDemoSession();
+      assignment.pendingStatus = input.targetStatus;
+      assignment.pendingRequestedByUsername = actor?.username ?? null;
+      assignment.pendingRequestedByName = actor?.displayName ?? actor?.username ?? 'an authority';
+      assignment.pendingJustification = input.justification.trim();
+      assignment.pendingRequestedAt = new Date().toISOString();
+      assignment.updatedAt = new Date().toISOString();
+      return { ...assignment };
+    },
+
+    async confirmAssignmentSignOff(id, input, signal) {
+      ensureNotAborted(signal);
+      const assignment = demoAssignments.find((a) => a.id === id);
+      if (!assignment) {
+        throw new ProviderError('unknown', `No assignment with id ${id}.`);
+      }
+      if (!assignment.pendingStatus) {
+        throw new ProviderError('unknown', 'No sign-off is pending for this assignment.');
+      }
+      const actor = readDemoSession();
+      if (actor?.username && actor.username === assignment.pendingRequestedByUsername) {
+        throw new ProviderError(
+          'unknown',
+          'A different authority must confirm this sign-off — the officer who requested ' +
+            'it cannot also confirm it.',
+        );
+      }
+      const label = assignment.pendingStatus === 'COMPLETED' ? 'Completion' : 'Cancellation';
+      const requestedByName = assignment.pendingRequestedByName ?? 'an authority';
+      const confirmingName = actor?.displayName ?? actor?.username ?? 'an authority';
+      assignment.note =
+        `${label} requested by ${requestedByName}: ${assignment.pendingJustification}\n` +
+        `${label} confirmed by ${confirmingName}: ${input.justification.trim()}`;
+      assignment.status = assignment.pendingStatus;
+      assignment.pendingStatus = null;
+      assignment.pendingRequestedByUsername = null;
+      assignment.pendingRequestedByName = null;
+      assignment.pendingJustification = null;
+      assignment.pendingRequestedAt = null;
+      assignment.updatedAt = new Date().toISOString();
+      return { ...assignment };
+    },
+
+    // --- notifications ---------------------------------------------------
+
+    async listNotifications(signal) {
+      ensureNotAborted(signal);
+      const role = currentDemoRole();
+      if (!role) {
+        return [];
+      }
+      seedHighRiskAlertsIfNeeded(role);
+      return demoNotifications
+        .filter((n) => n.recipientRole === role && !n.dismissed)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .map(toAppNotification);
+    },
+
+    async markNotificationRead(id, signal) {
+      ensureNotAborted(signal);
+      const role = currentDemoRole();
+      const notification = demoNotifications.find((n) => n.id === id && n.recipientRole === role);
+      if (!notification) {
+        throw new ProviderError('unknown', `No notification with id ${id}.`);
+      }
+      notification.read = true;
+      return toAppNotification(notification);
+    },
+
+    async markAllNotificationsRead(signal) {
+      ensureNotAborted(signal);
+      const role = currentDemoRole();
+      for (const notification of demoNotifications) {
+        if (notification.recipientRole === role && !notification.dismissed) {
+          notification.read = true;
+        }
+      }
+    },
+
+    async clearAllNotifications(signal) {
+      ensureNotAborted(signal);
+      const role = currentDemoRole();
+      for (const notification of demoNotifications) {
+        if (notification.recipientRole === role) {
+          notification.dismissed = true;
+        }
+      }
+    },
+
+    async sendSlaNotice(sourceWorkId, signal) {
+      ensureNotAborted(signal);
+      const project = demoProjects.find((p) => p.sourceWorkId === sourceWorkId);
+      if (!project) {
+        throw new ProviderError('unknown', `No work with source id ${sourceWorkId}.`);
+      }
+      notificationSeq += 1;
+      const title = workTitle(project.workDescription, project.sourceWorkId);
+      demoNotifications.unshift({
+        id: `demo-notification-${notificationSeq}`,
+        category: 'SLA_NOTICE',
+        title: `Attention required: ${title}`,
+        message:
+          'This work has been flagged as high-risk / requiring attention and needs your review.',
+        sourceWorkId: project.sourceWorkId,
+        read: false,
+        createdAt: new Date().toISOString(),
+        // Always the single seeded District Authority persona — mirrors the
+        // real backend, which has no per-district accounts yet (decision D31).
+        recipientRole: 'DISTRICT',
+        dismissed: false,
+      });
     },
 
     async getAuditPhotos(_sourceWorkId, _limit, signal) {

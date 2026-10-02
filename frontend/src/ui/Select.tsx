@@ -16,7 +16,8 @@ export interface SelectProps extends Omit<
   error?: string;
 }
 
-/** A labelled native `<select>` — the base for future filter controls. */
+/** A labelled native `<select>` — the base for future filter controls. Pass
+ *  `required` to also mark the label with a red asterisk. */
 export function Select({
   label,
   hideLabel,
@@ -24,6 +25,7 @@ export function Select({
   hint,
   error,
   className,
+  required,
   ...rest
 }: SelectProps) {
   const id = useId();
@@ -34,12 +36,19 @@ export function Select({
     <div className="ui-field">
       <label className={hideLabel ? 'visually-hidden' : 'ui-field__label'} htmlFor={id}>
         {label}
+        {required ? (
+          <span className="ui-field__required" aria-hidden>
+            {' '}
+            *
+          </span>
+        ) : null}
       </label>
       <select
         id={id}
         className={['ui-control', className].filter(Boolean).join(' ')}
         aria-invalid={error ? true : undefined}
         aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
+        required={required}
         {...rest}
       >
         {options.map((option) => (

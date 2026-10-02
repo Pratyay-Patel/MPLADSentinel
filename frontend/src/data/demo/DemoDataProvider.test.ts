@@ -49,9 +49,11 @@ describe('DemoDataProvider', () => {
     const one = await provider.getPublicProject(full.sourceWorkId);
 
     expect(publicRows).toHaveLength((await provider.listProjects()).length);
-    for (const key of ['sourceName', 'dataQualityFlags', 'paymentDataState', 'recordedPayments']) {
+    for (const key of ['sourceName', 'dataQualityFlags']) {
       expect(key in publicRows[0]).toBe(false);
     }
+    // Recorded-payment summary IS public (plain expenditure data, not risk).
+    expect(publicRows[0].paymentDataState).toBe(full.paymentDataState);
     expect(one?.reference).toBe(full.sourceWorkId);
     expect(one?.memberOfParliament).toBe(full.mpName);
     expect(await provider.getPublicProject(-1)).toBeNull();
@@ -100,6 +102,22 @@ describe('DemoDataProvider', () => {
     expect(byId[projects[0].sourceWorkId].level).toBe(single!.level);
   });
 
+  it('listDuplicateWorks flags real fixture pairs with a real signal, and every pair has a reason', async () => {
+    const { pairs, totalFound } = await provider.listDuplicateWorks();
+
+    expect(Array.isArray(pairs)).toBe(true);
+    expect(totalFound).toBe(pairs.length);
+    for (const pair of pairs) {
+      expect(pair.reasons.length).toBeGreaterThan(0);
+      expect(pair.score).toBeGreaterThan(0);
+      expect(['LOW', 'MEDIUM', 'HIGH']).toContain(pair.confidence);
+      // grouped by the same state, district and category
+      expect(pair.workA.state).toBe(pair.workB.state);
+      expect(pair.workA.district).toBe(pair.workB.district);
+      expect(pair.workA.category).toBe(pair.workB.category);
+    }
+  });
+
   it('returns installment rows for a payments-present work and none otherwise', async () => {
     const projects = await provider.listProjects();
     const present = projects.find((p) => p.paymentDataState === 'FETCHED_PRESENT')!;
@@ -112,6 +130,15 @@ describe('DemoDataProvider', () => {
 
     expect(await provider.getProjectPayments(notFetched.sourceWorkId)).toEqual([]);
     expect(await provider.getProjectPayments(-1)).toEqual([]);
+  });
+
+  it('serves the same installment rows on the public payments track', async () => {
+    const projects = await provider.listProjects();
+    const present = projects.find((p) => p.paymentDataState === 'FETCHED_PRESENT')!;
+
+    const authorityRows = await provider.getProjectPayments(present.sourceWorkId);
+    const publicRows = await provider.getPublicProjectPayments(present.sourceWorkId);
+    expect(publicRows).toEqual(authorityRows);
   });
 
   it('records a submitted grievance and lists it back', async () => {

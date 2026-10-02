@@ -5,17 +5,26 @@ import { AppShell } from '../layout/AppShell';
 import { AnalyticsPage } from '../pages/analytics/AnalyticsPage';
 import { AssistantPage } from '../pages/assistant/AssistantPage';
 import { GovernmentDashboard } from '../pages/dashboard/GovernmentDashboard';
+import { CitizenAnalytics } from '../pages/citizen/CitizenAnalytics';
+import { CitizenAssistant } from '../pages/citizen/CitizenAssistant';
+import { CitizenCompareMps } from '../pages/citizen/CitizenCompareMps';
+import { CitizenOverview } from '../pages/citizen/CitizenOverview';
 import { CitizenPortal } from '../pages/citizen/CitizenPortal';
 import { CitizenProjectView } from '../pages/citizen/CitizenProjectView';
 import { AuditPage } from '../pages/audit/AuditPage';
 import { Grievances } from '../pages/grievances/Grievances';
+import { RecommendWork } from '../pages/recommend/RecommendWork';
 import { InspectionsPage } from '../pages/inspections/InspectionsPage';
+import { EscrowFundControl } from '../pages/escrow/EscrowFundControl';
+import { FundRequestDetail } from '../pages/escrow/FundRequestDetail';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { ProjectDetail } from '../pages/project-detail/ProjectDetail';
 import { ProjectRegister } from '../pages/projects/ProjectRegister';
 import { RiskAlerts } from '../pages/risk/RiskAlerts';
+import { DuplicateWorks } from '../pages/duplicates/DuplicateWorks';
+import { CartelMatrixPage } from '../pages/cartel/CartelMatrixPage';
 import { CompareMps } from '../pages/compare/CompareMps';
 import { IndexRedirect } from './IndexRedirect';
 
@@ -81,6 +90,22 @@ export const appRouter = createBrowserRouter([
         ),
       },
       {
+        path: 'duplicates',
+        element: (
+          <RequireRole area="duplicates">
+            <DuplicateWorks />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'cartel',
+        element: (
+          <RequireRole area="cartel">
+            <CartelMatrixPage />
+          </RequireRole>
+        ),
+      },
+      {
         path: 'compare',
         element: (
           <RequireRole area="compare">
@@ -113,6 +138,22 @@ export const appRouter = createBrowserRouter([
         ),
       },
       {
+        path: 'escrow',
+        element: (
+          <RequireRole area="escrow">
+            <EscrowFundControl />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'escrow/:id',
+        element: (
+          <RequireRole area="escrow">
+            <FundRequestDetail />
+          </RequireRole>
+        ),
+      },
+      {
         path: 'audit',
         element: (
           <RequireRole area="audit">
@@ -129,6 +170,38 @@ export const appRouter = createBrowserRouter([
         ),
       },
       {
+        path: 'citizen/overview',
+        element: (
+          <RequireRole area="citizen">
+            <CitizenOverview />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'citizen/compare',
+        element: (
+          <RequireRole area="citizen">
+            <CitizenCompareMps />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'citizen/analytics',
+        element: (
+          <RequireRole area="citizen">
+            <CitizenAnalytics />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'citizen/assistant',
+        element: (
+          <RequireRole area="citizen">
+            <CitizenAssistant />
+          </RequireRole>
+        ),
+      },
+      {
         path: 'citizen/:id',
         element: (
           <RequireRole area="citizen">
@@ -141,6 +214,14 @@ export const appRouter = createBrowserRouter([
         element: (
           <RequireRole area="grievances">
             <Grievances />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'recommend',
+        element: (
+          <RequireRole area="recommendations">
+            <RecommendWork />
           </RequireRole>
         ),
       },

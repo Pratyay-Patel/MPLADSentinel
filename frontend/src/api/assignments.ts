@@ -3,6 +3,8 @@ import type {
   AssignmentPatch,
   FieldOfficer,
   InspectionAssignment,
+  SignOffConfirmInput,
+  SignOffRequestInput,
 } from '../data/types';
 import { apiClient } from './client';
 
@@ -30,3 +32,19 @@ export const patchAssignment = (
   patch: AssignmentPatch,
   signal?: AbortSignal,
 ): Promise<InspectionAssignment> => apiClient.patch(`/assignments/${id}`, patch, { signal });
+
+/** Dual-authority sign-off, step 1 — see `AssignmentResponse.pending*` on the backend. */
+export const requestSignOff = (
+  id: string,
+  input: SignOffRequestInput,
+  signal?: AbortSignal,
+): Promise<InspectionAssignment> =>
+  apiClient.post(`/assignments/${id}/sign-off/request`, input, { signal });
+
+/** Dual-authority sign-off, step 2 — a different authority than the requester. */
+export const confirmSignOff = (
+  id: string,
+  input: SignOffConfirmInput,
+  signal?: AbortSignal,
+): Promise<InspectionAssignment> =>
+  apiClient.post(`/assignments/${id}/sign-off/confirm`, input, { signal });

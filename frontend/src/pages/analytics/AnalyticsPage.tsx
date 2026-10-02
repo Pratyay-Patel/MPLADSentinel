@@ -25,6 +25,8 @@ import {
 import {
   CircleCheckIcon,
   LayoutGridIcon,
+  ListIcon,
+  MapPinIcon,
   RupeeIcon,
   TrendingUpIcon,
 } from '../../ui/icons';
@@ -131,12 +133,14 @@ function AnalyticsBody({ data }: { data: AnalyticsData }) {
           label="Works analysed"
           value={formatCount(data.totalWorks)}
           hint="MPLADS works in the dataset"
+          tone="info"
         />
         <MetricCard
           icon={<RupeeIcon />}
           label="Sanctioned (total)"
           value={formatINRCompact(data.sanctionedTotal)}
           hint="Estimated cost of works with an estimate"
+          tone="warning"
         />
         <MetricCard
           icon={<RupeeIcon />}
@@ -149,12 +153,14 @@ function AnalyticsBody({ data }: { data: AnalyticsData }) {
           label="Recorded utilisation"
           value={pct(data.recordedUtilisationPct)}
           hint="Payments ÷ sanctioned, over works with both known"
+          tone="info"
         />
         <MetricCard
           icon={<CircleCheckIcon />}
           label="Completed vs not"
           value={`${formatCount(data.completedWorks)} / ${formatCount(data.notCompletedWorks)}`}
           hint="Seen in the completed listing vs not yet"
+          tone="success"
         />
       </div>
 
@@ -165,6 +171,8 @@ function AnalyticsBody({ data }: { data: AnalyticsData }) {
           <SectionHeader
             title="MPs by utilisation band"
             description="Share of the MPs analysed in each recorded-utilisation band."
+            icon={<TrendingUpIcon />}
+            tone="info"
           />
           {data.mpsAnalysed === 0 ? (
             <EmptyState
@@ -187,6 +195,8 @@ function AnalyticsBody({ data }: { data: AnalyticsData }) {
           <SectionHeader
             title="Data-derived observations"
             description="Computed from the figures above — descriptive, not policy findings."
+            icon={<ListIcon />}
+            tone="neutral"
           />
           {data.observations.length === 0 ? (
             <p className="text-muted">Not enough data for observations.</p>
@@ -223,6 +233,8 @@ function StatesUtilisationCard({ data }: { data: AnalyticsData }) {
       <SectionHeader
         title="States & UTs by recorded fund utilisation"
         description="Recorded payments as a share of sanctioned cost, over works where both the estimate and a payment are known. Bars are coloured by band; scroll for more."
+        icon={<MapPinIcon />}
+        tone="success"
       />
       {data.states.length === 0 ? (
         <EmptyState
@@ -316,6 +328,8 @@ function MpLeaderboard({ mps }: { mps: MpUtilisation[] }) {
       <SectionHeader
         title="MP fund-utilisation leaderboard"
         description="Every MP with at least one scored work, best recorded utilisation first. This is the per-MP detail behind the band chart above."
+        icon={<RupeeIcon />}
+        tone="warning"
       />
       {mps.length === 0 ? (
         <EmptyState

@@ -9,6 +9,7 @@ import {
   StatusBadge,
   type Column,
 } from '../../ui';
+import { RupeeIcon } from '../../ui/icons';
 import { PAYMENT_STATE_LABEL, PAYMENT_STATE_NOTE, PAYMENT_STATE_TONE } from './labels';
 
 const columns: Column<PaymentInstallment>[] = [
@@ -48,6 +49,8 @@ export function PaymentsSection({
     <Card>
       <SectionHeader
         title="Payments"
+        icon={<RupeeIcon />}
+        tone="success"
         actions={
           <StatusBadge tone={PAYMENT_STATE_TONE[state]} srLabel="Payment data state">
             {PAYMENT_STATE_LABEL[state]}

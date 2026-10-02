@@ -8,8 +8,9 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   error?: string;
 }
 
-/** A labelled text input. The label is always associated via `htmlFor`. */
-export function Input({ label, hideLabel, hint, error, className, ...rest }: InputProps) {
+/** A labelled text input. The label is always associated via `htmlFor`. Pass
+ *  `required` to also mark the label with a red asterisk. */
+export function Input({ label, hideLabel, hint, error, className, required, ...rest }: InputProps) {
   const id = useId();
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
@@ -18,12 +19,19 @@ export function Input({ label, hideLabel, hint, error, className, ...rest }: Inp
     <div className="ui-field">
       <label className={hideLabel ? 'visually-hidden' : 'ui-field__label'} htmlFor={id}>
         {label}
+        {required ? (
+          <span className="ui-field__required" aria-hidden>
+            {' '}
+            *
+          </span>
+        ) : null}
       </label>
       <input
         id={id}
         className={['ui-control', className].filter(Boolean).join(' ')}
         aria-invalid={error ? true : undefined}
         aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
+        required={required}
         {...rest}
       />
       {hint ? (

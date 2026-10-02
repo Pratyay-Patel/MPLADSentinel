@@ -19,6 +19,7 @@ import {
   Select,
   SectionHeader,
 } from '../../ui';
+import { BarsIcon, SearchIcon, TrendingUpIcon } from '../../ui/icons';
 import { MpCompareChart } from './MpCompareChart';
 import { METRICS, pct, type Metric } from './metrics';
 
@@ -131,6 +132,8 @@ function CompareBody({ data }: { data: MpComparisonData }) {
         <SectionHeader
           title="Choose MPs"
           description={`Add up to ${MAX_MPS}. Type to search by name, constituency or state.`}
+          icon={<SearchIcon />}
+          tone="info"
         />
 
         {selected.length > 0 && (
@@ -253,16 +256,18 @@ function Comparison({
   return (
     <>
       <div className="ui-metric-grid">
-        <MetricCard label="MPs compared" value={formatCount(selected.length)} />
+        <MetricCard label="MPs compared" value={formatCount(selected.length)} tone="info" />
         <MetricCard
           label="Combined works"
           value={formatCount(selected.reduce((s, m) => s + m.works, 0))}
           hint={`${formatCount(selected.reduce((s, m) => s + m.completed, 0))} completed`}
+          tone="success"
         />
         <MetricCard
           label="Combined recorded payments"
           value={sumMoney(selected, (m) => m.recordedPayments.amount)}
           hint={`of ${sumMoney(selected, (m) => m.estimatedCost.amount)} estimated`}
+          tone="warning"
         />
       </div>
 
@@ -270,6 +275,8 @@ function Comparison({
         <SectionHeader
           title="Metric comparison"
           description="One bar per selected MP; the dashed line is the average across all MPs."
+          icon={<TrendingUpIcon />}
+          tone="success"
         />
         <div className="mpc-metric-pick">
           <Select
@@ -283,7 +290,7 @@ function Comparison({
       </Card>
 
       <Card>
-        <SectionHeader title="Detailed comparison" />
+        <SectionHeader title="Detailed comparison" icon={<BarsIcon />} tone="warning" />
         <div className="mpc-table-wrap">
           <table className="mpc-table">
             <thead>
@@ -324,6 +331,7 @@ function Comparison({
           label="Most works"
           value={mostWorks.mpName}
           hint={`${formatCount(mostWorks.works)} works recorded`}
+          tone="info"
         />
         <MetricCard
           label="Highest fund utilisation"
@@ -331,11 +339,13 @@ function Comparison({
           hint={
             bestUtilisation ? `${pct(bestUtilisation.fundUtilisation)} of allocated` : 'No allocation data'
           }
+          tone="success"
         />
         <MetricCard
           label="Lowest flagged share"
           value={lowestFlagged ? lowestFlagged.mpName : '—'}
           hint={lowestFlagged ? `${pct(lowestFlagged.flaggedShare)} HIGH + MEDIUM` : 'Nothing assessed'}
+          tone="warning"
         />
       </div>
     </>

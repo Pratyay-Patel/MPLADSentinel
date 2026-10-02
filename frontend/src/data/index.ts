@@ -13,6 +13,7 @@
  */
 
 export type {
+  AppNotification,
   AssignmentInput,
   AssignmentPatch,
   AssignmentStatus,
@@ -20,21 +21,36 @@ export type {
   AuditPhoto,
   BackendHealth,
   DataSource,
+  DuplicateConfidence,
+  DuplicatePair,
+  DuplicatePairsResult,
+  DuplicateWorkSummary,
   FieldOfficer,
+  FundRequest,
+  FundRequestEvent,
+  FundRequestEventType,
+  FundRequestInput,
+  FundRequestStatus,
   Grievance,
   GrievanceInput,
   GrievanceStatus,
   GrievanceStatusPatch,
   InspectionAssignment,
   LifecycleState,
+  LocationCategory,
   Money,
+  NotificationCategory,
   PaymentDataState,
   PaymentInstallment,
   Project,
   ProjectHouse,
   ProjectRisk,
   ProjectSummary,
+  RecommendationStatus,
   RiskLevel,
+  WorkRecommendation,
+  WorkRecommendationInput,
+  WorkRecommendationStatusPatch,
 } from './types';
 
 export type { DataProvider } from './DataProvider';
@@ -78,6 +94,13 @@ export {
 export { useAnalyticsService } from './features/useAnalyticsService';
 
 export {
+  createCitizenAnalyticsService,
+  buildCitizenAnalytics,
+  type CitizenAnalyticsService,
+} from './features/citizenAnalytics';
+export { useCitizenAnalyticsService } from './features/useCitizenAnalyticsService';
+
+export {
   createAssistantService,
   type AssistantService,
   type AssistantData,
@@ -87,6 +110,17 @@ export {
   type AssistantCategory,
 } from './features/assistant';
 export { useAssistantService } from './features/useAssistantService';
+
+export {
+  createCitizenAssistantService,
+  type CitizenAssistantService,
+  type CitizenAssistantData,
+  type CitizenAssistantWork,
+  type CitizenAssistantMp,
+  type CitizenAssistantState,
+  type CitizenAssistantCategory,
+} from './features/citizenAssistant';
+export { useCitizenAssistantService } from './features/useCitizenAssistantService';
 
 export {
   createProjectDetailService,
@@ -103,6 +137,19 @@ export {
 } from './features/risk';
 export { useRiskService } from './features/useRiskService';
 
+export { createDuplicatesService, type DuplicatesService } from './features/duplicates';
+export { useDuplicatesService } from './features/useDuplicatesService';
+
+export {
+  createEscrowService,
+  pickRiskBalancedSample,
+  type EscrowService,
+  type EscrowData,
+  type EscrowWorkOption,
+  type FundRequestSummary,
+} from './features/escrow';
+export { useEscrowService } from './features/useEscrowService';
+
 export {
   createMpComparisonService,
   aggregateMps,
@@ -111,6 +158,15 @@ export {
   type MpStat,
 } from './features/mpComparison';
 export { useMpComparisonService } from './features/useMpComparisonService';
+
+export {
+  createCitizenMpComparisonService,
+  aggregateCitizenMps,
+  type CitizenMpComparisonService,
+  type CitizenMpComparisonData,
+  type CitizenMpStat,
+} from './features/citizenMpComparison';
+export { useCitizenMpComparisonService } from './features/useCitizenMpComparisonService';
 
 export {
   createProjectRegisterService,
@@ -129,6 +185,15 @@ export {
   type PublicProject,
 } from './features/citizen';
 export { useCitizenService } from './features/useCitizenService';
+
+export {
+  createCitizenOverviewService,
+  buildCitizenOverview,
+  type CitizenOverviewService,
+  type CitizenOverviewData,
+  type CitizenStateCount,
+} from './features/citizenOverview';
+export { useCitizenOverviewService } from './features/useCitizenOverviewService';
 
 export {
   createGrievancesService,
@@ -168,7 +233,31 @@ export {
 } from './features/audit';
 export { useAuditService } from './features/useAuditService';
 
+export {
+  createNotificationsService,
+  type NotificationsService,
+} from './features/notifications';
+export { useNotificationsService } from './features/useNotificationsService';
+
+export {
+  createWorkRecommendationsService,
+  RECOMMENDATION_CATEGORIES,
+  RECOMMENDATION_STATUSES,
+  RECOMMENDATION_STATUS_LABEL,
+  type WorkRecommendationsService,
+  type RecommendationsData,
+  type MpOption,
+} from './features/workRecommendations';
+export { useWorkRecommendationsService } from './features/useWorkRecommendationsService';
+
 export { deriveRisk, riskHeadline, paymentRatio, RISK_RULES, type RiskContext } from './risk/rules';
+export { findDuplicatePairs, capDuplicatePairs, MAX_DUPLICATE_PAIRS } from './dedup/duplicateRules';
+export {
+  evaluateFundEligibility,
+  remainingFunds,
+  alreadyReleasedAmount,
+  type FundEligibilityDecision,
+} from './escrow/fundEligibility';
 export {
   classifyRiskReason,
   summarizeRiskFactors,

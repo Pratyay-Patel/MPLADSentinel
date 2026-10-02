@@ -64,6 +64,11 @@ public class WorkQueryService {
      * {@link Optional} means the work itself is unknown; a present-but-empty
      * list means the work exists with no payment rows (which is <em>not</em>
      * "&#8377;0 spent" — see {@link PaymentDataState}).
+     *
+     * <p>Backs both {@code GET /api/works/{id}/payments} (authority) and
+     * {@code GET /api/public/works/{reference}/payments} (citizen) — the row
+     * shape ({@link WorkPaymentResponse}) carries no risk or internal field
+     * either way, so one query serves both controllers.
      */
     public Optional<List<WorkPaymentResponse>> getPayments(long sourceWorkId) {
         return works.findFirstBySourceWorkIdOrderByIdAsc(sourceWorkId).map(work -> {

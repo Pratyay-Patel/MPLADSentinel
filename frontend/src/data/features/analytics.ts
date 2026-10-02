@@ -35,7 +35,9 @@ export const UTILISATION_BANDS: { band: UtilisationBand; min: number; label: str
   { band: 'Low', min: 0, label: 'below 50%' },
 ];
 
-function bandFor(pct: number): UtilisationBand {
+/** Exported so the citizen-safe Analytics service ({@link ./citizenAnalytics.ts})
+ *  can reuse the exact same band thresholds without duplicating them. */
+export function bandFor(pct: number): UtilisationBand {
   return (UTILISATION_BANDS.find((b) => pct >= b.min) ?? UTILISATION_BANDS[UTILISATION_BANDS.length - 1])
     .band;
 }

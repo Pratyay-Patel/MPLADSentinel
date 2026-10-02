@@ -50,3 +50,11 @@ tmp/
 
 # Database snapshots — share out-of-band, never commit
 *.dump
+
+# --- Internal-only (kept out of the public repo) ---
+# Design notes, submission PPT/PDF drafts and internal planning docs — shared
+# with judges separately, not meant for a public/competitor-readable repo.
+docs/
+# AI-assistant project instructions/local state — not meant to be public.
+CLAUDE.md
+.claude/

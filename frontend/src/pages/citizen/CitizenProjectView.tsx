@@ -4,21 +4,28 @@ import { Link, useParams } from 'react-router-dom';
 import {
   useAsyncData,
   useCitizenService,
+  type AsyncState,
   type LifecycleState,
+  type PaymentInstallment,
   type PublicProject,
 } from '../../data';
 import { formatDate, formatINRExact, workTitle } from '../../format';
 import {
   Card,
+  DataTable,
   EmptyState,
   ErrorState,
   KeyValueList,
   LoadingState,
   PageHeader,
+  ProjectLocationMap,
   SectionHeader,
   StatusBadge,
+  type Column,
   type StatusTone,
 } from '../../ui';
+import { CalendarIcon, InfoIcon, MapPinIcon, RupeeIcon, UsersIcon } from '../../ui/icons';
+import { PAYMENT_STATE_LABEL, PAYMENT_STATE_NOTE, PAYMENT_STATE_TONE } from '../project-detail/labels';
 
 const HOUSE_LABEL: Record<string, string> = {
   LOK_SABHA: 'Lok Sabha',
@@ -41,7 +48,9 @@ const dash = (value: string | number | null | undefined) =>
 /**
  * Public work view (`/citizen/:id`) — the publicly releasable summary for one
  * MPLADS work. Renders a {@link PublicProject}: no risk assessment, no
- * data-quality flags, no payment-retrieval internals or provenance framing.
+ * data-quality flags, no provenance framing. It does show the recorded
+ * payment installments — public expenditure data, not a risk signal — via the
+ * separate public payments call.
  */
 export function CitizenProjectView() {
   const params = useParams<{ id: string }>();
@@ -55,6 +64,11 @@ export function CitizenProjectView() {
     (signal) => (validId ? service.get(reference, signal) : Promise.resolve(null)),
     [service, reference, validId, reloadKey],
     { isEmpty: (data) => data === null },
+  );
+
+  const paymentsState = useAsyncData<PaymentInstallment[]>(
+    (signal) => (validId ? service.getPayments(reference, signal) : Promise.resolve([])),
+    [service, reference, validId, reloadKey],
   );
 
   const project = state.status === 'success' ? state.data : undefined;
@@ -110,17 +124,27 @@ export function CitizenProjectView() {
         </Card>
       )}
 
-      {state.status === 'success' && project && <PublicView project={project} />}
+      {state.status === 'success' && project && (
+        <PublicView project={project} paymentsState={paymentsState} />
+      )}
     </div>
   );
 }
 
-function PublicView({ project }: { project: PublicProject }) {
+function PublicView({
+  project,
+  paymentsState,
+}: {
+  project: PublicProject;
+  paymentsState: AsyncState<PaymentInstallment[]>;
+}) {
   return (
     <>
       <Card>
         <SectionHeader
           title="Overview"
+          icon={<InfoIcon />}
+          tone="info"
           actions={
             <StatusBadge tone={STATUS_TONE[project.status]} srLabel="Status">
               {STATUS_LABEL[project.status]}
@@ -137,7 +161,7 @@ function PublicView({ project }: { project: PublicProject }) {
       </Card>
 
       <Card>
-        <SectionHeader title="Representation" />
+        <SectionHeader title="Representation" icon={<UsersIcon />} tone="success" />
         <KeyValueList
           items={[
             { label: 'Member of Parliament', value: dash(project.memberOfParliament) },
@@ -152,7 +176,7 @@ function PublicView({ project }: { project: PublicProject }) {
       </Card>
 
       <Card>
-        <SectionHeader title="Location" />
+        <SectionHeader title="Location" icon={<MapPinIcon />} tone="warning" />
         <KeyValueList
           items={[
             { label: 'State', value: dash(project.state) },
@@ -160,12 +184,15 @@ function PublicView({ project }: { project: PublicProject }) {
             { label: 'Location', value: dash(project.location) },
           ]}
         />
+        <ProjectLocationMap state={project.state} district={project.district} />
       </Card>
 
       <Card>
         <SectionHeader
           title="Funding"
           description="Estimated and final cost are separate figures."
+          icon={<RupeeIcon />}
+          tone="neutral"
         />
         <KeyValueList
           items={[
@@ -175,8 +202,15 @@ function PublicView({ project }: { project: PublicProject }) {
         />
       </Card>
 
+      <PublicPaymentsSection project={project} paymentsState={paymentsState} />
+
       <Card>
-        <SectionHeader title="Dates" description="Key dates recorded for this work." />
+        <SectionHeader
+          title="Dates"
+          description="Key dates recorded for this work."
+          icon={<CalendarIcon />}
+          tone="info"
+        />
         <KeyValueList
           items={[
             { label: 'Recommended on', value: formatDate(project.recommendedOn) },
@@ -192,5 +226,74 @@ function PublicView({ project }: { project: PublicProject }) {
         where, under which representative, and its current status.
       </p>
     </>
+  );
+}
+
+const paymentColumns: Column<PaymentInstallment>[] = [
+  { key: 'ordinal', header: '#', render: (row) => row.ordinal + 1 },
+  { key: 'amount', header: 'Amount', align: 'right', render: (row) => formatINRExact(row.amount) },
+  { key: 'paidOn', header: 'Paid on', render: (row) => formatDate(row.paidOn) },
+  { key: 'vendor', header: 'Vendor', render: (row) => row.vendorName ?? '—' },
+];
+
+function PublicPaymentsSection({
+  project,
+  paymentsState,
+}: {
+  project: PublicProject;
+  paymentsState: AsyncState<PaymentInstallment[]>;
+}) {
+  const dataState = project.paymentDataState;
+
+  return (
+    <Card>
+      <SectionHeader
+        title="Recorded payments"
+        description="Which vendor was paid, how much, and when — from the same recorded-payment source as the estimated/final cost above."
+        icon={<RupeeIcon />}
+        tone="success"
+        actions={
+          <StatusBadge tone={PAYMENT_STATE_TONE[dataState]} srLabel="Payment data state">
+            {PAYMENT_STATE_LABEL[dataState]}
+          </StatusBadge>
+        }
+      />
+      <p className="detail-note" style={{ marginTop: 0 }}>
+        {PAYMENT_STATE_NOTE[dataState]}
+      </p>
+
+      {dataState === 'FETCHED_PRESENT' && (
+        <>
+          <div style={{ marginTop: 'var(--space-4)' }}>
+            <KeyValueList
+              items={[
+                { label: 'Total recorded payments', value: formatINRExact(project.recordedPayments) },
+                { label: 'Installments', value: project.paymentInstallments ?? '—' },
+              ]}
+            />
+          </div>
+          <div style={{ marginTop: 'var(--space-4)' }}>
+            {paymentsState.status === 'loading' && <LoadingState label="Loading payment installments" />}
+            {paymentsState.status === 'error' && (
+              <p className="detail-note">Payment installment rows could not be loaded right now.</p>
+            )}
+            {paymentsState.status === 'success' && (
+              <DataTable
+                caption="Payment installments"
+                columns={paymentColumns}
+                rows={paymentsState.data}
+                getRowKey={(row) => row.ordinal}
+                emptyState={
+                  <EmptyState
+                    title="No installment rows"
+                    description="The summary reports payments but no installment rows were returned."
+                  />
+                }
+              />
+            )}
+          </div>
+        </>
+      )}
+    </Card>
   );
 }

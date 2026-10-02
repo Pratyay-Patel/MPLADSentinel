@@ -172,4 +172,35 @@ describe('RiskAlerts', () => {
     expect(alert).toHaveTextContent('backend down');
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });
+
+  it('sends an attention notice for a flagged work and confirms it with a toast', async () => {
+    const sendSlaNotice = vi.fn().mockResolvedValue(undefined);
+    const provider: DataProvider = { ...createDemoDataProvider(), sendSlaNotice };
+    renderRisk(provider);
+
+    const table = await screen.findByRole('table', { name: 'Risk and alerts' });
+    const [firstRow] = within(table).getAllByRole('row').slice(1);
+    const sendButton = within(firstRow).getByRole('button', { name: 'Send Notice' });
+
+    fireEvent.click(sendButton);
+
+    expect(await screen.findByText(/Attention notice sent to the District Authority/)).toBeInTheDocument();
+    expect(sendSlaNotice).toHaveBeenCalledTimes(1);
+    expect(await within(firstRow).findByRole('button', { name: 'Notice sent' })).toBeDisabled();
+  });
+
+  it('shows an error toast, without disabling the button, when sending a notice fails', async () => {
+    const provider: DataProvider = {
+      ...createDemoDataProvider(),
+      sendSlaNotice: vi.fn().mockRejectedValue(new Error('The server refused the request.')),
+    };
+    renderRisk(provider);
+
+    const table = await screen.findByRole('table', { name: 'Risk and alerts' });
+    const [firstRow] = within(table).getAllByRole('row').slice(1);
+    fireEvent.click(within(firstRow).getByRole('button', { name: 'Send Notice' }));
+
+    expect(await screen.findByText('The server refused the request.')).toBeInTheDocument();
+    expect(within(firstRow).getByRole('button', { name: 'Send Notice' })).toBeEnabled();
+  });
 });

@@ -1,5 +1,6 @@
 import { recommendedAction, riskDimensions, type ProjectRisk } from '../../data';
 import { Card, KeyValueList, RiskLevelBadge, SectionHeader } from '../../ui';
+import { AlertTriangleIcon } from '../../ui/icons';
 import { FactorContributionChart } from './FactorContributionChart';
 
 /**
@@ -19,6 +20,8 @@ export function RiskInsights({ risk }: { risk: ProjectRisk }) {
       <SectionHeader
         title="Risk assessment"
         description="Score from the weighted statistical risk model over this work's financial and data-quality signals — pointers for review, not proof of wrongdoing."
+        icon={<AlertTriangleIcon />}
+        tone="danger"
         actions={<RiskLevelBadge level={risk.level} />}
       />
 

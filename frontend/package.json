@@ -17,8 +17,10 @@
     "gen:allocations": "node scripts/gen-mp-allocations.mjs"
   },
   "dependencies": {
+    "leaflet": "^1.9.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.1.1",
     "recharts": "^3.10.1"
   },
@@ -27,6 +29,7 @@
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",

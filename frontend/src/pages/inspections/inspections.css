@@ -15,12 +15,6 @@
   margin-top: var(--space-4, 1rem);
 }
 
-.insp-form__ok {
-  margin: var(--space-3, 0.75rem) 0 0;
-  color: var(--tone-success-fg, #1a7f4b);
-  font-weight: 600;
-}
-
 .insp-form__hint {
   margin: 0.35rem 0 0;
   font-size: 0.85rem;

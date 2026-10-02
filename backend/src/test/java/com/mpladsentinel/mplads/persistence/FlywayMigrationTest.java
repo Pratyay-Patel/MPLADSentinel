@@ -36,7 +36,7 @@ class FlywayMigrationTest extends AbstractPostgresIntegrationTest {
                 .map(Object::toString)
                 .toList();
 
-        assertThat(applied).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9");
+        assertThat(applied).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13");
         assertThat(flyway.info().current().getState()).isEqualTo(MigrationState.SUCCESS);
     }
 
@@ -54,6 +54,8 @@ class FlywayMigrationTest extends AbstractPostgresIntegrationTest {
         assertThat(tableExists("work_payment")).isTrue();
         assertThat(tableExists("app_user")).isTrue();
         assertThat(tableExists("grievance")).isTrue();
+        assertThat(tableExists("notification")).isTrue();
+        assertThat(tableExists("work_recommendation")).isTrue();
     }
 
     @Test
@@ -74,6 +76,52 @@ class FlywayMigrationTest extends AbstractPostgresIntegrationTest {
     void requiredPhotosColumnFromV9Exists() {
         assertThat(columnExists("inspection_assignment", "required_photos")).isTrue();
         assertThat(constraintExists("ck_inspection_assignment_required_photos")).isTrue();
+    }
+
+    @Test
+    void dualSignOffColumnsFromV10Exist() {
+        assertThat(columnExists("inspection_assignment", "pending_status")).isTrue();
+        assertThat(columnExists("inspection_assignment", "pending_requested_by_user_id")).isTrue();
+        assertThat(columnExists("inspection_assignment", "pending_justification")).isTrue();
+        assertThat(columnExists("inspection_assignment", "pending_requested_at")).isTrue();
+        assertThat(constraintExists("ck_inspection_assignment_pending_status")).isTrue();
+        assertThat(constraintExists("ck_inspection_assignment_pending_consistent")).isTrue();
+    }
+
+    @Test
+    void notificationTableFromV11Exists() {
+        assertThat(tableExists("notification")).isTrue();
+        assertThat(columnExists("notification", "recipient_user_id")).isTrue();
+        assertThat(columnExists("notification", "category")).isTrue();
+        assertThat(columnExists("notification", "source_work_id")).isTrue();
+        assertThat(columnExists("notification", "is_read")).isTrue();
+        assertThat(columnExists("notification", "dismissed")).isTrue();
+        assertThat(constraintExists("ck_notification_category")).isTrue();
+    }
+
+    @Test
+    void workRecommendationTableFromV12Exists() {
+        assertThat(tableExists("work_recommendation")).isTrue();
+        assertThat(columnExists("work_recommendation", "gps_coordinates_link")).isTrue();
+        assertThat(columnExists("work_recommendation", "tracking_number")).isTrue();
+        assertThat(columnExists("work_recommendation", "location_category")).isTrue();
+        assertThat(constraintExists("uq_work_recommendation_tracking_number")).isTrue();
+        assertThat(constraintExists("ck_work_recommendation_category")).isTrue();
+        assertThat(constraintExists("ck_work_recommendation_status")).isTrue();
+    }
+
+    @Test
+    void fundRequestTablesFromV13Exist() {
+        assertThat(tableExists("fund_request")).isTrue();
+        assertThat(columnExists("fund_request", "requested_by_user_id")).isTrue();
+        assertThat(columnExists("fund_request", "requested_amount")).isTrue();
+        assertThat(columnExists("fund_request", "status")).isTrue();
+        assertThat(columnExists("fund_request", "release_notice_sent")).isTrue();
+        assertThat(constraintExists("ck_fund_request_status")).isTrue();
+        assertThat(constraintExists("ck_fund_request_release_notice_only_approved")).isTrue();
+        assertThat(tableExists("fund_request_event")).isTrue();
+        assertThat(columnExists("fund_request_event", "event_type")).isTrue();
+        assertThat(constraintExists("ck_fund_request_event_type")).isTrue();
     }
 
     @Test

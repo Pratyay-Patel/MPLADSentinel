@@ -255,3 +255,163 @@
     min-width: 0;
   }
 }
+
+/* Vendor concentration (HHI) hub-and-spoke */
+
+.vendor-graph {
+  margin-top: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.vendor-graph__hub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-5);
+  border: 2px solid var(--color-brand-700);
+  border-radius: var(--radius-lg);
+  background: var(--color-brand-050);
+  text-align: center;
+  max-width: 100%;
+}
+
+.vendor-graph__hub-title {
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  max-width: 48ch;
+  overflow-wrap: anywhere;
+}
+
+.vendor-graph__hub-sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.vendor-graph__hub-badges {
+  margin-top: var(--space-1);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.vendor-graph__connector {
+  width: 2px;
+  height: var(--space-5);
+  background: var(--color-border-strong);
+}
+
+.vendor-graph__spokes {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-5) var(--space-2) var(--space-2);
+  border-top: 2px solid var(--color-border-strong);
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* A single, always-one-row scroll strip (rather than wrapping) keeps each
+ * vendor at a known, consistent distance below the shared bridge line above,
+ * so the per-card connector stem always lines up correctly. */
+
+.vendor-node {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 160px;
+  padding: var(--space-3);
+  border: 2px solid var(--color-neutral-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.vendor-node:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.vendor-node::before {
+  content: '';
+  position: absolute;
+  top: calc(-1 * var(--space-5));
+  left: 50%;
+  width: 2px;
+  height: var(--space-5);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--vendor-node-line, var(--color-border-strong)) 0 4px,
+    transparent 4px 9px
+  );
+  background-size: 2px 18px;
+  animation: vendor-flow 700ms linear infinite;
+}
+
+@keyframes vendor-flow {
+  from {
+    background-position-y: -18px;
+  }
+  to {
+    background-position-y: 0;
+  }
+}
+
+.vendor-node[data-tone='danger'] {
+  border-color: var(--color-danger-fg);
+  background: var(--color-danger-bg);
+  --vendor-node-line: var(--color-danger-fg);
+}
+.vendor-node[data-tone='danger']:hover {
+  box-shadow: 0 0 0 3px var(--color-danger-border), var(--shadow-lg);
+}
+.vendor-node[data-tone='warning'] {
+  border-color: var(--color-warning-fg);
+  background: var(--color-warning-bg);
+  --vendor-node-line: var(--color-warning-fg);
+}
+.vendor-node[data-tone='warning']:hover {
+  box-shadow: 0 0 0 3px var(--color-warning-border), var(--shadow-lg);
+}
+.vendor-node[data-tone='neutral'] {
+  border-color: var(--color-neutral-border);
+  --vendor-node-line: var(--color-neutral-fg);
+}
+.vendor-node[data-tone='neutral']:hover {
+  box-shadow: 0 0 0 3px var(--color-neutral-border), var(--shadow-lg);
+}
+
+.vendor-node__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.vendor-node__share {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.vendor-node__amount {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.vendor-graph__note {
+  margin-top: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  max-width: 80ch;
+  text-align: center;
+}

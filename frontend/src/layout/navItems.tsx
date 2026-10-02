@@ -9,15 +9,19 @@
 
 import type { ReactNode } from 'react';
 
-import type { Area } from '../auth';
+import { reviewsRecommendations, type Area, type Role } from '../auth';
 import {
   AlertTriangleIcon,
   BarsIcon,
   ChatIcon,
   ClipboardListIcon,
+  CopyIcon,
   InboxIcon,
   LayoutGridIcon,
   ListIcon,
+  NetworkIcon,
+  RupeeIcon,
+  SendIcon,
   ShieldIcon,
   TrendingUpIcon,
   UsersIcon,
@@ -32,6 +36,10 @@ export interface NavItem {
   end?: boolean;
   /** Shown in the collapsed sidebar rail. */
   icon: ReactNode;
+  /** Overrides `label` for a given role, when the same screen reads differently
+   *  depending on who's looking (e.g. a citizen "recommends"; an authority
+   *  "reviews recommendations"). Falls back to `label` when omitted. */
+  labelFor?: (role: Role) => string;
 }
 
 export interface NavGroup {
@@ -47,8 +55,26 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Overview', to: '/dashboard', area: 'overview', icon: <LayoutGridIcon /> },
       { label: 'Projects', to: '/projects', area: 'projects', icon: <ListIcon /> },
       { label: 'Risk & Alerts', to: '/risk', area: 'risk', icon: <AlertTriangleIcon /> },
+      {
+        label: 'Duplicate Works',
+        to: '/duplicates',
+        area: 'duplicates',
+        icon: <CopyIcon />,
+      },
+      {
+        label: 'Cartel & Cluster Matrix',
+        to: '/cartel',
+        area: 'cartel',
+        icon: <NetworkIcon />,
+      },
       { label: 'Compare MPs', to: '/compare', area: 'compare', icon: <BarsIcon /> },
       { label: 'Inspections', to: '/inspections', area: 'inspections', icon: <ClipboardListIcon /> },
+      {
+        label: 'Escrow & Fund Control',
+        to: '/escrow',
+        area: 'escrow',
+        icon: <RupeeIcon />,
+      },
       { label: 'Audit', to: '/audit', area: 'audit', icon: <ShieldIcon /> },
     ],
   },
@@ -63,6 +89,37 @@ export const NAV_GROUPS: NavGroup[] = [
     caption: 'Public',
     items: [
       { label: 'Citizen Portal', to: '/citizen', area: 'citizen', icon: <UsersIcon /> },
+      {
+        label: 'Transparency Overview',
+        to: '/citizen/overview',
+        area: 'citizen',
+        icon: <LayoutGridIcon />,
+      },
+      {
+        label: 'Compare MPs (Public)',
+        to: '/citizen/compare',
+        area: 'citizen',
+        icon: <BarsIcon />,
+      },
+      {
+        label: 'Analytics (Public)',
+        to: '/citizen/analytics',
+        area: 'citizen',
+        icon: <TrendingUpIcon />,
+      },
+      {
+        label: 'Assistant (Public)',
+        to: '/citizen/assistant',
+        area: 'citizen',
+        icon: <ChatIcon />,
+      },
+      {
+        label: 'Recommend a Work',
+        labelFor: (role) => (reviewsRecommendations(role) ? 'Recommended Works' : 'Recommend a Work'),
+        to: '/recommend',
+        area: 'recommendations',
+        icon: <SendIcon />,
+      },
       { label: 'Grievances', to: '/grievances', area: 'grievances', icon: <InboxIcon /> },
     ],
   },

@@ -19,7 +19,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./src/test/setup.tsx'],
     css: false,
     // Tests must not inherit a local `.env` (e.g. VITE_DATA_SOURCE=api); the
     // provider is chosen explicitly in each test.
