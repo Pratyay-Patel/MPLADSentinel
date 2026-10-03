@@ -58,3 +58,6 @@ docs/
 # AI-assistant project instructions/local state — not meant to be public.
 CLAUDE.md
 .claude/
+
+ai-service
+blockchain-service
