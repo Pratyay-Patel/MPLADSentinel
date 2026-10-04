@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://parthakadam.in/api/:path*"
+    },
+    {
       "source": "/:path*",
       "destination": "/index.html"
     }
