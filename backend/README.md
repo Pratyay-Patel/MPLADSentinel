@@ -1,79 +1,55 @@
 # MPLADSentinel Backend
 
-Spring Boot modular monolith. Primary backend and integration layer for
-MPLADSentinel (SIH PS 26102).
+The server behind MPLADSentinel. It is the single point of integration: it
+stores and serves the data, runs the analysis, enforces who can see and do what,
+and is the only component that talks to external services.
 
 ## Stack
 
-- Java 21 (Java 21 LTS)
-- Spring Boot 3.4.x (Web, Security, JDBC, Actuator, Validation)
+- Java 21, Spring Boot 3, Spring Security
+- PostgreSQL with versioned schema migrations (Flyway)
 - Maven
-- PostgreSQL 16.x + Flyway migrations
 
-> Stack versions are fixed by `docs/decisions.md` (D25). Exact patch versions are
-> pinned in `pom.xml` (Spring Boot `3.4.2`) and `docker-compose.yml`
-> (`postgres:16-alpine`).
+## How it is organised
 
-## Package structure
+The application is a modular monolith. Each domain (data ingestion, analysis,
+auditing, citizen input and so on) is a self-contained module with its own
+logic, while shared configuration, security and API conventions live in one
+place. Keeping it as a single deployable keeps operations simple.
 
-```
-com.mpladsentinel
-├── MpladSentinelApplication      application entry point
-├── config                       cross-cutting configuration (security, CORS)
-├── common                       shared web response shapes + error handling
-└── platform.health              operational /api/health endpoint
-```
-
-Business capabilities are added as sibling packages
-(`project`, `risk`, `ingestion`, `audit`, `evidence`, `grievance`, ...), each
-with its own controller / service / repository layers, in later phases.
+Security is enforced here, not in the browser. Every request is checked against
+the signed-in user's role, so the rules hold even if a client misbehaves.
 
 ## Configuration
 
-All environment-specific and sensitive values come from environment variables
-(see `../.env.example`). Local-development defaults are baked into
-`src/main/resources/application.yml`.
+Settings come from environment variables; sensible local defaults are built in.
+Sensitive values are never stored in the repository.
 
-| Variable | Purpose | Local default |
-|---|---|---|
-| `MPLADS_DB_URL` | JDBC URL | `jdbc:postgresql://localhost:5544/mpladsentinel` |
-| `MPLADS_DB_USERNAME` | DB user | `mpladsentinel` |
-| `MPLADS_DB_PASSWORD` | DB password | `change-me-locally` |
-| `MPLADS_SERVER_PORT` | HTTP port | `8081` |
-| `MPLADS_CORS_ALLOWED_ORIGINS` | Allowed browser origins (CSV) | `http://localhost:5173` |
-| `SPRING_PROFILES_ACTIVE` | Active profile | `dev` |
+| Variable | Purpose |
+|---|---|
+| `MPLADS_DB_URL` | Database connection URL |
+| `MPLADS_DB_USERNAME` / `MPLADS_DB_PASSWORD` | Database credentials |
+| `MPLADS_SERVER_PORT` | HTTP port (default `8081`) |
+| `MPLADS_CORS_ALLOWED_ORIGINS` | Browser origins allowed to call the API |
+| `SPRING_PROFILES_ACTIVE` | `dev` or `prod` |
 
-The local default DB port is **5544**, matching `docker-compose.yml`. It is
-deliberately not the conventional 5432, which is often taken by a native
-PostgreSQL install. If nothing else uses 5432 on your machine you can set
-`POSTGRES_PORT=5432` and `MPLADS_DB_URL=jdbc:postgresql://localhost:5432/mpladsentinel`
-in a local `.env` (compose) / environment (backend).
+The database runs in Docker for local development (`docker compose up -d` from
+the repository root). See the root README for the full local setup.
 
 ## Running
 
 ```bash
-# 1. start PostgreSQL (from repo root)
-docker compose up -d
-
-# 2. run the backend
 cd backend
-./mvnw spring-boot:run        # or: mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 Health check: `GET http://localhost:8081/api/health`
 
-## Build & test
+## Build and test
 
 ```bash
-./mvnw verify        # compile + run tests
+./mvnw verify
 ```
 
-The test suite does not require a database — datasource and Flyway
-auto-configuration are excluded for tests (`src/test/resources/application.properties`).
-
-## Security
-
-`SecurityConfig` establishes the security *structure* only (stateless, CSRF off,
-no form login / HTTP Basic, configurable CORS). There is no authentication or
-RBAC yet and endpoints are currently open. Real authentication and
-backend-enforced RBAC are implemented in the dedicated RBAC phase.
+The test suite runs against a real PostgreSQL instance in a container, so the
+same schema and queries are exercised as in deployment.
