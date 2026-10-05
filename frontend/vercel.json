@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://parthakadam.in/api/:path*"
+      "destination": "https://mpladsentinel-backend.onrender.com/api/:path*"
     },
     {
       "source": "/:path*",
