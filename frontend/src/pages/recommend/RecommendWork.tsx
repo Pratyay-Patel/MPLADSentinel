@@ -127,7 +127,7 @@ function validate(form: FormState): FieldErrors {
   const errors: FieldErrors = {};
   if (!form.fullName.trim()) errors.fullName = 'Enter your full name.';
   if (!MOBILE_RE.test(form.mobileNumber.trim())) {
-    errors.mobileNumber = 'Enter a valid 10-digit mobile number.';
+    errors.mobileNumber = 'Enter a valid 10-digit mobile number starting with 6, 7, 8 or 9.';
   }
   if (form.email.trim() && !EMAIL_RE.test(form.email.trim())) {
     errors.email = 'Enter a valid email address, or leave it blank.';
@@ -364,7 +364,7 @@ function CitizenRecommendations({
               label="Mobile number"
               required
               type="tel"
-              placeholder="10-digit mobile number"
+              placeholder="10-digit mobile number starting with 6, 7, 8 or 9"
               value={form.mobileNumber}
               error={errors.mobileNumber}
               onChange={(e) => set('mobileNumber', e.target.value)}
