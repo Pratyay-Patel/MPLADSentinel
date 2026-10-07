@@ -874,3 +874,47 @@
     display: none;
   }
 }
+
+/* Shown when this tab's session cookie turns out to have changed underneath
+ * it (another tab of the same browser signed in as a different role). See
+ * layout/RoleMismatchBanner.tsx. */
+.role-mismatch-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  background: var(--color-warning-bg);
+  border: var(--border-width) solid var(--color-warning-border);
+  border-radius: var(--radius-md);
+  color: var(--color-warning-fg);
+}
+
+.role-mismatch-banner__icon {
+  flex: none;
+  margin-top: 2px;
+}
+
+.role-mismatch-banner__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.role-mismatch-banner__actions {
+  display: flex;
+  flex: none;
+  gap: var(--space-2);
+}
+
+@media (max-width: 600px) {
+  .role-mismatch-banner {
+    flex-wrap: wrap;
+  }
+
+  .role-mismatch-banner__actions {
+    width: 100%;
+  }
+}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import {
   fetchCurrentUser,
@@ -7,7 +7,7 @@ import {
   register as apiRegister,
   type SessionUser,
 } from '../api/auth';
-import { SessionContext, type Session, type SessionStatus } from './context';
+import { SessionContext, type RoleMismatch, type Session, type SessionStatus } from './context';
 import { clearDemoSession, demoAuthEnabled, demoLogin, readDemoSession } from './demoAuth';
 import type { Role } from './roles';
 
@@ -60,6 +60,14 @@ interface SessionProviderProps {
 export function SessionProvider({ children, initialRole }: SessionProviderProps) {
   const demo = demoAuthEnabled();
   const [state, setState] = useState<SessionState>(() => initialState(initialRole));
+  const [roleMismatch, setRoleMismatch] = useState<RoleMismatch | null>(null);
+
+  // Mirrors `state` for the resync effect below, which runs from event
+  // listeners added once and must not read a stale closure of `state`.
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   useEffect(() => {
     if (initialRole || demo) {
@@ -78,8 +86,55 @@ export function SessionProvider({ children, initialRole }: SessionProviderProps)
     return () => controller.abort();
   }, [initialRole, demo]);
 
+  // The backend session is one cookie shared by every tab of this browser, so
+  // signing in as a different role in another tab silently replaces it here
+  // too — the next request this tab makes is authenticated as that other
+  // role, not the one still shown on screen. Re-checking `/api/auth/me`
+  // whenever the tab regains focus catches that before it shows up as a
+  // confusing "you do not have access" error, and lets the UI explain what
+  // actually happened instead.
+  useEffect(() => {
+    if (initialRole || demo) {
+      return;
+    }
+    const resync = () => {
+      if (document.visibilityState === 'hidden') {
+        return;
+      }
+      const prevUser = stateRef.current.user;
+      fetchCurrentUser()
+        .then((user) => {
+          const stillPrevUser = stateRef.current.user;
+          const changed =
+            (stillPrevUser?.username ?? null) !== (user?.username ?? null) ||
+            (stillPrevUser?.role ?? null) !== (user?.role ?? null);
+          if (!changed) {
+            return;
+          }
+          setState(user ? { status: 'authenticated', user } : ANONYMOUS);
+          // Only surface the notice when this tab actually believed it was
+          // someone — an anonymous tab picking up a session from elsewhere
+          // (e.g. the user just signed in in another tab first) is a normal
+          // sign-in, not a surprise.
+          if (prevUser) {
+            setRoleMismatch({ previous: prevUser, current: user });
+          }
+        })
+        .catch(() => {
+          /* transient network issue — leave the current session as-is */
+        });
+    };
+    window.addEventListener('focus', resync);
+    document.addEventListener('visibilitychange', resync);
+    return () => {
+      window.removeEventListener('focus', resync);
+      document.removeEventListener('visibilitychange', resync);
+    };
+  }, [initialRole, demo]);
+
   const login = useCallback(
     async (username: string, password: string) => {
+      setRoleMismatch(null);
       if (demo) {
         setState({ status: 'authenticated', user: demoLogin(username) });
         return;
@@ -102,6 +157,7 @@ export function SessionProvider({ children, initialRole }: SessionProviderProps)
   );
 
   const logout = useCallback(async () => {
+    setRoleMismatch(null);
     if (demo) {
       clearDemoSession();
       setState(ANONYMOUS);
@@ -114,6 +170,8 @@ export function SessionProvider({ children, initialRole }: SessionProviderProps)
     }
   }, [demo]);
 
+  const dismissRoleMismatch = useCallback(() => setRoleMismatch(null), []);
+
   const value = useMemo<Session>(
     () => ({
       status: state.status,
@@ -122,8 +180,10 @@ export function SessionProvider({ children, initialRole }: SessionProviderProps)
       login,
       register,
       logout,
+      roleMismatch,
+      dismissRoleMismatch,
     }),
-    [state, login, register, logout],
+    [state, login, register, logout, roleMismatch, dismissRoleMismatch],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

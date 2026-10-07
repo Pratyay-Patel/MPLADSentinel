@@ -5,6 +5,18 @@ import type { Role } from './roles';
 
 export type SessionStatus = 'loading' | 'authenticated' | 'anonymous';
 
+/**
+ * Set when this tab's session cookie turned out, on a background resync, to
+ * belong to a different user than the one this tab last knew about — the
+ * usual cause is signing in as another role in a different tab of the same
+ * browser, since the session cookie is shared across tabs. `current` is
+ * `null` when the other tab signed out entirely.
+ */
+export interface RoleMismatch {
+  previous: SessionUser;
+  current: SessionUser | null;
+}
+
 export interface Session {
   /** `loading` until the initial `/api/auth/me` probe resolves. */
   status: SessionStatus;
@@ -21,6 +33,10 @@ export interface Session {
   register: (displayName: string, email: string, password: string) => Promise<void>;
   /** End the session. Always resolves; local state is cleared regardless. */
   logout: () => Promise<void>;
+  /** Non-null right after a background resync finds this tab's session changed underneath it. */
+  roleMismatch: RoleMismatch | null;
+  /** Clears {@link roleMismatch} once the user has seen and acted on the notice. */
+  dismissRoleMismatch: () => void;
 }
 
 /**

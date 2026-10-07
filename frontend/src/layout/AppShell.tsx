@@ -4,6 +4,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { FilterProvider } from '../filters';
 import { AppHeader } from './AppHeader';
 import { AppSidebar } from './AppSidebar';
+import { RoleMismatchBanner } from './RoleMismatchBanner';
 
 const SIDEBAR_ID = 'app-primary-nav';
 const COLLAPSE_KEY = 'mplads.navCollapsed';
@@ -88,6 +89,7 @@ export function AppShell() {
 
       <main id="app-main-content" className="app-main" tabIndex={-1}>
         <div className="app-main__inner">
+          <RoleMismatchBanner />
           <FilterProvider>
             <Outlet />
           </FilterProvider>
